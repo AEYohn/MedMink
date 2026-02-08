@@ -1,0 +1,71 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Docker
+docker/data/
+
+# Node/Dashboard
+dashboard/node_modules/
+dashboard/.next/
+dashboard/out/
+dashboard/.env.local
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data
+data/
+*.pdf
+*.json.bak
+
+# Models (large files, download with scripts/download_model.sh)
+models/
+*.gguf
+*.bin
+*.safetensors

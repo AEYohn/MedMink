@@ -3,7 +3,6 @@
 import asyncio
 from typing import Any
 
-import google.generativeai as genai
 import structlog
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -24,6 +23,14 @@ class EmbeddingService:
     """Generate embeddings using Gemini's embedding API."""
 
     def __init__(self, api_key: str | None = None):
+        try:
+            import google.generativeai as genai
+        except ImportError:
+            raise ImportError(
+                "google-generativeai is not installed. "
+                "Install it with: pip install google-generativeai"
+            )
+        self._genai = genai
         self.api_key = api_key or settings.gemini_api_key
         genai.configure(api_key=self.api_key)
         self.dimension = EMBEDDING_DIMENSION
@@ -60,7 +67,7 @@ class EmbeddingService:
         truncated = self._truncate_text(text.strip())
 
         result = await asyncio.to_thread(
-            genai.embed_content,
+            self._genai.embed_content,
             model=EMBEDDING_MODEL,
             content=truncated,
             task_type=task_type,
@@ -115,7 +122,7 @@ class EmbeddingService:
             batch = processed_texts[batch_start:batch_start + MAX_BATCH_SIZE]
 
             result = await asyncio.to_thread(
-                genai.embed_content,
+                self._genai.embed_content,
                 model=EMBEDDING_MODEL,
                 content=batch,
                 task_type=task_type,

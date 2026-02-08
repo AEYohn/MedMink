@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   CaseSession,
   CaseEvent,
@@ -18,6 +18,17 @@ export function useCaseSession() {
   const [currentSession, setCurrentSession] = useState<CaseSession | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Ref to avoid stale closure issues in async callbacks (e.g. SSE stream handlers).
+  // Without this, updateResult/addEvent close over the old currentSession value
+  // from the render where handleSubmit was called, causing them to silently no-op.
+  const sessionRef = useRef<CaseSession | null>(null);
+
+  // Helper: update both React state and ref synchronously
+  const setSession = useCallback((s: CaseSession | null) => {
+    sessionRef.current = s;
+    setCurrentSession(s);
+  }, []);
+
   // Load sessions on mount
   useEffect(() => {
     const sessions = getCaseSessions();
@@ -27,11 +38,11 @@ export function useCaseSession() {
     if (currentId) {
       const found = sessions.find(s => s.id === currentId);
       if (found) {
-        setCurrentSession(found);
+        setSession(found);
       }
     }
     setIsLoaded(true);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const refreshSessions = useCallback(() => {
     setAllSessions(getCaseSessions());
@@ -52,101 +63,105 @@ export function useCaseSession() {
     };
     saveCaseSession(session);
     setCurrentCaseSessionId(session.id);
-    setCurrentSession(session);
+    setSession(session);
     refreshSessions();
     return session;
-  }, [refreshSessions]);
+  }, [refreshSessions, setSession]);
 
   const saveSession = useCallback((session: CaseSession) => {
     saveCaseSession(session);
-    setCurrentSession(session);
+    setSession(session);
     refreshSessions();
-  }, [refreshSessions]);
+  }, [refreshSessions, setSession]);
 
   const loadSession = useCallback((id: string) => {
     const sessions = getCaseSessions();
     const found = sessions.find(s => s.id === id);
     if (found) {
       setCurrentCaseSessionId(found.id);
-      setCurrentSession(found);
+      setSession(found);
     }
     return found || null;
-  }, []);
+  }, [setSession]);
 
   const deleteSession = useCallback((id: string) => {
     deleteSessionFromStorage(id);
-    if (currentSession?.id === id) {
-      setCurrentSession(null);
+    if (sessionRef.current?.id === id) {
+      setSession(null);
       setCurrentCaseSessionId(null);
     }
     refreshSessions();
-  }, [currentSession, refreshSessions]);
+  }, [refreshSessions, setSession]);
 
   const clearCurrentSession = useCallback(() => {
-    setCurrentSession(null);
+    setSession(null);
     setCurrentCaseSessionId(null);
-  }, []);
+  }, [setSession]);
 
   const addEvent = useCallback((event: Omit<CaseEvent, 'id' | 'timestamp'>) => {
-    if (!currentSession) return;
+    const cur = sessionRef.current;
+    if (!cur) return;
     const newEvent: CaseEvent = {
       ...event,
       id: `event-${Date.now()}`,
       timestamp: new Date().toISOString(),
     };
     const updated = {
-      ...currentSession,
-      events: [...currentSession.events, newEvent],
+      ...cur,
+      events: [...cur.events, newEvent],
       updatedAt: new Date().toISOString(),
     };
     saveCaseSession(updated);
-    setCurrentSession(updated);
+    setSession(updated);
     refreshSessions();
-  }, [currentSession, refreshSessions]);
+  }, [refreshSessions, setSession]);
 
   const addFindings = useCallback((findings: NewFindings): string => {
-    if (!currentSession) return '';
+    const cur = sessionRef.current;
+    if (!cur) return '';
 
     // Append new findings to case text
     const findingsLabel = findings.category.replace('_', ' ');
     const timePrefix = findings.clinicalTime ? `[${findings.clinicalTime}] ` : '';
     const addition = `\n\n--- New ${findingsLabel} ${timePrefix}---\n${findings.text}`;
-    const updatedText = currentSession.currentCaseText + addition;
+    const updatedText = cur.currentCaseText + addition;
 
     const updated = {
-      ...currentSession,
+      ...cur,
       currentCaseText: updatedText,
       updatedAt: new Date().toISOString(),
     };
     saveCaseSession(updated);
-    setCurrentSession(updated);
+    setSession(updated);
     refreshSessions();
     return updatedText;
-  }, [currentSession, refreshSessions]);
+  }, [refreshSessions, setSession]);
 
   const updateResult = useCallback((result: Record<string, unknown>) => {
-    if (!currentSession) return;
+    const cur = sessionRef.current;
+    if (!cur) return;
     const updated = {
-      ...currentSession,
+      ...cur,
       currentResult: result,
       updatedAt: new Date().toISOString(),
     };
     saveCaseSession(updated);
-    setCurrentSession(updated);
+    setSession(updated);
     refreshSessions();
-  }, [currentSession, refreshSessions]);
+  }, [refreshSessions, setSession]);
 
   const updateFollowUpMessages = useCallback((messages: CaseFollowUpMessage[]) => {
-    if (!currentSession) return;
+    const cur = sessionRef.current;
+    if (!cur) return;
     const updated = {
-      ...currentSession,
+      ...cur,
       followUpMessages: messages,
       updatedAt: new Date().toISOString(),
     };
     saveCaseSession(updated);
-    setCurrentSession(updated);
+    setSession(updated);
     refreshSessions();
-  }, [currentSession, refreshSessions]);
+  }, [refreshSessions, setSession]);
 
   return {
     currentSession,

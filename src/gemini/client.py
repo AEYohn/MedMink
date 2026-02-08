@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 from functools import lru_cache
 from typing import Any, TypeVar
 
-import google.generativeai as genai
 import structlog
 from tenacity import (
     retry,
@@ -32,6 +31,18 @@ from src.cache import get_analysis_cache
 logger = structlog.get_logger()
 
 T = TypeVar("T")
+
+
+def _get_genai():
+    """Lazy import of google.generativeai to avoid hard crash at startup."""
+    try:
+        import google.generativeai as genai
+        return genai
+    except ImportError:
+        raise ImportError(
+            "google-generativeai is not installed. "
+            "Install it with: pip install google-generativeai"
+        )
 
 
 # Pricing per 1M tokens (approximate for Gemini 2.0)
@@ -162,6 +173,7 @@ class GeminiClient:
         self.model_name = model or settings.gemini_model
 
         # Configure the API
+        genai = _get_genai()
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(self.model_name)
 
@@ -259,6 +271,7 @@ class GeminiClient:
 
         try:
             # Build generation config
+            genai = _get_genai()
             generation_config = genai.GenerationConfig(
                 temperature=temperature,
                 max_output_tokens=max_output_tokens,

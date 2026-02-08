@@ -804,7 +804,9 @@ class MedGemmaClient:
 
     @property
     def is_available(self) -> bool:
-        """Check if local model is available."""
+        """Check if model (local or remote) is available."""
+        if self._modal_url:
+            return True
         self._ensure_initialized()
         return self._model is not None
 

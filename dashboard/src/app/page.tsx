@@ -29,7 +29,7 @@ const ACTION_CARDS = [
     tag: 'Core Feature',
   },
   {
-    href: '/#consensus',
+    href: '/consensus',
     icon: Search,
     title: 'Evidence Query',
     description: 'Ask a clinical question with multi-model consensus — Primary Clinician vs Skeptical Reviewer',
@@ -159,7 +159,7 @@ export default function HomePage() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {recentSessions.map((s) => (
-                <Link key={s.id} href="/case">
+                <Link key={s.id} href={`/case?session=${s.id}`}>
                   <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
                     <CardContent className="p-4 flex items-center gap-3">
                       <Stethoscope className="w-4 h-4 text-muted-foreground flex-shrink-0" />

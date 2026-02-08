@@ -684,9 +684,20 @@ export default function CaseAnalysisPage() {
   // Case session state
   const session = useCaseSession();
 
-  // Restore session state on mount
+  // Restore session state on mount (or from ?session= query param)
   useEffect(() => {
     if (!session.isLoaded) return;
+
+    // Check for session ID in URL (e.g. from home page recent sessions)
+    const params = new URLSearchParams(window.location.search);
+    const urlSessionId = params.get('session');
+    if (urlSessionId) {
+      handleLoadSession(urlSessionId);
+      // Clean up URL so refresh doesn't re-trigger
+      window.history.replaceState({}, '', '/case');
+      return;
+    }
+
     if (session.currentSession) {
       const s = session.currentSession;
       setCaseText(s.currentCaseText);

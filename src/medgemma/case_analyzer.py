@@ -799,6 +799,9 @@ class ClinicalFindings:
     labs: list[str] = field(default_factory=list)
     imaging: list[str] = field(default_factory=list)
     vitals: list[str] = field(default_factory=list)
+    precipitating_factors: str = ""
+    context_of_onset: str = ""
+    associated_symptoms: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -834,6 +837,7 @@ class TreatmentOption:
     key_evidence: list[dict] = field(default_factory=list)  # [{finding, pmid, year}]
     rationale: str = ""
     papers_used: list[dict] = field(default_factory=list)  # [{pmid, title, match_type, matched_words}]
+    reasoning: dict = field(default_factory=dict)  # structured reasoning for transparency
 
 
 @dataclass
@@ -849,6 +853,7 @@ class CaseAnalysisResult:
     acute_management: dict = field(default_factory=dict)
     suggested_followups: list[str] = field(default_factory=list)
     medication_review: dict = field(default_factory=dict)
+    differential_diagnosis: dict = field(default_factory=dict)
 
 
 CASE_PARSING_PROMPT = """Parse this clinical vignette and extract structured information.
@@ -869,7 +874,10 @@ Extract the following in JSON format:
         "physical_exam": ["list of physical exam findings"],
         "labs": ["list of laboratory values with results"],
         "imaging": ["list of imaging findings"],
-        "vitals": ["list of vital signs if mentioned"]
+        "vitals": ["list of vital signs if mentioned"],
+        "precipitating_factors": "what triggered or preceded symptoms (e.g., 'after gym pull day', 'post alcohol binge', 'lifting weights')",
+        "context_of_onset": "circumstances at onset (e.g., 'during exercise', 'at rest', 'after eating')",
+        "associated_symptoms": ["symptoms occurring alongside the chief complaint"]
     }},
     "management": {{
         "medications": ["current medications"],
@@ -889,8 +897,15 @@ TREATMENT_GENERATION_PROMPT = """Based on this clinical case, suggest 5-8 eviden
 CLINICAL CASE SUMMARY:
 - Patient: {age} {sex} with {history}
 - Presentation: {presentation}
+- Precipitating Factors: {precipitating_factors}
+- Context of Onset: {context_of_onset}
+- Timeline: {timeline}
+- Physical Exam: {physical_exam}
+- Vitals: {vitals}
 - Key Findings: {findings}
 - Current Management: {management}
+- Recent Changes: {recent_changes}
+- Response to Treatment: {response_to_treatment}
 - Clinical Question: {clinical_question}
 - {category_context}
 
@@ -955,6 +970,13 @@ TREATMENT_EVALUATION_PROMPT = """Evaluate this treatment option for the clinical
 CLINICAL CONTEXT:
 - Patient: {patient_summary}
 - Presentation: {presentation}
+- Precipitating Factors: {precipitating_factors}
+- Context of Onset: {context_of_onset}
+- Timeline: {timeline}
+- Vitals: {vitals}
+- Physical Exam: {physical_exam}
+- Key Labs: {labs}
+- Response to Treatment: {response_to_treatment}
 - Category: {case_category}
 - Clinical Question: {clinical_question}
 - CURRENT MEDICATIONS: {current_medications}
@@ -998,7 +1020,13 @@ Provide evaluation in JSON format:
     "evidence_grade": "high|moderate|low|very_low",
     "pros": ["advantages for this patient (2-3 items)"],
     "cons": ["risks or disadvantages (1-2 items)"],
-    "rationale": "2-3 sentences on why this verdict for THIS patient"
+    "rationale": "2-3 sentences on why this verdict for THIS patient",
+    "reasoning": {{
+        "patient_factors_considered": ["key patient factors that influenced this verdict (e.g., '21-year-old male', 'post-exercise onset', 'no fever')"],
+        "supporting_evidence": "which evidence supports this verdict",
+        "key_concern": "most important risk/benefit consideration",
+        "context_relevance": "how precipitating factors or onset context influenced the assessment"
+    }}
 }}
 
 Output ONLY the JSON. No explanation. Start with {{ end with }}."""
@@ -1048,14 +1076,73 @@ class ClinicalCaseAnalyzer:
                         "timeline": parsed_case.findings.timeline,
                         "labs": parsed_case.findings.labs,
                         "imaging": parsed_case.findings.imaging,
+                        "physical_exam": parsed_case.findings.physical_exam,
+                        "precipitating_factors": parsed_case.findings.precipitating_factors,
+                        "context_of_onset": parsed_case.findings.context_of_onset,
+                        "associated_symptoms": parsed_case.findings.associated_symptoms,
                     },
                     "management": {
                         "medications": parsed_case.management.medications,
                         "recent_changes": parsed_case.management.recent_changes,
+                        "response_to_treatment": parsed_case.management.response_to_treatment,
                     },
                     "clinical_question": parsed_case.clinical_question,
                     "case_category": parsed_case.case_category,
                 }
+            }
+
+            # Step 1b: Generate differential diagnosis
+            yield {
+                "type": "step",
+                "step": "differential_diagnosis",
+                "status": "started",
+                "message": "Generating differential diagnosis...",
+                "progress": 0.22
+            }
+
+            from src.medgemma.differential_diagnosis import (
+                generate_differential_diagnosis,
+                ddx_result_to_dict,
+            )
+
+            parsed_case_dict = {
+                "patient": {
+                    "age": parsed_case.patient.age,
+                    "sex": parsed_case.patient.sex,
+                    "relevant_history": parsed_case.patient.relevant_history,
+                },
+                "findings": {
+                    "presentation": parsed_case.findings.presentation,
+                    "timeline": parsed_case.findings.timeline,
+                    "physical_exam": parsed_case.findings.physical_exam,
+                    "labs": parsed_case.findings.labs,
+                    "imaging": parsed_case.findings.imaging,
+                    "precipitating_factors": parsed_case.findings.precipitating_factors,
+                    "context_of_onset": parsed_case.findings.context_of_onset,
+                    "associated_symptoms": parsed_case.findings.associated_symptoms,
+                },
+                "management": {
+                    "medications": parsed_case.management.medications,
+                    "recent_changes": parsed_case.management.recent_changes,
+                    "response_to_treatment": parsed_case.management.response_to_treatment,
+                },
+                "clinical_question": parsed_case.clinical_question,
+                "case_category": parsed_case.case_category,
+            }
+
+            ddx_result = await generate_differential_diagnosis(
+                parsed_case=parsed_case_dict,
+                case_text=case_text,
+            )
+            ddx_dict = ddx_result_to_dict(ddx_result)
+
+            yield {
+                "type": "step",
+                "step": "differential_diagnosis",
+                "status": "completed",
+                "message": f"Generated {len(ddx_result.diagnoses)} differential diagnoses",
+                "progress": 0.28,
+                "data": ddx_dict,
             }
 
             # Step 2: Generate treatment options
@@ -1289,6 +1376,7 @@ class ClinicalCaseAnalyzer:
                 search_terms_used=search_terms,
                 acute_management=acute_management,
                 medication_review=medication_review,
+                differential_diagnosis=ddx_dict,
             )
 
             # Generate suggested follow-up questions
@@ -1358,6 +1446,9 @@ class ClinicalCaseAnalyzer:
                     labs=ensure_str_list(findings_data.get("labs", [])),
                     imaging=ensure_str_list(findings_data.get("imaging", [])),
                     vitals=ensure_str_list(findings_data.get("vitals", [])),
+                    precipitating_factors=ensure_str(findings_data.get("precipitating_factors", "")),
+                    context_of_onset=ensure_str(findings_data.get("context_of_onset", "")),
+                    associated_symptoms=ensure_str_list(findings_data.get("associated_symptoms", [])),
                 ),
                 management=CurrentManagement(
                     medications=ensure_str_list(mgmt_data.get("medications", [])),
@@ -1384,13 +1475,20 @@ class ClinicalCaseAnalyzer:
         prompt = TREATMENT_GENERATION_PROMPT.format(
             age=parsed_case.patient.age,
             sex=parsed_case.patient.sex,
-            history=", ".join(parsed_case.patient.relevant_history[:3]),
+            history=", ".join(parsed_case.patient.relevant_history[:8]),
             presentation=parsed_case.findings.presentation,
+            precipitating_factors=parsed_case.findings.precipitating_factors or "None identified",
+            context_of_onset=parsed_case.findings.context_of_onset or "Not specified",
+            timeline=parsed_case.findings.timeline or "Not specified",
+            physical_exam=", ".join(parsed_case.findings.physical_exam[:6]) or "Not documented",
+            vitals=", ".join(parsed_case.findings.vitals[:5]) or "Not documented",
             findings=", ".join(
-                parsed_case.findings.labs[:3] +
-                parsed_case.findings.imaging[:2]
+                parsed_case.findings.labs[:8] +
+                parsed_case.findings.imaging[:5]
             ),
             management=", ".join(parsed_case.management.medications),
+            recent_changes=parsed_case.management.recent_changes or "None",
+            response_to_treatment=parsed_case.management.response_to_treatment or "Not documented",
             clinical_question=parsed_case.clinical_question,
             category_context=get_category_context(parsed_case.case_category),
         )
@@ -1494,13 +1592,20 @@ class ClinicalCaseAnalyzer:
 
         evidence_summary = "\n---\n".join(evidence_parts) if evidence_parts else "No direct evidence found."
 
-        patient_summary = f"{parsed_case.patient.age} {parsed_case.patient.sex} with {', '.join(parsed_case.patient.relevant_history[:2])}"
+        patient_summary = f"{parsed_case.patient.age} {parsed_case.patient.sex} with {', '.join(parsed_case.patient.relevant_history[:5])}"
 
         current_meds = ", ".join(parsed_case.management.medications) if parsed_case.management.medications else "None listed"
 
         prompt = TREATMENT_EVALUATION_PROMPT.format(
             patient_summary=patient_summary,
             presentation=parsed_case.findings.presentation,
+            precipitating_factors=parsed_case.findings.precipitating_factors or "None identified",
+            context_of_onset=parsed_case.findings.context_of_onset or "Not specified",
+            timeline=parsed_case.findings.timeline or "Not specified",
+            vitals=", ".join(parsed_case.findings.vitals[:5]) or "Not documented",
+            physical_exam=", ".join(parsed_case.findings.physical_exam[:6]) or "Not documented",
+            labs=", ".join(parsed_case.findings.labs[:8]) or "None",
+            response_to_treatment=parsed_case.management.response_to_treatment or "Not documented",
             case_category=parsed_case.case_category,
             clinical_question=parsed_case.clinical_question,
             current_medications=current_meds,
@@ -1525,6 +1630,7 @@ class ClinicalCaseAnalyzer:
             option.pros = data.get("pros", [])
             option.cons = data.get("cons", [])
             option.rationale = data.get("rationale", option.rationale)
+            option.reasoning = data.get("reasoning", {})
 
             # CRITICAL FIX: Use ACTUAL abstract text instead of MedGemma's hallucinated quotes
             # MedGemma will generate plausible-sounding but completely fake quotes
@@ -1927,6 +2033,9 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                     "physical_exam": result.parsed_case.findings.physical_exam,
                     "labs": result.parsed_case.findings.labs,
                     "imaging": result.parsed_case.findings.imaging,
+                    "precipitating_factors": result.parsed_case.findings.precipitating_factors,
+                    "context_of_onset": result.parsed_case.findings.context_of_onset,
+                    "associated_symptoms": result.parsed_case.findings.associated_symptoms,
                 },
                 "management": {
                     "medications": result.parsed_case.management.medications,
@@ -1958,6 +2067,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                     ],
                     "rationale": opt.rationale,
                     "papers_used": opt.papers_used or [],
+                    "reasoning": opt.reasoning or {},
                 }
                 for opt in result.treatment_options
             ],
@@ -1976,6 +2086,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
             "acute_management": result.acute_management,
             "suggested_followups": result.suggested_followups,
             "medication_review": result.medication_review,
+            "differential_diagnosis": result.differential_diagnosis,
         }
 
 
@@ -2034,6 +2145,9 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                 labs=labs,
                 imaging=imaging,
                 vitals=vitals,
+                precipitating_factors=str(findings_data.get("precipitating_factors", "")),
+                context_of_onset=str(findings_data.get("context_of_onset", "")),
+                associated_symptoms=list(findings_data.get("associated_symptoms", [])),
             ),
             management=CurrentManagement(
                 medications=medications,
@@ -2086,10 +2200,15 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                         "timeline": merged_case.findings.timeline,
                         "labs": merged_case.findings.labs,
                         "imaging": merged_case.findings.imaging,
+                        "physical_exam": merged_case.findings.physical_exam,
+                        "precipitating_factors": merged_case.findings.precipitating_factors,
+                        "context_of_onset": merged_case.findings.context_of_onset,
+                        "associated_symptoms": merged_case.findings.associated_symptoms,
                     },
                     "management": {
                         "medications": merged_case.management.medications,
                         "recent_changes": merged_case.management.recent_changes,
+                        "response_to_treatment": merged_case.management.response_to_treatment,
                     },
                     "clinical_question": merged_case.clinical_question,
                     "case_category": merged_case.case_category,

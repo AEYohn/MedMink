@@ -58,6 +58,10 @@ import { LabExtractorCard } from '@/components/case/LabExtractorCard';
 import { DictationModal } from '@/components/case/DictationModal';
 import { SOAPExportCard } from '@/components/case/SOAPExportCard';
 import { CaseReportExport } from '@/components/case/CaseReportExport';
+import { DifferentialDiagnosisTab } from '@/components/case/DifferentialDiagnosisTab';
+import { MedicationSafetyTab } from '@/components/case/MedicationSafetyTab';
+import { DischargeTab } from '@/components/case/DischargeTab';
+import { ReferralTab } from '@/components/case/ReferralTab';
 import { TreatmentComparisonChart } from '@/components/visualizations/TreatmentComparisonChart';
 import { EvidenceRadar } from '@/components/visualizations/EvidenceRadar';
 import { CaseTimelineD3 } from '@/components/visualizations/CaseTimelineD3';
@@ -91,6 +95,12 @@ interface TreatmentOption {
     match_type: 'keyword' | 'general';
     matched_words: string[];
   }>;
+  reasoning?: {
+    patient_factors_considered?: string[];
+    supporting_evidence?: string;
+    key_concern?: string;
+    context_relevance?: string;
+  };
 }
 
 interface ParsedCase {
@@ -105,6 +115,9 @@ interface ParsedCase {
     physical_exam: string[];
     labs: string[];
     imaging: string[];
+    precipitating_factors?: string;
+    context_of_onset?: string;
+    associated_symptoms?: string[];
   };
   management: {
     medications: string[];
@@ -170,6 +183,19 @@ interface CaseAnalysisResult {
     acute_management?: AcuteManagement;
     suggested_followups?: string[];
     medication_review?: MedicationReview;
+    differential_diagnosis?: {
+      clinical_reasoning_summary: string;
+      key_distinguishing_tests: string[];
+      diagnoses: Array<{
+        diagnosis: string;
+        likelihood: 'high' | 'moderate' | 'low';
+        must_rule_out: boolean;
+        supporting_findings: string[];
+        refuting_findings: string[];
+        diagnostic_pathway: string[];
+        distinguishing_feature: string;
+      }>;
+    };
   };
 }
 
@@ -318,6 +344,35 @@ function TreatmentCard({ option, isTop }: { option: TreatmentOption; isTop: bool
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {option.rationale}
               </p>
+              {/* Structured Reasoning */}
+              {option.reasoning && Object.keys(option.reasoning).length > 0 && (
+                <div className="mt-3 space-y-2 border-t border-border pt-3">
+                  {option.reasoning.patient_factors_considered && option.reasoning.patient_factors_considered.length > 0 && (
+                    <div>
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Patient Factors</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {option.reasoning.patient_factors_considered.map((factor, i) => (
+                          <span key={i} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-700 dark:text-blue-300">
+                            {factor}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {option.reasoning.context_relevance && (
+                    <div>
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Context Relevance</span>
+                      <p className="text-xs text-muted-foreground mt-0.5">{option.reasoning.context_relevance}</p>
+                    </div>
+                  )}
+                  {option.reasoning.key_concern && (
+                    <div>
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Key Concern</span>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">{option.reasoning.key_concern}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <Separator />
@@ -737,55 +792,73 @@ export default function CaseAnalysisPage() {
     const decoder = new TextDecoder();
     if (!reader) throw new Error('No response body');
 
+    const handleSSEData = (data: SSEEvent) => {
+      if (data.type === 'step') {
+        const step = data as StepUpdate;
+        setCurrentStep(step.step);
+        setStepProgress(step.progress);
+        setStepMessage(step.message);
+        if (step.status === 'completed') {
+          setCompletedSteps(prev => new Set([...Array.from(prev), step.step]));
+          if (step.step === 'parsing' && step.data) {
+            setParsedCase(step.data as unknown as ParsedCase);
+          }
+        }
+        // Capture evaluated treatment options as they stream in
+        if (step.step === 'evaluating' && step.data?.name && step.data?.verdict) {
+          setStreamingOptions(prev => {
+            const exists = prev.some(o => o.name === step.data?.name);
+            if (exists) return prev;
+            return [...prev, {
+              name: step.data!.name as string,
+              verdict: step.data!.verdict as TreatmentOption['verdict'],
+              confidence: step.data!.confidence as number,
+              papers_used: step.data!.papers_used as TreatmentOption['papers_used'],
+              rationale: step.data!.rationale as string,
+            }];
+          });
+        }
+      } else if (data.type === 'result') {
+        const r = data as CaseAnalysisResult;
+        setResult(r.data);
+        if (r.data.suggested_followups?.length) {
+          setSuggestedQuestions(r.data.suggested_followups);
+        }
+        onResult(r.data);
+      } else if (data.type === 'error') {
+        setError((data as { type: 'error'; message: string }).message);
+      }
+    };
+
+    let buffer = '';
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
+      buffer += decoder.decode(value, { stream: true });
+      // SSE events are separated by double newlines
+      const parts = buffer.split('\n\n');
+      buffer = parts.pop() || '';
 
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            const data = JSON.parse(line.slice(6)) as SSEEvent;
-            if (data.type === 'step') {
-              const step = data as StepUpdate;
-              setCurrentStep(step.step);
-              setStepProgress(step.progress);
-              setStepMessage(step.message);
-              if (step.status === 'completed') {
-                setCompletedSteps(prev => new Set([...Array.from(prev), step.step]));
-                if (step.step === 'parsing' && step.data) {
-                  setParsedCase(step.data as unknown as ParsedCase);
-                }
-              }
-              // Capture evaluated treatment options as they stream in
-              if (step.step === 'evaluating' && step.data?.name && step.data?.verdict) {
-                setStreamingOptions(prev => {
-                  const exists = prev.some(o => o.name === step.data?.name);
-                  if (exists) return prev;
-                  return [...prev, {
-                    name: step.data!.name as string,
-                    verdict: step.data!.verdict as TreatmentOption['verdict'],
-                    confidence: step.data!.confidence as number,
-                    papers_used: step.data!.papers_used as TreatmentOption['papers_used'],
-                    rationale: step.data!.rationale as string,
-                  }];
-                });
-              }
-            } else if (data.type === 'result') {
-              const r = data as CaseAnalysisResult;
-              setResult(r.data);
-              if (r.data.suggested_followups?.length) {
-                setSuggestedQuestions(r.data.suggested_followups);
-              }
-              onResult(r.data);
-            } else if (data.type === 'error') {
-              setError((data as { type: 'error'; message: string }).message);
-            }
-          } catch (e) {
-            console.error('SSE parse error:', e);
-          }
+      for (const part of parts) {
+        const dataLine = part.split('\n').find(l => l.startsWith('data: '));
+        if (!dataLine) continue;
+        try {
+          handleSSEData(JSON.parse(dataLine.slice(6)) as SSEEvent);
+        } catch (e) {
+          console.error('SSE parse error:', e);
+        }
+      }
+    }
+
+    // Process any remaining buffer after stream ends
+    if (buffer.trim()) {
+      const dataLine = buffer.split('\n').find(l => l.startsWith('data: '));
+      if (dataLine) {
+        try {
+          handleSSEData(JSON.parse(dataLine.slice(6)) as SSEEvent);
+        } catch (e) {
+          console.error('SSE parse error (final):', e);
         }
       }
     }
@@ -1322,6 +1395,24 @@ Example: A 21-year-old male presents with neck stiffness and pain for 3 days..."
                           {parsedCase.findings.timeline}
                         </p>
                       )}
+                      {parsedCase.findings?.precipitating_factors && (
+                        <p className="mt-1">
+                          <span className="font-medium text-foreground">Trigger:</span>{' '}
+                          {parsedCase.findings.precipitating_factors}
+                        </p>
+                      )}
+                      {parsedCase.findings?.context_of_onset && (
+                        <p className="mt-1">
+                          <span className="font-medium text-foreground">Context:</span>{' '}
+                          {parsedCase.findings.context_of_onset}
+                        </p>
+                      )}
+                      {parsedCase.findings?.associated_symptoms && parsedCase.findings.associated_symptoms.length > 0 && (
+                        <div className="mt-1">
+                          <span className="font-medium text-foreground">Associated:</span>{' '}
+                          {parsedCase.findings.associated_symptoms.join(', ')}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1374,7 +1465,7 @@ Example: A 21-year-old male presents with neck stiffness and pain for 3 days..."
                     <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">
                       Clinical Question
                     </p>
-                    <p className="text-sm font-medium">{parsedCase.clinical_question}</p>
+                    <p className="text-sm font-medium">{parsedCase.clinical_question || 'Determine optimal management for this presentation'}</p>
                   </div>
                 </CardContent>
               </CollapsibleContent>
@@ -1386,7 +1477,7 @@ Example: A 21-year-old male presents with neck stiffness and pain for 3 days..."
         {result && (
           <Tabs defaultValue="visuals" className="animate-fade-in">
             <div className="flex items-center justify-between mb-6">
-              <TabsList className="grid grid-cols-5">
+              <TabsList className="flex w-full overflow-x-auto gap-1">
                 <TabsTrigger value="visuals" className="gap-1">
                   <BarChart3 className="w-3.5 h-3.5" /> Visual
                 </TabsTrigger>
@@ -1394,6 +1485,10 @@ Example: A 21-year-old male presents with neck stiffness and pain for 3 days..."
                 <TabsTrigger value="treatments">
                   Treatments ({result.treatment_options.length})
                 </TabsTrigger>
+                <TabsTrigger value="ddx">DDx</TabsTrigger>
+                <TabsTrigger value="safety">Safety</TabsTrigger>
+                <TabsTrigger value="discharge">Discharge</TabsTrigger>
+                <TabsTrigger value="referral">Referral</TabsTrigger>
                 <TabsTrigger value="media" className="gap-1">
                   <Camera className="w-3.5 h-3.5" /> Media
                 </TabsTrigger>
@@ -1699,6 +1794,52 @@ Example: A 21-year-old male presents with neck stiffness and pain for 3 days..."
                   isReassessing={isReassessing}
                 />
               )}
+            </TabsContent>
+
+            {/* === DDx Tab === */}
+            <TabsContent value="ddx" className="space-y-6">
+              <DifferentialDiagnosisTab
+                ddxResult={result.differential_diagnosis || null}
+                caseText={caseText}
+                parsedCase={result.parsed_case as unknown as Record<string, unknown>}
+              />
+            </TabsContent>
+
+            {/* === Medication Safety Tab === */}
+            <TabsContent value="safety" className="space-y-6">
+              <MedicationSafetyTab
+                currentMedications={result.parsed_case?.management?.medications || []}
+                newMedications={
+                  result.treatment_options
+                    ?.filter((t: TreatmentOption) => t.verdict === 'recommended')
+                    .map((t: TreatmentOption) => t.name) || []
+                }
+                patientConditions={result.parsed_case?.patient?.relevant_history || []}
+                allergies={[]}
+                labs={result.parsed_case?.findings?.labs || []}
+                age={result.parsed_case?.patient?.age || ''}
+                sex={result.parsed_case?.patient?.sex || ''}
+              />
+            </TabsContent>
+
+            {/* === Discharge Tab === */}
+            <TabsContent value="discharge" className="space-y-6">
+              <DischargeTab
+                parsedCase={result.parsed_case as unknown as Record<string, unknown>}
+                treatmentOptions={result.treatment_options as unknown as Array<Record<string, unknown>>}
+                acuteManagement={(result.acute_management || {}) as Record<string, unknown>}
+                topRecommendation={result.top_recommendation}
+              />
+            </TabsContent>
+
+            {/* === Referral Tab === */}
+            <TabsContent value="referral" className="space-y-6">
+              <ReferralTab
+                parsedCase={result.parsed_case as unknown as Record<string, unknown>}
+                treatmentOptions={result.treatment_options as unknown as Array<Record<string, unknown>>}
+                acuteManagement={(result.acute_management || {}) as Record<string, unknown>}
+                suggestedConsults={result.acute_management?.consults || []}
+              />
             </TabsContent>
 
             {/* === Media Tab (Image + Lab + SOAP) === */}

@@ -14,6 +14,24 @@ import structlog
 from src.medgemma.case_analyzer import get_case_analyzer
 from src.medgemma.client import get_medgemma_client
 from src.medgemma.vision import get_vision_client
+from src.medgemma.differential_diagnosis import (
+    generate_differential_diagnosis,
+    ddx_result_to_dict,
+)
+from src.medgemma.medication_safety import (
+    check_medication_safety,
+    safety_result_to_dict,
+)
+from src.medgemma.discharge_planner import (
+    generate_discharge_plan,
+    discharge_plan_to_dict,
+)
+from src.medgemma.referral_generator import (
+    generate_referral_note,
+    generate_handoff_note,
+    referral_note_to_dict,
+    handoff_note_to_dict,
+)
 
 logger = structlog.get_logger()
 router = APIRouter(prefix="/api/case", tags=["case-analysis"])
@@ -417,3 +435,137 @@ async def get_example_case(category: str | None = None):
 async def get_all_examples():
     """Get all example cases."""
     return {"examples": {k: v for k, v in EXAMPLE_CASES.items()}}
+
+
+# --- Differential Diagnosis ---
+
+class DDxRequest(BaseModel):
+    """Request for differential diagnosis generation."""
+    case_text: str = Field(..., min_length=10)
+    parsed_case: dict[str, Any]
+
+
+@router.post("/ddx")
+async def generate_ddx(request: DDxRequest):
+    """Generate differential diagnosis for a clinical case."""
+    try:
+        result = await generate_differential_diagnosis(
+            parsed_case=request.parsed_case,
+            case_text=request.case_text,
+        )
+        return ddx_result_to_dict(result)
+    except Exception as e:
+        logger.error("DDx generation failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- Medication Safety ---
+
+class MedicationSafetyRequest(BaseModel):
+    """Request for medication safety check."""
+    current_medications: list[str] = Field(default_factory=list)
+    new_medications: list[str] = Field(default_factory=list)
+    patient_conditions: list[str] = Field(default_factory=list)
+    allergies: list[str] = Field(default_factory=list)
+    labs: list[str] = Field(default_factory=list)
+    age: str = ""
+    sex: str = ""
+
+
+@router.post("/medication-safety")
+async def medication_safety_check(request: MedicationSafetyRequest):
+    """Check medication safety with hybrid deterministic + AI approach."""
+    try:
+        result = await check_medication_safety(
+            current_medications=request.current_medications,
+            new_medications=request.new_medications,
+            patient_conditions=request.patient_conditions,
+            allergies=request.allergies,
+            labs=request.labs,
+            age=request.age,
+            sex=request.sex,
+        )
+        return safety_result_to_dict(result)
+    except Exception as e:
+        logger.error("Medication safety check failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- Discharge Planning ---
+
+class DischargePlanRequest(BaseModel):
+    """Request for discharge plan generation."""
+    parsed_case: dict[str, Any]
+    treatment_options: list[dict[str, Any]] = Field(default_factory=list)
+    acute_management: dict[str, Any] = Field(default_factory=dict)
+    top_recommendation: str = ""
+
+
+@router.post("/discharge-plan")
+async def discharge_plan_endpoint(request: DischargePlanRequest):
+    """Generate a comprehensive discharge plan."""
+    try:
+        result = await generate_discharge_plan(
+            parsed_case=request.parsed_case,
+            treatment_options=request.treatment_options,
+            acute_management=request.acute_management,
+            top_recommendation=request.top_recommendation,
+        )
+        return discharge_plan_to_dict(result)
+    except Exception as e:
+        logger.error("Discharge plan generation failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- Referral Note ---
+
+class ReferralRequest(BaseModel):
+    """Request for referral note generation."""
+    specialty: str = Field(..., min_length=2)
+    parsed_case: dict[str, Any]
+    treatment_options: list[dict[str, Any]] = Field(default_factory=list)
+    acute_management: dict[str, Any] = Field(default_factory=dict)
+
+
+@router.post("/referral")
+async def referral_endpoint(request: ReferralRequest):
+    """Generate a specialty-specific referral note."""
+    try:
+        result = await generate_referral_note(
+            specialty=request.specialty,
+            parsed_case=request.parsed_case,
+            treatment_options=request.treatment_options,
+            acute_management=request.acute_management,
+        )
+        return referral_note_to_dict(result)
+    except Exception as e:
+        logger.error("Referral note generation failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- Handoff Note ---
+
+class HandoffRequest(BaseModel):
+    """Request for handoff note generation."""
+    format: str = Field(default="ipass", pattern="^(ipass|sbar)$")
+    parsed_case: dict[str, Any]
+    treatment_options: list[dict[str, Any]] = Field(default_factory=list)
+    acute_management: dict[str, Any] = Field(default_factory=dict)
+    pending_tasks: list[str] = Field(default_factory=list)
+
+
+@router.post("/handoff")
+async def handoff_endpoint(request: HandoffRequest):
+    """Generate a structured handoff note (I-PASS or SBAR)."""
+    try:
+        result = await generate_handoff_note(
+            format=request.format,
+            parsed_case=request.parsed_case,
+            treatment_options=request.treatment_options,
+            acute_management=request.acute_management,
+            pending_tasks=request.pending_tasks,
+        )
+        return handoff_note_to_dict(result)
+    except Exception as e:
+        logger.error("Handoff note generation failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))

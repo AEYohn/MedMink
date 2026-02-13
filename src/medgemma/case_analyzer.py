@@ -4,6 +4,7 @@ Parses clinical vignettes, extracts structured findings, generates treatment opt
 and evaluates each option against medical literature evidence.
 """
 
+import asyncio
 import json
 import re
 from dataclasses import dataclass, field
@@ -854,6 +855,7 @@ class CaseAnalysisResult:
     suggested_followups: list[str] = field(default_factory=list)
     medication_review: dict = field(default_factory=dict)
     differential_diagnosis: dict = field(default_factory=dict)
+    clinical_risk_scores: dict = field(default_factory=dict)
 
 
 CASE_PARSING_PROMPT = """Parse this clinical vignette and extract structured information.
@@ -1091,18 +1093,14 @@ class ClinicalCaseAnalyzer:
                 }
             }
 
-            # Step 1b: Generate differential diagnosis
-            yield {
-                "type": "step",
-                "step": "differential_diagnosis",
-                "status": "started",
-                "message": "Generating differential diagnosis...",
-                "progress": 0.22
-            }
-
+            # Build parsed_case_dict once for parallel steps
             from src.medgemma.differential_diagnosis import (
                 generate_differential_diagnosis,
                 ddx_result_to_dict,
+            )
+            from src.medgemma.risk_scores import (
+                calculate_risk_scores,
+                risk_score_report_to_dict,
             )
 
             parsed_case_dict = {
@@ -1130,12 +1128,47 @@ class ClinicalCaseAnalyzer:
                 "case_category": parsed_case.case_category,
             }
 
-            ddx_result = await generate_differential_diagnosis(
-                parsed_case=parsed_case_dict,
-                case_text=case_text,
-            )
-            ddx_dict = ddx_result_to_dict(ddx_result)
+            # Run DDx, risk scores, and treatment generation in parallel
+            # These are independent — each only needs the parsed case
+            yield {
+                "type": "step",
+                "step": "parallel_analysis",
+                "status": "started",
+                "message": "Generating DDx, risk scores, and treatment options...",
+                "progress": 0.22,
+            }
 
+            async def _run_ddx():
+                return await generate_differential_diagnosis(
+                    parsed_case=parsed_case_dict,
+                    case_text=case_text,
+                )
+
+            async def _run_risk_scores():
+                try:
+                    report = await calculate_risk_scores(
+                        parsed_case=parsed_case_dict,
+                        case_text=case_text,
+                    )
+                    return risk_score_report_to_dict(report)
+                except Exception as e:
+                    logger.warning("Risk score calculation failed", error=str(e))
+                    return {"scores": [], "case_category": parsed_case.case_category, "summary": "Risk score calculation failed."}
+
+            async def _run_treatment_gen():
+                return await self._generate_treatment_options(parsed_case)
+
+            ddx_result, risk_scores_dict, treatment_result = await asyncio.gather(
+                _run_ddx(),
+                _run_risk_scores(),
+                _run_treatment_gen(),
+            )
+
+            # Unpack results
+            ddx_dict = ddx_result_to_dict(ddx_result)
+            options, search_terms, acute_management = treatment_result
+
+            # Yield completed events for each parallel step
             yield {
                 "type": "step",
                 "step": "differential_diagnosis",
@@ -1145,16 +1178,14 @@ class ClinicalCaseAnalyzer:
                 "data": ddx_dict,
             }
 
-            # Step 2: Generate treatment options
             yield {
                 "type": "step",
-                "step": "generating_options",
-                "status": "started",
-                "message": "Generating treatment options...",
-                "progress": 0.3
+                "step": "risk_scores",
+                "status": "completed",
+                "message": f"Calculated {len(risk_scores_dict.get('scores', []))} risk scores",
+                "progress": 0.30,
+                "data": risk_scores_dict,
             }
-
-            options, search_terms, acute_management = await self._generate_treatment_options(parsed_case)
 
             yield {
                 "type": "step",
@@ -1167,6 +1198,14 @@ class ClinicalCaseAnalyzer:
                     "search_terms": search_terms,
                     "acute_management": acute_management,
                 }
+            }
+
+            yield {
+                "type": "step",
+                "step": "parallel_analysis",
+                "status": "completed",
+                "message": "DDx, risk scores, and treatment options ready",
+                "progress": 0.42,
             }
 
             # Step 3: Search for evidence (if papers not provided)
@@ -1182,12 +1221,12 @@ class ClinicalCaseAnalyzer:
                 # Import here to avoid circular imports
                 from src.agents.ingest_pubmed import search_pubmed_papers
 
-                papers = []
-                for term in search_terms[:3]:
+                async def _search_term(term: str) -> list[dict]:
+                    """Search PubMed for a single term and filter results."""
+                    results = []
                     try:
-                        found = await search_pubmed_papers(query=term, max_results=5)  # Get more to filter
+                        found = await search_pubmed_papers(query=term, max_results=5)
 
-                        # Log search results for debugging citation issues
                         logger.info(
                             "PubMed search results",
                             search_term=term,
@@ -1195,31 +1234,20 @@ class ClinicalCaseAnalyzer:
                             titles=[p.title[:60] + "..." if len(p.title) > 60 else p.title for p in found]
                         )
 
-                        # Filter papers to ensure they actually mention the search term
-                        # This prevents irrelevant results from appearing
-                        # Uses word-boundary matching for short words to avoid
-                        # false positives (e.g., "mono" matching "mono-ADP-ribosylation")
                         term_words = [w.lower() for w in term.split() if len(w) > 3]
                         for p in found:
                             title_text = p.title or ""
                             abstract_text = p.abstract or ""
 
-                            # Check if paper mentions at least one key word from search term
                             is_relevant = any(
                                 _word_matches(word, title_text) or _word_matches(word, abstract_text)
                                 for word in term_words
                             )
 
                             if not is_relevant:
-                                logger.warning(
-                                    "Filtered irrelevant paper",
-                                    pmid=p.id,
-                                    title=p.title[:50],
-                                    search_term=term
-                                )
+                                logger.warning("Filtered irrelevant paper", pmid=p.id, title=p.title[:50], search_term=term)
                                 continue
 
-                            # Preserve metadata for filtering
                             meta = p.metadata if hasattr(p, 'metadata') and p.metadata else {}
                             paper_dict = {
                                 "pmid": p.id,
@@ -1231,21 +1259,25 @@ class ClinicalCaseAnalyzer:
                                 "mesh_terms": meta.get("mesh_terms", []),
                             }
 
-                            # Filter non-human / non-clinical studies
                             if not _is_human_clinical_study(paper_dict):
                                 logger.warning(
                                     "Filtered non-human study",
-                                    pmid=p.id,
-                                    title=p.title[:50],
+                                    pmid=p.id, title=p.title[:50],
                                     pub_types=paper_dict["publication_types"],
                                     mesh_terms=paper_dict["mesh_terms"][:5],
                                 )
                                 continue
 
-                            papers.append(paper_dict)
-
+                            results.append(paper_dict)
                     except Exception as e:
                         logger.warning("Search failed for term", term=term, error=str(e))
+                    return results
+
+                # Search all terms in parallel
+                search_results = await asyncio.gather(
+                    *(_search_term(term) for term in search_terms[:3])
+                )
+                papers = [p for batch in search_results for p in batch]
 
                 yield {
                     "type": "step",
@@ -1265,29 +1297,18 @@ class ClinicalCaseAnalyzer:
                 "progress": 0.6
             }
 
-            evaluated_options = []
-            for i, option in enumerate(options):
-                progress = 0.6 + (0.25 * (i + 1) / len(options))
+            # Evaluate all treatments in parallel
+            evaluated_options = list(await asyncio.gather(
+                *(self._evaluate_treatment(opt, parsed_case, papers) for opt in options)
+            ))
 
-                yield {
-                    "type": "step",
-                    "step": "evaluating",
-                    "status": "in_progress",
-                    "message": f"Evaluating {option.name}...",
-                    "progress": progress
-                }
-
-                evaluated = await self._evaluate_treatment(
-                    option, parsed_case, papers
-                )
-                evaluated_options.append(evaluated)
-
+            for evaluated in evaluated_options:
                 yield {
                     "type": "step",
                     "step": "evaluating",
                     "status": "in_progress",
                     "message": f"Evaluated {evaluated.name}: {evaluated.verdict}",
-                    "progress": progress,
+                    "progress": 0.6 + (0.25 * (evaluated_options.index(evaluated) + 1) / max(len(evaluated_options), 1)),
                     "data": {
                         "name": evaluated.name,
                         "verdict": evaluated.verdict,
@@ -1377,6 +1398,7 @@ class ClinicalCaseAnalyzer:
                 acute_management=acute_management,
                 medication_review=medication_review,
                 differential_diagnosis=ddx_dict,
+                clinical_risk_scores=risk_scores_dict,
             )
 
             # Generate suggested follow-up questions
@@ -2087,6 +2109,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
             "suggested_followups": result.suggested_followups,
             "medication_review": result.medication_review,
             "differential_diagnosis": result.differential_diagnosis,
+            "clinical_risk_scores": result.clinical_risk_scores,
         }
 
 

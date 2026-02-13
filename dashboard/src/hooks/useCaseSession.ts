@@ -6,6 +6,8 @@ import {
   CaseEvent,
   CaseFollowUpMessage,
   NewFindings,
+  ClinicianOverrides,
+  createEmptyOverrides,
   getCaseSessions,
   saveCaseSession,
   deleteCaseSession as deleteSessionFromStorage,
@@ -163,6 +165,23 @@ export function useCaseSession() {
     refreshSessions();
   }, [refreshSessions, setSession]);
 
+  const updateOverrides = useCallback((overrides: ClinicianOverrides) => {
+    const cur = sessionRef.current;
+    if (!cur) return;
+    const updated = {
+      ...cur,
+      overrides: { ...overrides, lastModified: new Date().toISOString() },
+      updatedAt: new Date().toISOString(),
+    };
+    saveCaseSession(updated);
+    setSession(updated);
+    refreshSessions();
+  }, [refreshSessions, setSession]);
+
+  const getOverrides = useCallback((): ClinicianOverrides => {
+    return sessionRef.current?.overrides || createEmptyOverrides();
+  }, []);
+
   return {
     currentSession,
     allSessions,
@@ -176,5 +195,7 @@ export function useCaseSession() {
     addFindings,
     updateResult,
     updateFollowUpMessages,
+    updateOverrides,
+    getOverrides,
   };
 }

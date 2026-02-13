@@ -14,16 +14,55 @@ from src.medgemma.client import get_medgemma_client
 
 logger = structlog.get_logger()
 
-# Import known interaction data from existing medication manager
-from src.agents.medication_manager import KNOWN_MAJOR_INTERACTIONS, DRUG_CLASSES
+# Static interaction data — kept here to avoid importing the dspy-dependent
+# medication_manager module in lightweight deployments (e.g., Modal).
+KNOWN_MAJOR_INTERACTIONS = {
+    ("warfarin", "aspirin"): {
+        "description": "Increased risk of bleeding when combined",
+        "recommendation": "Monitor closely for signs of bleeding. Consider alternative if possible.",
+    },
+    ("metformin", "alcohol"): {
+        "description": "Risk of lactic acidosis, especially with heavy alcohol use",
+        "recommendation": "Limit alcohol consumption. Monitor for symptoms of lactic acidosis.",
+    },
+    ("ssri", "maoi"): {
+        "description": "Risk of serotonin syndrome, potentially life-threatening",
+        "recommendation": "These medications should not be combined. Wait 14 days between.",
+    },
+    ("ace inhibitor", "potassium"): {
+        "description": "Risk of dangerously high potassium levels (hyperkalemia)",
+        "recommendation": "Monitor potassium levels regularly. May need dose adjustment.",
+    },
+    ("statin", "grapefruit"): {
+        "description": "Grapefruit can increase statin levels, raising risk of side effects",
+        "recommendation": "Avoid grapefruit and grapefruit juice while taking statins.",
+    },
+}
+
+DRUG_CLASSES = {
+    "ssri": ["sertraline", "fluoxetine", "paroxetine", "citalopram", "escitalopram", "prozac", "zoloft", "paxil", "lexapro"],
+    "maoi": ["phenelzine", "tranylcypromine", "selegiline", "isocarboxazid", "nardil", "parnate"],
+    "statin": ["atorvastatin", "simvastatin", "rosuvastatin", "pravastatin", "lovastatin", "lipitor", "crestor", "zocor"],
+    "ace inhibitor": ["lisinopril", "enalapril", "ramipril", "benazepril", "captopril", "prinivil", "vasotec"],
+    "blood thinner": ["warfarin", "coumadin", "eliquis", "xarelto", "apixaban", "rivaroxaban"],
+    "nsaid": ["ibuprofen", "naproxen", "aspirin", "advil", "motrin", "aleve"],
+    "opioid": ["hydrocodone", "oxycodone", "morphine", "codeine", "tramadol", "vicodin", "percocet"],
+    "benzodiazepine": ["alprazolam", "lorazepam", "diazepam", "clonazepam", "xanax", "ativan", "valium", "klonopin"],
+}
+
+
+def _get_medication_data():
+    """Return the interaction and drug class data."""
+    return KNOWN_MAJOR_INTERACTIONS, DRUG_CLASSES
 
 
 def _classify_drug(drug_name: str) -> str | None:
     """Map a drug name to its drug class using DRUG_CLASSES dict."""
+    _, drug_classes = _get_medication_data()
     drug_lower = drug_name.lower().strip()
     # Strip dosage info (e.g., "aspirin 325mg" → "aspirin")
     drug_base = drug_lower.split()[0] if drug_lower else drug_lower
-    for drug_class, members in DRUG_CLASSES.items():
+    for drug_class, members in drug_classes.items():
         if drug_base in members or drug_lower in members:
             return drug_class
     return None
@@ -53,7 +92,8 @@ def _check_deterministic_interactions(
                 pairs_to_check.append((class_a, class_b))
 
             for pair in pairs_to_check:
-                match = KNOWN_MAJOR_INTERACTIONS.get(pair) or KNOWN_MAJOR_INTERACTIONS.get((pair[1], pair[0]))
+                known_interactions, _ = _get_medication_data()
+                match = known_interactions.get(pair) or known_interactions.get((pair[1], pair[0]))
                 if match:
                     interactions.append({
                         "drug_a": med_a,
@@ -145,6 +185,7 @@ class MedicationSafetyResult:
     allergy_alerts: list[dict[str, Any]] = field(default_factory=list)
     overall_safety: str = "safe"  # safe, caution, unsafe
     summary: str = ""
+    toxicity_profiles: dict[str, Any] = field(default_factory=dict)  # TxGemma drug toxicity data
 
 
 async def check_medication_safety(
@@ -173,6 +214,62 @@ async def check_medication_safety(
     # Step 1: Fast deterministic check for known major interactions
     all_meds = current_medications + new_medications
     deterministic_interactions = _check_deterministic_interactions(all_meds)
+
+    # Step 1.5: TxGemma AI-predicted interactions/toxicity (if available)
+    txgemma_interactions = []
+    txgemma_toxicity = {}
+    try:
+        from src.medgemma.txgemma import get_txgemma_client
+
+        txgemma = get_txgemma_client()
+        if txgemma.is_available and new_medications:
+            import asyncio
+
+            # Check interactions between new meds and all existing meds
+            interaction_tasks = []
+            for new_med in new_medications:
+                for existing_med in current_medications:
+                    interaction_tasks.append(txgemma.predict_interaction(new_med, existing_med))
+
+            # Get toxicity profiles for new medications
+            toxicity_tasks = [txgemma.predict_toxicity(med) for med in new_medications]
+
+            # Run in parallel
+            all_results = await asyncio.gather(
+                *interaction_tasks, *toxicity_tasks, return_exceptions=True
+            )
+
+            # Parse interaction results
+            n_interactions = len(interaction_tasks)
+            for result in all_results[:n_interactions]:
+                if isinstance(result, dict) and result.get("interaction_exists"):
+                    txgemma_interactions.append({
+                        "drug_a": result.get("drug_a", ""),
+                        "drug_b": result.get("drug_b", ""),
+                        "severity": result.get("severity", "moderate"),
+                        "mechanism": result.get("mechanism", ""),
+                        "clinical_effect": result.get("clinical_effect", ""),
+                        "recommendation": result.get("recommendation", ""),
+                        "alternatives": [],
+                        "source": "txgemma",
+                        "confidence": result.get("confidence", 0.5),
+                    })
+
+            # Parse toxicity results
+            for i, result in enumerate(all_results[n_interactions:]):
+                if isinstance(result, dict) and "error" not in result:
+                    med_name = new_medications[i] if i < len(new_medications) else "unknown"
+                    txgemma_toxicity[med_name] = result
+
+            logger.info(
+                "TxGemma analysis complete",
+                interactions_found=len(txgemma_interactions),
+                toxicity_profiles=len(txgemma_toxicity),
+            )
+    except ImportError:
+        pass
+    except Exception as e:
+        logger.warning("TxGemma analysis failed (non-critical)", error=str(e))
 
     # Step 2: MedGemma clinical reasoning for deeper analysis
     medgemma = get_medgemma_client()
@@ -203,8 +300,9 @@ async def check_medication_safety(
 
         data = medgemma._parse_json_response(response)
 
-        # Merge deterministic + AI-found interactions
+        # Merge deterministic + TxGemma + MedGemma interactions
         all_interactions = list(deterministic_interactions)
+        all_interactions.extend(txgemma_interactions)
         for interaction in data.get("additional_interactions", []):
             interaction["source"] = "medgemma"
             all_interactions.append(interaction)
@@ -223,6 +321,7 @@ async def check_medication_safety(
             allergy_alerts=data.get("allergy_alerts", []),
             overall_safety=overall,
             summary=data.get("summary", ""),
+            toxicity_profiles=txgemma_toxicity,
         )
 
     except Exception as e:
@@ -245,4 +344,5 @@ def safety_result_to_dict(result: MedicationSafetyResult) -> dict[str, Any]:
         "allergy_alerts": result.allergy_alerts,
         "overall_safety": result.overall_safety,
         "summary": result.summary,
+        "toxicity_profiles": result.toxicity_profiles,
     }

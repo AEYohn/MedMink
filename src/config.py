@@ -134,6 +134,29 @@ class Settings(BaseSettings):
     medgemma_multimodal_modal_url: str = ""  # e.g. https://USER--medgemma-multimodal-serve.modal.run
     medgemma_multimodal_modal_model: str = "google/medgemma-27b-multimodal"
 
+    # Modal (Whisper ASR for patient interview)
+    whisper_modal_url: str = ""  # e.g. https://USER--whisper-asr-transcribe.modal.run
+
+    # Modal (MedASR — Google Conformer for medical speech recognition)
+    medasr_modal_url: str = ""  # e.g. https://USER--medasr-transcribe.modal.run
+    medasr_model: str = "google/medasr"
+
+    # Modal (CXR Foundation — Chest X-ray classifier)
+    cxr_foundation_modal_url: str = ""  # e.g. https://USER--cxr-foundation-serve.modal.run
+
+    # Modal (TxGemma — Drug property prediction)
+    txgemma_modal_url: str = ""  # e.g. https://USER--txgemma-serve.modal.run
+    txgemma_modal_model: str = "google/txgemma-9b-chat"
+
+    # Modal (Derm Foundation — Skin lesion classifier)
+    derm_foundation_modal_url: str = ""  # e.g. https://USER--derm-foundation-serve.modal.run
+
+    # Modal (HeAR — Respiratory sound screening)
+    hear_modal_url: str = ""  # e.g. https://USER--hear-serve.modal.run
+
+    # Modal (Path Foundation — Digital pathology)
+    path_foundation_modal_url: str = ""  # e.g. https://USER--path-foundation-serve.modal.run
+
     # Local ChromaDB
     chroma_persist_directory: str = "./data/chroma"
     chroma_collection_name: str = "medical_papers"

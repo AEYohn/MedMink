@@ -87,12 +87,35 @@ function ConfidenceLabel(props: any) {
   );
 }
 
+function truncateName(name: string, maxLen = 32): string {
+  // Strip parenthetical dosing details first, e.g. "Aspirin (325 mg PO)" → "Aspirin"
+  const short = name.replace(/\s*\(e\.g\..*?\)\s*/g, '').replace(/\s*\(.*?mg.*?\)\s*/g, '');
+  if (short.length <= maxLen) return short;
+  return short.slice(0, maxLen - 1).trimEnd() + '…';
+}
+
+function CustomYTick({ x, y, payload }: any) {
+  const label = truncateName(payload.value);
+  return (
+    <text
+      x={x - 4}
+      y={y}
+      fill="hsl(0 0% 98%)"
+      fontSize={12}
+      textAnchor="end"
+      dominantBaseline="central"
+    >
+      {label}
+    </text>
+  );
+}
+
 export function TreatmentComparisonChart({ treatments }: TreatmentComparisonChartProps) {
   const chartData = useMemo(() => {
     return [...treatments].sort((a, b) => b.confidence - a.confidence);
   }, [treatments]);
 
-  const chartHeight = Math.max(200, chartData.length * 48 + 40);
+  const chartHeight = Math.max(200, chartData.length * 44 + 40);
 
   const presentVerdicts = useMemo(() => {
     const unique = new Set(chartData.map((t) => t.verdict));
@@ -146,8 +169,8 @@ export function TreatmentComparisonChart({ treatments }: TreatmentComparisonChar
               <YAxis
                 type="category"
                 dataKey="name"
-                width={140}
-                tick={{ fill: 'hsl(0 0% 98%)', fontSize: 12 }}
+                width={180}
+                tick={<CustomYTick />}
                 axisLine={false}
                 tickLine={false}
               />

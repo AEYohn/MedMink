@@ -171,6 +171,11 @@ class MedVisionClient:
     ) -> dict[str, Any]:
         """Analyze a medical image with clinical context.
 
+        Routes through specialized foundation models when available:
+        - X-ray → CXR Foundation (zero-shot classification) + MedGemma narrative
+        - Dermoscopy → Derm Foundation (risk assessment) + MedGemma narrative
+        - Pathology → Path Foundation (tissue classification) + MedGemma narrative
+
         Args:
             image_b64: Base64-encoded image data
             clinical_context: Clinical history/question
@@ -178,7 +183,7 @@ class MedVisionClient:
             filename: Original filename for modality detection
 
         Returns:
-            Structured analysis result
+            Structured analysis result with foundation model scores when available
         """
         if modality is None:
             modality = self._detect_modality(filename, clinical_context)
@@ -193,6 +198,74 @@ class MedVisionClient:
             result = await self._analyze_via_modal(image_b64, prompt, modality)
         else:
             result = await self._analyze_text_only(modality, clinical_context)
+
+        # Route through specialized foundation models for enhanced analysis
+        result = await self._enhance_with_foundation_models(result, image_b64, modality)
+
+        return result
+
+    async def _enhance_with_foundation_models(
+        self,
+        result: dict[str, Any],
+        image_b64: str,
+        modality: str,
+    ) -> dict[str, Any]:
+        """Enhance MedGemma analysis with specialized foundation model scores."""
+        import asyncio
+
+        if modality == "xray":
+            try:
+                from src.medgemma.cxr_foundation import get_cxr_foundation_client
+
+                cxr = get_cxr_foundation_client()
+                if cxr.is_available:
+                    cxr_result = await cxr.classify_zero_shot(image_b64)
+                    if "error" not in cxr_result:
+                        result["cxr_foundation"] = {
+                            "classifications": cxr_result.get("classifications", []),
+                            "model": "cxr-foundation",
+                        }
+                        logger.info("CXR Foundation enhanced analysis", n_conditions=len(cxr_result.get("classifications", [])))
+            except Exception as e:
+                logger.warning("CXR Foundation enhancement failed", error=str(e))
+
+        elif modality == "dermoscopy":
+            try:
+                from src.medgemma.derm_foundation import get_derm_foundation_client
+
+                derm = get_derm_foundation_client()
+                if derm.is_available:
+                    derm_result = await derm.classify(image_b64)
+                    if "error" not in derm_result:
+                        result["derm_foundation"] = {
+                            "classifications": derm_result.get("classifications", []),
+                            "top_diagnosis": derm_result.get("top_diagnosis", ""),
+                            "overall_risk": derm_result.get("overall_risk", ""),
+                            "malignancy_probability": derm_result.get("malignancy_probability", 0),
+                            "model": "derm-foundation",
+                        }
+                        logger.info("Derm Foundation enhanced analysis", risk=derm_result.get("overall_risk"))
+            except Exception as e:
+                logger.warning("Derm Foundation enhancement failed", error=str(e))
+
+        elif modality == "pathology":
+            try:
+                from src.medgemma.path_foundation import get_path_foundation_client
+
+                path = get_path_foundation_client()
+                if path.is_available:
+                    path_result = await path.classify_tissue(image_b64)
+                    if "error" not in path_result:
+                        result["path_foundation"] = {
+                            "classifications": path_result.get("classifications", []),
+                            "tumor_probability": path_result.get("tumor_probability", 0),
+                            "grade": path_result.get("grade", ""),
+                            "tiles_analyzed": path_result.get("tiles_analyzed", 0),
+                            "model": "path-foundation",
+                        }
+                        logger.info("Path Foundation enhanced analysis", grade=path_result.get("grade"))
+            except Exception as e:
+                logger.warning("Path Foundation enhancement failed", error=str(e))
 
         return result
 

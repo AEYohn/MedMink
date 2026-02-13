@@ -32,6 +32,14 @@ from src.medgemma.referral_generator import (
     referral_note_to_dict,
     handoff_note_to_dict,
 )
+from src.medgemma.risk_scores import (
+    calculate_risk_scores,
+    risk_score_report_to_dict,
+)
+from src.medgemma.cxr_foundation import get_cxr_foundation_client
+from src.medgemma.derm_foundation import get_derm_foundation_client
+from src.medgemma.path_foundation import get_path_foundation_client
+from src.medgemma.txgemma import get_txgemma_client
 
 logger = structlog.get_logger()
 router = APIRouter(prefix="/api/case", tags=["case-analysis"])
@@ -54,6 +62,7 @@ class CaseAnalysisResponse(BaseModel):
     acute_management: dict[str, Any] = {}
     suggested_followups: list[str] = []
     medication_review: dict[str, Any] = {}
+    clinical_risk_scores: dict[str, Any] = {}
 
 
 class CaseFollowUpRequest(BaseModel):
@@ -459,6 +468,28 @@ async def generate_ddx(request: DDxRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# --- Risk Scores ---
+
+class RiskScoreRequest(BaseModel):
+    """Request for clinical risk score calculation."""
+    case_text: str = Field(..., min_length=10)
+    parsed_case: dict[str, Any]
+
+
+@router.post("/risk-scores")
+async def compute_risk_scores(request: RiskScoreRequest):
+    """Calculate clinical risk scores for a case."""
+    try:
+        report = await calculate_risk_scores(
+            parsed_case=request.parsed_case,
+            case_text=request.case_text,
+        )
+        return risk_score_report_to_dict(report)
+    except Exception as e:
+        logger.error("Risk score calculation failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # --- Medication Safety ---
 
 class MedicationSafetyRequest(BaseModel):
@@ -568,4 +599,160 @@ async def handoff_endpoint(request: HandoffRequest):
         return handoff_note_to_dict(result)
     except Exception as e:
         logger.error("Handoff note generation failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- CXR Foundation (Chest X-ray Classification) ---
+
+class CXRClassifyRequest(BaseModel):
+    """Request for chest X-ray classification."""
+    image_b64: str = Field(..., min_length=100)
+    conditions: list[str] = Field(default_factory=list)
+
+
+@router.post("/image/cxr-classify")
+async def cxr_classify(request: CXRClassifyRequest):
+    """Zero-shot classification of chest X-ray conditions using CXR Foundation."""
+    cxr = get_cxr_foundation_client()
+    if not cxr.is_available:
+        raise HTTPException(status_code=503, detail="CXR Foundation not configured")
+
+    try:
+        result = await cxr.classify_zero_shot(
+            image_b64=request.image_b64,
+            conditions=request.conditions or None,
+        )
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("CXR classification failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- Derm Foundation (Skin Lesion Classification) ---
+
+class DermClassifyRequest(BaseModel):
+    """Request for dermoscopy image classification."""
+    image_b64: str = Field(..., min_length=100)
+
+
+@router.post("/image/derm-classify")
+async def derm_classify(request: DermClassifyRequest):
+    """Classify skin lesion and provide risk assessment using Derm Foundation."""
+    derm = get_derm_foundation_client()
+    if not derm.is_available:
+        raise HTTPException(status_code=503, detail="Derm Foundation not configured")
+
+    try:
+        result = await derm.classify(image_b64=request.image_b64)
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Derm classification failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- Path Foundation (Digital Pathology) ---
+
+class PathClassifyRequest(BaseModel):
+    """Request for pathology image classification."""
+    image_b64: str = Field(..., min_length=100)
+    tile_size: int = Field(default=224)
+
+
+@router.post("/image/pathology-classify")
+async def pathology_classify(request: PathClassifyRequest):
+    """Classify tissue types in pathology image using Path Foundation."""
+    path = get_path_foundation_client()
+    if not path.is_available:
+        raise HTTPException(status_code=503, detail="Path Foundation not configured")
+
+    try:
+        result = await path.classify_tissue(
+            image_b64=request.image_b64,
+            tile_size=request.tile_size,
+        )
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Pathology classification failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- TxGemma (Drug Property Prediction) ---
+
+class DrugPropertyRequest(BaseModel):
+    """Request for drug property prediction."""
+    drug: str = Field(..., min_length=2)
+
+
+class DrugInteractionRequest(BaseModel):
+    """Request for drug-drug interaction prediction."""
+    drug_a: str = Field(..., min_length=2)
+    drug_b: str = Field(..., min_length=2)
+
+
+@router.post("/drug-properties")
+async def drug_properties(request: DrugPropertyRequest):
+    """Predict therapeutic properties of a drug using TxGemma."""
+    tx = get_txgemma_client()
+    if not tx.is_available:
+        raise HTTPException(status_code=503, detail="TxGemma not configured")
+
+    try:
+        result = await tx.predict_properties(drug=request.drug)
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Drug property prediction failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/drug-interaction")
+async def drug_interaction(request: DrugInteractionRequest):
+    """Predict drug-drug interaction using TxGemma."""
+    tx = get_txgemma_client()
+    if not tx.is_available:
+        raise HTTPException(status_code=503, detail="TxGemma not configured")
+
+    try:
+        result = await tx.predict_interaction(drug_a=request.drug_a, drug_b=request.drug_b)
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Drug interaction prediction failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/drug-toxicity")
+async def drug_toxicity(request: DrugPropertyRequest):
+    """Predict toxicity profile for a drug using TxGemma."""
+    tx = get_txgemma_client()
+    if not tx.is_available:
+        raise HTTPException(status_code=503, detail="TxGemma not configured")
+
+    try:
+        result = await tx.predict_toxicity(drug=request.drug)
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Drug toxicity prediction failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))

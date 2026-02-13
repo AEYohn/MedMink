@@ -48,13 +48,22 @@ backend_image = (
     cpu=1,
     memory=512,
     scaledown_window=300,
-    timeout=600,
+    timeout=900,
     secrets=[modal.Secret.from_dict({
         "MEDGEMMA_MODAL_URL": "https://saeyohn122--medgemma-27b-serve.modal.run",
         "MEDGEMMA_MODAL_MODEL": "google/medgemma-27b-it",
+        "MEDGEMMA_MULTIMODAL_MODAL_URL": "",
+        "MEDGEMMA_MULTIMODAL_MODAL_MODEL": "google/medgemma-27b-multimodal",
         "USE_LOCAL_MEDGEMMA": "false",
         "MEDGEMMA_MODEL": "remote-only",
         "ENVIRONMENT": "production",
+        "WHISPER_MODAL_URL": "",
+        "MEDASR_MODAL_URL": "https://saeyohn122--medasr-transcribe.modal.run",
+        "CXR_FOUNDATION_MODAL_URL": "https://saeyohn122--cxr-foundation-serve.modal.run",
+        "TXGEMMA_MODAL_URL": "https://saeyohn122--txgemma-serve.modal.run",
+        "DERM_FOUNDATION_MODAL_URL": "https://saeyohn122--derm-foundation-serve.modal.run",
+        "HEAR_MODAL_URL": "https://saeyohn122--hear-respiratory-serve.modal.run",
+        "PATH_FOUNDATION_MODAL_URL": "https://saeyohn122--path-foundation-serve.modal.run",
     })],
 )
 @modal.asgi_app()
@@ -66,6 +75,9 @@ def serve():
     from fastapi import FastAPI
     from fastapi.middleware.cors import CORSMiddleware
     from src.api.routes.case_analysis import router as case_router
+    from src.api.routes.interview import router as interview_router
+    from src.api.routes.labs import router as labs_router
+    from src.api.routes.consensus_lite import router as consensus_router
 
     api = FastAPI(
         title="Research Synthesizer API",
@@ -82,6 +94,9 @@ def serve():
     )
 
     api.include_router(case_router)
+    api.include_router(interview_router)
+    api.include_router(labs_router)
+    api.include_router(consensus_router)
 
     @api.get("/health")
     async def health():

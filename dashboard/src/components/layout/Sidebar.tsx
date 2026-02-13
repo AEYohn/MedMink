@@ -20,6 +20,7 @@ import {
   Search,
   Stethoscope,
   Camera,
+  ClipboardList,
 } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
 import { useChat } from '@/contexts/ChatContext';
@@ -51,6 +52,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const navItems = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/case', icon: Stethoscope, label: 'Case Analysis' },
+    { href: '/interview', icon: ClipboardList, label: 'Interview' },
     { href: '/imaging', icon: Camera, label: 'Medical Imaging' },
     { href: '/labs', icon: Beaker, label: 'Lab Reports' },
     { href: '/chart', icon: FileText, label: 'Charting' },

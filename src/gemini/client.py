@@ -33,18 +33,6 @@ logger = structlog.get_logger()
 T = TypeVar("T")
 
 
-def _get_genai():
-    """Lazy import of google.generativeai to avoid hard crash at startup."""
-    try:
-        import google.generativeai as genai
-        return genai
-    except ImportError:
-        raise ImportError(
-            "google-generativeai is not installed. "
-            "Install it with: pip install google-generativeai"
-        )
-
-
 # Pricing per 1M tokens (approximate for Gemini 2.0)
 GEMINI_PRICING = {
     "input": 0.075,  # $0.075 per 1M input tokens
@@ -169,13 +157,15 @@ class GeminiClient:
         monthly_budget: float | None = None,
         use_dspy: bool | None = None,
     ):
+        import google.generativeai as genai
+
         self.api_key = api_key or settings.gemini_api_key
         self.model_name = model or settings.gemini_model
 
         # Configure the API
-        genai = _get_genai()
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(self.model_name)
+        self._genai = genai
 
         # Rate limiter
         self.rate_limiter = RateLimiter(
@@ -271,8 +261,7 @@ class GeminiClient:
 
         try:
             # Build generation config
-            genai = _get_genai()
-            generation_config = genai.GenerationConfig(
+            generation_config = self._genai.GenerationConfig(
                 temperature=temperature,
                 max_output_tokens=max_output_tokens,
             )

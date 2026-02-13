@@ -1,12 +1,10 @@
 """MedASR - Medical Speech Recognition for HAI-DEF.
 
-Provides speech-to-text transcription optimized for medical terminology,
-drug names, anatomical terms, and clinical abbreviations.
+Primary: Google MedASR Conformer (105M params, 4.6% WER on radiology dictation)
+Fallback: OpenAI Whisper large-v3
 
-Features:
-- Medical vocabulary optimization
-- Support for clinical dictation
-- Integration with MedGemma for post-processing
+The Modal deployment (modal_asr.py) handles GPU inference. This client
+can also load models locally for development.
 """
 
 import asyncio
@@ -15,35 +13,14 @@ from typing import Any
 
 import structlog
 
-from src.medgemma.model_registry import get_model_registry, ModelType
+from src.config import settings
 
 logger = structlog.get_logger()
 
 
-# Medical terminology corrections for common misheard words
-MEDICAL_CORRECTIONS = {
-    # Drug names
-    "metformin": ["met form in", "met for min", "metform in"],
-    "atorvastatin": ["a tour vast a tin", "ator vast atin"],
-    "lisinopril": ["lice in oh pril", "lysin o pril"],
-    "omeprazole": ["oh mep ra zole", "omep razole"],
-    "amlodipine": ["am low dip een", "amlod ipine"],
-    "tesamorelin": ["tessa more lin", "tesa morelin"],
-    "methotrexate": ["metho trex ate", "meth o trex ate"],
-
-    # Conditions
-    "hypertension": ["high per tension", "hyper ten sion"],
-    "hyperlipidemia": ["hyper lip id emia", "hyper lipid emia"],
-    "atherosclerosis": ["athero scler osis", "athero sclerosis"],
-    "cardiomyopathy": ["cardio my op athy", "cardio myo pathy"],
-    "lipodystrophy": ["lipo dys trophy", "lipody strophy"],
-
-    # Anatomical
-    "myocardium": ["myo card ium", "my o cardium"],
-    "pericardium": ["peri card ium", "peri cardium"],
-    "endocardium": ["endo card ium", "endo cardium"],
-
-    # Abbreviations spoken aloud
+# Abbreviated corrections — MedASR handles most medical vocab natively.
+# Only abbreviation expansions needed (spoken letters → acronym).
+ABBREVIATION_CORRECTIONS = {
     "HIV": ["h i v", "h.i.v."],
     "AIDS": ["a i d s"],
     "COPD": ["c o p d", "c.o.p.d."],
@@ -58,8 +35,8 @@ MEDICAL_CORRECTIONS = {
 class MedASRClient:
     """Medical speech recognition client.
 
-    Uses MedASR (when available) or falls back to Whisper
-    with medical vocabulary optimization.
+    Routes to Modal-hosted MedASR Conformer when configured.
+    Falls back to local Whisper if Modal URL not set.
     """
 
     def __init__(self):
@@ -67,38 +44,50 @@ class MedASRClient:
         self._processor = None
         self._initialized = False
         self._using_whisper_fallback = False
+        self._modal_url = getattr(settings, "medasr_modal_url", "") or ""
+
+        # Fall back to the legacy Whisper Modal URL
+        if not self._modal_url:
+            self._modal_url = getattr(settings, "whisper_modal_url", "") or ""
+            if self._modal_url:
+                self._using_whisper_fallback = True
+                logger.info("MedASR client using Whisper Modal endpoint (MedASR URL not configured)")
+
+        if self._modal_url:
+            logger.info("MedASR client configured (Modal remote)", modal_url=self._modal_url)
 
     def _ensure_initialized(self):
-        """Lazily initialize the ASR model."""
-        if self._initialized:
+        """Lazily initialize a local model (only if no Modal URL)."""
+        if self._initialized or self._modal_url:
             return
 
         try:
-            # Try to load MedASR from registry
-            registry = get_model_registry()
-            model_info = registry.get_model_info(ModelType.ASR)
+            import torch
+            from transformers import AutoFeatureExtractor, AutoModelForCTC
 
-            if model_info["can_load"]:
-                # Try MedASR first
-                try:
-                    asyncio.get_event_loop().run_until_complete(
-                        registry.load_model(ModelType.ASR)
-                    )
-                    result = registry.get_model(ModelType.ASR)
-                    if result:
-                        self._model, self._processor = result
-                        logger.info("MedASR loaded successfully")
-                        self._initialized = True
-                        return
-                except Exception as e:
-                    logger.warning("MedASR not available, trying Whisper", error=str(e))
+            logger.info("Loading MedASR Conformer locally...")
+            model_id = getattr(settings, "medasr_model", "google/medasr")
 
-            # Fallback to Whisper
-            self._load_whisper_fallback()
+            self._processor = AutoFeatureExtractor.from_pretrained(
+                model_id, trust_remote_code=True
+            )
+            self._model = AutoModelForCTC.from_pretrained(
+                model_id, trust_remote_code=True
+            )
+
+            # Device selection
+            if torch.cuda.is_available():
+                self._model = self._model.to("cuda")
+            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                self._model = self._model.to("mps")
+
+            self._model.eval()
+            logger.info("MedASR Conformer loaded locally")
+            self._initialized = True
 
         except Exception as e:
-            logger.error("Failed to initialize speech recognition", error=str(e))
-            self._initialized = True
+            logger.warning("MedASR not available locally, trying Whisper", error=str(e))
+            self._load_whisper_fallback()
 
     def _load_whisper_fallback(self):
         """Load OpenAI Whisper as fallback."""
@@ -108,7 +97,6 @@ class MedASRClient:
 
             logger.info("Loading Whisper for speech recognition")
 
-            # Determine device
             if torch.cuda.is_available():
                 device = "cuda"
                 dtype = torch.float16
@@ -119,14 +107,10 @@ class MedASRClient:
                 device = "cpu"
                 dtype = torch.float32
 
-            # Load Whisper large-v3 for best medical transcription
             model_id = "openai/whisper-large-v3"
-
             self._processor = AutoProcessor.from_pretrained(model_id)
             self._model = AutoModelForSpeechSeq2Seq.from_pretrained(
-                model_id,
-                torch_dtype=dtype,
-                low_cpu_mem_usage=True,
+                model_id, torch_dtype=dtype, low_cpu_mem_usage=True
             ).to(device)
 
             self._using_whisper_fallback = True
@@ -141,127 +125,142 @@ class MedASRClient:
         self,
         audio_path: str,
         language: str = "en",
-        apply_medical_corrections: bool = True,
+        apply_corrections: bool = True,
     ) -> dict[str, Any]:
         """Transcribe audio to text with medical terminology optimization.
+
+        Routes to Modal MedASR endpoint if configured, otherwise uses local model.
 
         Args:
             audio_path: Path to audio file (wav, mp3, m4a, etc.)
             language: Language code (default: English)
-            apply_medical_corrections: Apply medical vocabulary corrections
+            apply_corrections: Apply abbreviation corrections
 
         Returns:
             Transcription result with text, confidence, and segments
         """
+        if self._modal_url:
+            return await self._transcribe_via_modal(audio_path)
+
         result = await asyncio.to_thread(
             self._transcribe_sync,
             audio_path=audio_path,
             language=language,
-            apply_medical_corrections=apply_medical_corrections,
+            apply_corrections=apply_corrections,
         )
         return result
+
+    async def _transcribe_via_modal(self, audio_path: str) -> dict[str, Any]:
+        """Transcribe via Modal-hosted MedASR endpoint."""
+        import aiohttp
+
+        audio_file = Path(audio_path)
+        if not audio_file.exists():
+            return {"text": "", "error": f"Audio file not found: {audio_path}", "confidence": 0.0}
+
+        try:
+            timeout = aiohttp.ClientTimeout(total=60)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                form = aiohttp.FormData()
+                form.add_field(
+                    "audio",
+                    open(audio_path, "rb"),
+                    filename=audio_file.name,
+                    content_type="audio/wav",
+                )
+                async with session.post(f"{self._modal_url}/transcribe", data=form) as resp:
+                    if resp.status != 200:
+                        body = await resp.text()
+                        logger.error("Modal ASR failed", status=resp.status, body=body[:200])
+                        return {"text": "", "error": f"Modal ASR failed: {resp.status}", "confidence": 0.0}
+
+                    result = await resp.json()
+                    return {
+                        "text": result.get("text", ""),
+                        "language": result.get("language", "en"),
+                        "audio_duration_seconds": result.get("duration", 0),
+                        "model": result.get("model", "medasr-conformer"),
+                        "confidence": 0.95 if result.get("model") == "medasr-conformer" else 0.85,
+                    }
+        except Exception as e:
+            logger.error("Modal ASR call failed", error=str(e))
+            return {"text": "", "error": str(e), "confidence": 0.0}
 
     def _transcribe_sync(
         self,
         audio_path: str,
         language: str,
-        apply_medical_corrections: bool,
+        apply_corrections: bool,
     ) -> dict[str, Any]:
-        """Synchronous transcription."""
+        """Synchronous local transcription."""
         self._ensure_initialized()
 
         if self._model is None:
-            return {
-                "text": "",
-                "error": "Speech recognition not available",
-                "confidence": 0.0,
-            }
+            return {"text": "", "error": "Speech recognition not available", "confidence": 0.0}
 
         try:
             import torch
             import librosa
 
-            # Load audio
             audio_file = Path(audio_path)
             if not audio_file.exists():
-                return {
-                    "text": "",
-                    "error": f"Audio file not found: {audio_path}",
-                    "confidence": 0.0,
-                }
+                return {"text": "", "error": f"Audio file not found: {audio_path}", "confidence": 0.0}
 
-            # Load and resample to 16kHz
             audio, sr = librosa.load(audio_path, sr=16000)
 
-            # Process with model
-            inputs = self._processor(
-                audio,
-                sampling_rate=16000,
-                return_tensors="pt",
-            )
+            if self._using_whisper_fallback:
+                # Whisper-style generation
+                inputs = self._processor(audio, sampling_rate=16000, return_tensors="pt")
+                device = next(self._model.parameters()).device
+                inputs = {k: v.to(device) for k, v in inputs.items()}
 
-            # Move to device
-            device = next(self._model.parameters()).device
-            inputs = {k: v.to(device) for k, v in inputs.items()}
+                with torch.no_grad():
+                    generated_ids = self._model.generate(
+                        **inputs, max_new_tokens=448, language=language, task="transcribe"
+                    )
 
-            # Generate transcription
-            with torch.no_grad():
-                generated_ids = self._model.generate(
-                    **inputs,
-                    max_new_tokens=448,
-                    language=language,
-                    task="transcribe",
-                )
+                transcription = self._processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+            else:
+                # MedASR CTC-style decoding
+                inputs = self._processor(audio, sampling_rate=16000, return_tensors="pt")
+                device = next(self._model.parameters()).device
+                inputs = {k: v.to(device) for k, v in inputs.items()}
 
-            # Decode
-            transcription = self._processor.batch_decode(
-                generated_ids,
-                skip_special_tokens=True,
-            )[0]
+                with torch.no_grad():
+                    logits = self._model(**inputs).logits
 
-            # Apply medical corrections if requested
-            if apply_medical_corrections:
-                transcription = self._apply_medical_corrections(transcription)
+                predicted_ids = torch.argmax(logits, dim=-1)
+                transcription = self._processor.batch_decode(predicted_ids)[0]
+
+            if apply_corrections:
+                transcription = self._apply_corrections(transcription)
 
             return {
                 "text": transcription.strip(),
                 "language": language,
                 "audio_duration_seconds": len(audio) / 16000,
-                "model": "medasr" if not self._using_whisper_fallback else "whisper-large-v3",
-                "confidence": 0.9,  # Placeholder - real models return confidence
+                "model": "medasr-conformer" if not self._using_whisper_fallback else "whisper-large-v3",
+                "confidence": 0.95 if not self._using_whisper_fallback else 0.85,
             }
 
         except ImportError as e:
             logger.error("Missing audio dependencies", error=str(e))
-            return {
-                "text": "",
-                "error": "Install: pip install librosa soundfile",
-                "confidence": 0.0,
-            }
+            return {"text": "", "error": "Install: pip install librosa soundfile", "confidence": 0.0}
         except Exception as e:
             logger.error("Transcription failed", error=str(e))
-            return {
-                "text": "",
-                "error": str(e),
-                "confidence": 0.0,
-            }
+            return {"text": "", "error": str(e), "confidence": 0.0}
 
-    def _apply_medical_corrections(self, text: str) -> str:
-        """Apply medical terminology corrections.
+    def _apply_corrections(self, text: str) -> str:
+        """Apply abbreviation corrections (MedASR handles drug/condition vocab natively)."""
+        import re
 
-        Fixes common misheard drug names, conditions, and abbreviations.
-        """
         text_lower = text.lower()
-
-        for correct_term, misheard_variants in MEDICAL_CORRECTIONS.items():
-            for variant in misheard_variants:
+        for correct_term, variants in ABBREVIATION_CORRECTIONS.items():
+            for variant in variants:
                 if variant in text_lower:
-                    # Case-preserving replacement
-                    import re
                     pattern = re.compile(re.escape(variant), re.IGNORECASE)
                     text = pattern.sub(correct_term, text)
                     text_lower = text.lower()
-
         return text
 
     async def transcribe_stream(

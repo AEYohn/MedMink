@@ -23,16 +23,11 @@ class EmbeddingService:
     """Generate embeddings using Gemini's embedding API."""
 
     def __init__(self, api_key: str | None = None):
-        try:
-            import google.generativeai as genai
-        except ImportError:
-            raise ImportError(
-                "google-generativeai is not installed. "
-                "Install it with: pip install google-generativeai"
-            )
-        self._genai = genai
+        import google.generativeai as genai
+
         self.api_key = api_key or settings.gemini_api_key
         genai.configure(api_key=self.api_key)
+        self._genai = genai
         self.dimension = EMBEDDING_DIMENSION
         logger.info("Embedding service initialized", model=EMBEDDING_MODEL, dimension=EMBEDDING_DIMENSION)
 

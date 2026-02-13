@@ -1,15 +1,19 @@
 """Base agent class with common functionality."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from uuid import uuid4
+
+if TYPE_CHECKING:
+    from src.gemini import GeminiClient
+    from src.kg import KnowledgeGraph
 
 import structlog
 
-from src.gemini import GeminiClient, get_gemini_client
-from src.kg import KnowledgeGraph, get_knowledge_graph
 from src.models import ThoughtSignature, Task, TaskStatus
 
 logger = structlog.get_logger()
@@ -52,6 +56,7 @@ class BaseAgent(ABC):
     async def _get_gemini(self) -> GeminiClient:
         """Get Gemini client."""
         if self._gemini is None:
+            from src.gemini import get_gemini_client
             self._gemini = get_gemini_client()
         return self._gemini
 
@@ -59,6 +64,7 @@ class BaseAgent(ABC):
         """Get knowledge graph (returns None if unavailable)."""
         if self._kg is None:
             try:
+                from src.kg import get_knowledge_graph
                 self._kg = await get_knowledge_graph()
             except Exception as e:
                 self.logger.warning("Knowledge graph unavailable", error=str(e))

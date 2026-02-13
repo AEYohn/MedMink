@@ -173,11 +173,11 @@ export function EvidenceRadar({ data }: EvidenceRadarProps) {
             const pct = Math.round(d.score * 100);
             return (
               <div key={d.dimension} className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground truncate mr-2">
+                <span className="text-xs text-muted-foreground whitespace-nowrap mr-2">
                   {d.dimension}
                 </span>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div className="w-12 h-1.5 rounded-full bg-muted overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-500"
                       style={{

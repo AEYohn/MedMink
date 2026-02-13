@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, FormEvent } from 'react';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
 import {
   Stethoscope,
   Loader2,
@@ -948,7 +949,13 @@ export default function CaseAnalysisPage() {
                                 'max-w-[85%] rounded-lg px-3 py-1.5 text-xs',
                                 msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-background border shadow-sm'
                               )}>
-                                <p className="whitespace-pre-wrap">{msg.content}</p>
+                                {msg.role === 'assistant' ? (
+                                  <div className="text-xs [&>p]:mb-1.5 [&>ol]:list-decimal [&>ol]:pl-4 [&>ol]:mb-1.5 [&>ul]:list-disc [&>ul]:pl-4 [&>ul]:mb-1.5 [&_strong]:font-semibold [&_em]:italic [&>p:last-child]:mb-0">
+                                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                  </div>
+                                ) : (
+                                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                                )}
                               </div>
                             </div>
                           ))}

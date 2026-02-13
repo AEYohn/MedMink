@@ -150,7 +150,7 @@ export function TreatmentComparisonChart({ treatments }: TreatmentComparisonChar
             <BarChart
               data={chartData}
               layout="vertical"
-              margin={{ top: 4, right: 48, bottom: 4, left: 4 }}
+              margin={{ top: 4, right: 48, bottom: 4, left: 8 }}
               barCategoryGap="20%"
             >
               <CartesianGrid
@@ -169,7 +169,7 @@ export function TreatmentComparisonChart({ treatments }: TreatmentComparisonChar
               <YAxis
                 type="category"
                 dataKey="name"
-                width={180}
+                width={200}
                 tick={<CustomYTick />}
                 axisLine={false}
                 tickLine={false}

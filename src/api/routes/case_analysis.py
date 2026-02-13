@@ -4,6 +4,7 @@ import asyncio
 import base64
 import json
 import random
+from collections import OrderedDict
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
@@ -71,6 +72,7 @@ class CaseFollowUpRequest(BaseModel):
     analysis_summary: dict[str, Any]
     question: str = Field(..., min_length=5, max_length=2000)
     conversation_history: list[dict[str, str]] = Field(default_factory=list)
+    session_id: str | None = None
 
 
 class CaseReassessmentRequest(BaseModel):
@@ -167,6 +169,29 @@ async def analyze_case(request: CaseAnalysisRequest):
     return CaseAnalysisResponse(**result)
 
 
+# In-memory LRU context store for session-aware follow-up chat
+# Stores last 20 messages per session, max 100 sessions
+_SESSION_CONTEXT_MAX = 100
+_SESSION_MSG_MAX = 20
+_session_context: OrderedDict[str, list[dict[str, str]]] = OrderedDict()
+
+
+def _get_session_context(session_id: str) -> list[dict[str, str]]:
+    """Get stored conversation context for a session."""
+    if session_id in _session_context:
+        _session_context.move_to_end(session_id)
+        return _session_context[session_id]
+    return []
+
+
+def _update_session_context(session_id: str, messages: list[dict[str, str]]) -> None:
+    """Update stored conversation context for a session."""
+    _session_context[session_id] = messages[-_SESSION_MSG_MAX:]
+    _session_context.move_to_end(session_id)
+    while len(_session_context) > _SESSION_CONTEXT_MAX:
+        _session_context.popitem(last=False)
+
+
 FOLLOWUP_SYSTEM_PROMPT = """You are a clinical reasoning assistant helping a physician interpret a case analysis.
 Reference specific findings from the case. Be thorough on drug interactions.
 Never fabricate evidence or citations. Keep answers clinically actionable.
@@ -239,9 +264,16 @@ async def case_followup(request: CaseFollowUpRequest):
         acute_bits.append(f"Monitoring: {', '.join(acute_mgmt['monitoring_plan'][:3])}")
     acute_compact = "; ".join(acute_bits)
 
+    # Merge conversation history: prefer session context if available
+    effective_history = request.conversation_history
+    if request.session_id:
+        stored = _get_session_context(request.session_id)
+        if stored and not effective_history:
+            effective_history = stored
+
     # Last 4 messages only
     history_text = ""
-    for msg in request.conversation_history[-4:]:
+    for msg in effective_history[-4:]:
         role = msg.get("role", "user")
         content = msg.get("content", "")
         if len(content) > 300:
@@ -289,6 +321,14 @@ QUESTION: {request.question}"""
             treatment_options=request.analysis_summary.get("treatment_options", []),
             question=request.question,
         )
+
+        # Update session context store
+        if request.session_id:
+            updated_history = list(effective_history) + [
+                {"role": "user", "content": request.question},
+                {"role": "assistant", "content": answer},
+            ]
+            _update_session_context(request.session_id, updated_history)
 
         return CaseFollowUpResponse(answer=answer, suggested_questions=suggestions)
 
@@ -737,6 +777,59 @@ async def drug_interaction(request: DrugInteractionRequest):
     except Exception as e:
         logger.error("Drug interaction prediction failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class AIAssistRequest(BaseModel):
+    """Request for inline AI assist."""
+    context_type: str = Field(..., description="Type: treatment, section, medication")
+    context_item: str = Field(..., min_length=1, description="The specific item to ask about")
+    question: str = Field(..., description="why_recommended, alternatives, or explain")
+    case_snippet: str = Field(default="", max_length=500)
+
+
+class AIAssistResponse(BaseModel):
+    """Response from inline AI assist."""
+    answer: str
+
+
+AI_ASSIST_PROMPTS = {
+    "why_recommended": "In 2-3 sentences, explain WHY {item} is recommended for this case.",
+    "alternatives": "In 2-3 sentences, list alternatives to {item} and briefly justify each.",
+    "explain": "In 2-3 sentences, explain {item} in simple clinical terms.",
+}
+
+
+@router.post("/ai-assist", response_model=AIAssistResponse)
+async def ai_assist(request: AIAssistRequest):
+    """Provide brief AI-generated explanations for treatments or management items."""
+    medgemma = get_medgemma_client()
+
+    template = AI_ASSIST_PROMPTS.get(request.question)
+    if not template:
+        template = "In 2-3 sentences, answer about {item}: " + request.question
+
+    question_text = template.format(item=request.context_item)
+
+    prompt = f"""CASE: {request.case_snippet}
+CONTEXT: {request.context_type} — {request.context_item}
+QUESTION: {question_text}
+
+Answer concisely in plain text (2-3 sentences)."""
+
+    try:
+        response = await medgemma.generate(
+            prompt=prompt,
+            system_prompt="You are a concise clinical reasoning assistant. Answer in 2-3 sentences. Plain text only.",
+            temperature=0.3,
+            max_tokens=300,
+        )
+        response = medgemma._clean_response(response)
+        if not response or len(response.strip()) < 5:
+            response = "Unable to generate a response. Please try a different question."
+        return AIAssistResponse(answer=response.strip())
+    except Exception as e:
+        logger.error("AI assist failed", error=str(e))
+        return AIAssistResponse(answer=f"Unable to generate response: {str(e)[:100]}")
 
 
 @router.post("/drug-toxicity")

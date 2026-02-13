@@ -14,6 +14,8 @@ import {
   GripVertical,
   MessageSquare,
   Sparkles,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +29,8 @@ import {
 } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import type { TreatmentOption } from '@/types/case';
-import type { ClinicianOverrides, TreatmentOverride } from '@/lib/storage';
+import type { ClinicianOverrides, TreatmentOverride, CustomTreatment } from '@/lib/storage';
+import { InlineAIAssist } from '@/components/case/InlineAIAssist';
 
 interface TreatmentPlanEditorProps {
   treatmentOptions: TreatmentOption[];
@@ -35,6 +38,7 @@ interface TreatmentPlanEditorProps {
   recommendationRationale: string;
   overrides: ClinicianOverrides;
   onOverridesChange: (overrides: ClinicianOverrides) => void;
+  caseSnippet?: string;
 }
 
 const STATUS_CYCLE: TreatmentOverride['status'][] = ['pending', 'ordered', 'administered', 'held'];
@@ -78,12 +82,23 @@ export function TreatmentPlanEditor({
   recommendationRationale,
   overrides,
   onOverridesChange,
+  caseSnippet,
 }: TreatmentPlanEditorProps) {
-  const [order, setOrder] = useState<string[]>(() =>
-    treatmentOptions.map(t => t.name)
-  );
+  const customTreatments = overrides.customTreatments || [];
+
+  // Order includes both AI treatment names and custom:id keys
+  const [order, setOrder] = useState<string[]>(() => [
+    ...treatmentOptions.map(t => t.name),
+    ...customTreatments.map(t => `custom:${t.id}`),
+  ]);
   const dragItem = useRef<number | null>(null);
   const dragOver = useRef<number | null>(null);
+
+  // Add custom treatment form state
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newDose, setNewDose] = useState('');
+  const [newRationale, setNewRationale] = useState('');
 
   const getOverride = (name: string): TreatmentOverride =>
     overrides.treatments[name] || {};
@@ -111,9 +126,73 @@ export function TreatmentPlanEditor({
     dragOver.current = null;
   };
 
-  const orderedOptions = order
-    .map(name => treatmentOptions.find(t => t.name === name))
-    .filter((t): t is TreatmentOption => !!t);
+  const addCustomTreatment = useCallback(() => {
+    if (!newName.trim()) return;
+    const ct: CustomTreatment = {
+      id: `ct-${Date.now()}`,
+      name: newName.trim(),
+      dose: newDose.trim(),
+      rationale: newRationale.trim(),
+      status: 'pending',
+      addedAt: new Date().toISOString(),
+    };
+    const updated = [...customTreatments, ct];
+    onOverridesChange({
+      ...overrides,
+      customTreatments: updated,
+      lastModified: new Date().toISOString(),
+    });
+    setOrder(prev => [...prev, `custom:${ct.id}`]);
+    setNewName('');
+    setNewDose('');
+    setNewRationale('');
+    setShowAddForm(false);
+  }, [newName, newDose, newRationale, customTreatments, overrides, onOverridesChange]);
+
+  const deleteCustomTreatment = useCallback((id: string) => {
+    onOverridesChange({
+      ...overrides,
+      customTreatments: customTreatments.filter(t => t.id !== id),
+      lastModified: new Date().toISOString(),
+    });
+    setOrder(prev => prev.filter(key => key !== `custom:${id}`));
+  }, [customTreatments, overrides, onOverridesChange]);
+
+  const cycleCustomTreatmentStatus = useCallback((id: string) => {
+    onOverridesChange({
+      ...overrides,
+      customTreatments: customTreatments.map(t => {
+        if (t.id !== id) return t;
+        const currentIdx = STATUS_CYCLE.indexOf(t.status);
+        const nextIdx = (currentIdx + 1) % STATUS_CYCLE.length;
+        return { ...t, status: STATUS_CYCLE[nextIdx]! as CustomTreatment['status'] };
+      }),
+      lastModified: new Date().toISOString(),
+    });
+  }, [customTreatments, overrides, onOverridesChange]);
+
+  // Build ordered render list — mix AI and custom treatments
+  const orderedItems: Array<{ type: 'ai'; option: TreatmentOption } | { type: 'custom'; treatment: CustomTreatment }> = [];
+  const usedAi = new Set<string>();
+  const usedCustom = new Set<string>();
+
+  for (const key of order) {
+    if (key.startsWith('custom:')) {
+      const id = key.slice(7);
+      const ct = customTreatments.find(t => t.id === id);
+      if (ct) { orderedItems.push({ type: 'custom', treatment: ct }); usedCustom.add(id); }
+    } else {
+      const opt = treatmentOptions.find(t => t.name === key);
+      if (opt) { orderedItems.push({ type: 'ai', option: opt }); usedAi.add(key); }
+    }
+  }
+  // Add any items not in order (e.g. new AI options from reassessment)
+  for (const opt of treatmentOptions) {
+    if (!usedAi.has(opt.name)) orderedItems.push({ type: 'ai', option: opt });
+  }
+  for (const ct of customTreatments) {
+    if (!usedCustom.has(ct.id)) orderedItems.push({ type: 'custom', treatment: ct });
+  }
 
   return (
     <div className="space-y-4">
@@ -131,41 +210,134 @@ export function TreatmentPlanEditor({
         </Card>
       )}
 
-      {/* Treatment cards */}
-      {orderedOptions.map((option, idx) => {
-        const override = getOverride(option.name);
-        const clinicianVerdict = override.verdict;
-        const isTop = option.name === topRecommendation;
+      {/* Treatment cards — interleaved AI + custom */}
+      {orderedItems.map((item, idx) => {
+        if (item.type === 'ai') {
+          const option = item.option;
+          const override = getOverride(option.name);
+          const clinicianVerdict = override.verdict;
+          const isTop = option.name === topRecommendation;
+          const borderClass = clinicianVerdict
+            ? verdictConfig[clinicianVerdict].border
+            : aiVerdictConfig[option.verdict].border;
 
-        // Determine border color: clinician verdict overrides AI verdict
-        const borderClass = clinicianVerdict
-          ? verdictConfig[clinicianVerdict].border
-          : aiVerdictConfig[option.verdict].border;
-
-        return (
-          <InteractiveTreatmentCard
-            key={option.name}
-            option={option}
-            isTop={isTop}
-            override={override}
-            borderClass={borderClass}
-            index={idx}
-            onSetVerdict={(v) => setOverride(option.name, {
-              verdict: override.verdict === v ? undefined : v,
-            })}
-            onCycleStatus={() => {
-              const currentIdx = STATUS_CYCLE.indexOf(override.status || 'pending');
-              const nextIdx = (currentIdx + 1) % STATUS_CYCLE.length;
-              setOverride(option.name, { status: STATUS_CYCLE[nextIdx] });
-            }}
-            onNotesChange={(notes) => setOverride(option.name, { notes })}
-            onDoseChange={(dose) => setOverride(option.name, { modifiedDose: dose })}
-            onDragStart={() => handleDragStart(idx)}
-            onDragEnter={() => handleDragEnter(idx)}
-            onDragEnd={handleDragEnd}
-          />
-        );
+          return (
+            <InteractiveTreatmentCard
+              key={option.name}
+              option={option}
+              isTop={isTop}
+              override={override}
+              borderClass={borderClass}
+              index={idx}
+              caseSnippet={caseSnippet}
+              onSetVerdict={(v) => setOverride(option.name, {
+                verdict: override.verdict === v ? undefined : v,
+              })}
+              onCycleStatus={() => {
+                const currentIdx = STATUS_CYCLE.indexOf(override.status || 'pending');
+                const nextIdx = (currentIdx + 1) % STATUS_CYCLE.length;
+                setOverride(option.name, { status: STATUS_CYCLE[nextIdx] });
+              }}
+              onNotesChange={(notes) => setOverride(option.name, { notes })}
+              onDoseChange={(dose) => setOverride(option.name, { modifiedDose: dose })}
+              onDragStart={() => handleDragStart(idx)}
+              onDragEnter={() => handleDragEnter(idx)}
+              onDragEnd={handleDragEnd}
+            />
+          );
+        } else {
+          const ct = item.treatment;
+          const sc = statusConfig[ct.status];
+          return (
+            <Card
+              key={`custom:${ct.id}`}
+              className="transition-all border-l-4 border-l-blue-400"
+              draggable
+              onDragStart={() => handleDragStart(idx)}
+              onDragEnter={() => handleDragEnter(idx)}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => e.preventDefault()}
+            >
+              <CardHeader className="py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <GripVertical className="w-4 h-4 text-muted-foreground/50 cursor-grab flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">
+                          Clinician
+                        </Badge>
+                        <button onClick={() => cycleCustomTreatmentStatus(ct.id)} className="inline-flex items-center">
+                          <Badge variant="outline" className={cn('text-xs cursor-pointer hover:opacity-80', sc.className)}>
+                            {sc.label}
+                          </Badge>
+                        </button>
+                      </div>
+                      <CardTitle className="text-base">{ct.name}</CardTitle>
+                      {ct.dose && <CardDescription className="mt-0.5 text-xs">Dose: {ct.dose}</CardDescription>}
+                      {ct.rationale && <p className="text-sm text-muted-foreground mt-1">{ct.rationale}</p>}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => deleteCustomTreatment(ct.id)}
+                    className="opacity-0 group-hover:opacity-100 hover:opacity-100 transition-opacity p-1"
+                  >
+                    <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                  </button>
+                </div>
+              </CardHeader>
+            </Card>
+          );
+        }
       })}
+
+      {/* Add Treatment form */}
+      {showAddForm ? (
+        <Card className="border-dashed border-2 border-blue-300">
+          <CardContent className="pt-4 pb-3 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">Add Custom Treatment</p>
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Treatment name (required)"
+              autoFocus
+              className="w-full h-8 rounded-md border border-input bg-background px-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+            <input
+              type="text"
+              value={newDose}
+              onChange={(e) => setNewDose(e.target.value)}
+              placeholder="Dose (optional, e.g. 500mg PO BID)"
+              className="w-full h-8 rounded-md border border-input bg-background px-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+            <input
+              type="text"
+              value={newRationale}
+              onChange={(e) => setNewRationale(e.target.value)}
+              placeholder="Rationale (optional)"
+              onKeyDown={(e) => { if (e.key === 'Enter') addCustomTreatment(); }}
+              className="w-full h-8 rounded-md border border-input bg-background px-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+            <div className="flex gap-2">
+              <Button size="sm" className="h-8 text-xs" onClick={addCustomTreatment} disabled={!newName.trim()}>
+                <Plus className="w-3.5 h-3.5 mr-1" /> Add Treatment
+              </Button>
+              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setShowAddForm(false); setNewName(''); setNewDose(''); setNewRationale(''); }}>
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Button
+          variant="outline"
+          className="w-full gap-1.5 text-xs border-dashed"
+          onClick={() => setShowAddForm(true)}
+        >
+          <Plus className="w-3.5 h-3.5" /> Add Treatment
+        </Button>
+      )}
     </div>
   );
 }
@@ -176,6 +348,7 @@ interface InteractiveTreatmentCardProps {
   override: TreatmentOverride;
   borderClass: string;
   index: number;
+  caseSnippet?: string;
   onSetVerdict: (v: 'accepted' | 'rejected' | 'modified') => void;
   onCycleStatus: () => void;
   onNotesChange: (notes: string) => void;
@@ -190,6 +363,7 @@ function InteractiveTreatmentCard({
   isTop,
   override,
   borderClass,
+  caseSnippet,
   onSetVerdict,
   onCycleStatus,
   onNotesChange,
@@ -245,9 +419,18 @@ function InteractiveTreatmentCard({
                     )}
                     <GradeBadge grade={option.evidence_grade} />
                   </div>
-                  <CardTitle className={cn('text-base', isRejected && 'line-through')}>
-                    {option.name}
-                  </CardTitle>
+                  <div className="flex items-center gap-1.5">
+                    <CardTitle className={cn('text-base', isRejected && 'line-through')}>
+                      {option.name}
+                    </CardTitle>
+                    {caseSnippet && (
+                      <InlineAIAssist
+                        contextType="treatment"
+                        contextItem={option.name}
+                        caseSnippet={caseSnippet}
+                      />
+                    )}
+                  </div>
                   <CardDescription className="mt-0.5 text-xs">{option.mechanism}</CardDescription>
                 </div>
               </div>

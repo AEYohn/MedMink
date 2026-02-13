@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronDown, FolderOpen, Trash2, Clock } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ChevronDown, FolderOpen, Trash2, Clock, Search, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +29,16 @@ export function CaseSessionList({
   onNewCase,
 }: CaseSessionListProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [filter, setFilter] = useState('');
+
+  const filteredSessions = useMemo(() => {
+    if (!filter.trim()) return sessions;
+    const q = filter.toLowerCase();
+    return sessions.filter(s =>
+      s.title.toLowerCase().includes(q) ||
+      (s.patientId && s.patientId.toLowerCase().includes(q))
+    );
+  }, [sessions, filter]);
 
   if (sessions.length === 0) return null;
 
@@ -62,8 +72,21 @@ export function CaseSessionList({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="pt-0 pb-3">
+            {/* Filter input */}
+            <div className="relative mb-2">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <input
+                type="text"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                placeholder="Filter by patient or title..."
+                className="w-full h-7 pl-7 pr-2 rounded-md border border-input bg-background text-xs shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+
             <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
-              {sessions.map((session) => {
+              {filteredSessions.map((session) => {
                 const isCurrent = session.id === currentSessionId;
                 const updatedAt = new Date(session.updatedAt);
                 const timeStr = updatedAt.toLocaleDateString([], { month: 'short', day: 'numeric' });
@@ -87,6 +110,12 @@ export function CaseSessionList({
                       <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                         <Clock className="w-3 h-3" />
                         {timeStr}
+                        {session.patientId && (
+                          <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 gap-0.5">
+                            <User className="w-2.5 h-2.5" />
+                            {session.patientId}
+                          </Badge>
+                        )}
                         {session.events.length > 0 && (
                           <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
                             {session.events.length} event{session.events.length !== 1 ? 's' : ''}
@@ -108,6 +137,9 @@ export function CaseSessionList({
                   </div>
                 );
               })}
+              {filteredSessions.length === 0 && filter && (
+                <p className="text-xs text-muted-foreground text-center py-3">No sessions match &ldquo;{filter}&rdquo;</p>
+              )}
             </div>
           </CardContent>
         </CollapsibleContent>

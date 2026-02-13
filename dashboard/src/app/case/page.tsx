@@ -202,6 +202,9 @@ export default function CaseAnalysisPage() {
   // Clinician overrides
   const [overrides, setOverrides] = useState<ClinicianOverrides>(createEmptyOverrides());
 
+  // Patient ID
+  const [patientId, setPatientId] = useState('');
+
   // Case session state
   const session = useCaseSession();
 
@@ -225,6 +228,7 @@ export default function CaseAnalysisPage() {
     if (session.currentSession) {
       const s = session.currentSession;
       setCaseText(s.currentCaseText);
+      setPatientId(s.patientId || '');
       if (s.overrides) setOverrides(s.overrides);
       if (s.currentResult) {
         const r = s.currentResult as unknown as CaseAnalysisData;
@@ -341,6 +345,7 @@ export default function CaseAnalysisPage() {
           analysis_summary: slimSummary,
           question: question.trim(),
           conversation_history: followUpMessages.map(m => ({ role: m.role, content: m.content })),
+          session_id: session.currentSession?.id || null,
         }),
       });
       if (!response.ok) throw new Error('Failed to get follow-up answer');
@@ -376,6 +381,7 @@ export default function CaseAnalysisPage() {
     resetAnalysisState();
     const title = caseText.trim().slice(0, 60).replace(/\n/g, ' ') + '...';
     if (!session.currentSession) session.createSession(caseText.trim(), title);
+    if (patientId.trim()) session.updatePatientId(patientId.trim());
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
       const response = await fetch(`${apiUrl}/api/case/analyze/stream`, {
@@ -448,6 +454,7 @@ export default function CaseAnalysisPage() {
     const loaded = session.loadSession(id);
     if (loaded) {
       setCaseText(loaded.currentCaseText);
+      setPatientId(loaded.patientId || '');
       if (loaded.overrides) setOverrides(loaded.overrides);
       else setOverrides(createEmptyOverrides());
       if (loaded.currentResult) {
@@ -469,6 +476,7 @@ export default function CaseAnalysisPage() {
   const handleNewCase = () => {
     session.clearCurrentSession();
     setCaseText('');
+    setPatientId('');
     resetAnalysisState();
   };
 
@@ -609,10 +617,20 @@ export default function CaseAnalysisPage() {
                     <Mic className="w-4 h-4 mr-1" /> Dictate
                   </Button>
                 </div>
-                <Button type="submit" disabled={!caseText.trim() || isLoading}>
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Sparkles className="w-4 h-4 mr-1" />}
-                  {isLoading ? 'Analyzing...' : 'Analyze Case'}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={patientId}
+                    onChange={(e) => setPatientId(e.target.value)}
+                    placeholder="Patient ID (optional)"
+                    className="h-9 w-40 rounded-md border border-input bg-background px-2 text-xs shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    disabled={isLoading}
+                  />
+                  <Button type="submit" disabled={!caseText.trim() || isLoading}>
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Sparkles className="w-4 h-4 mr-1" />}
+                    {isLoading ? 'Analyzing...' : 'Analyze Case'}
+                  </Button>
+                </div>
               </div>
             </form>
           </CardContent>
@@ -719,6 +737,7 @@ export default function CaseAnalysisPage() {
                     acuteManagement={result.acute_management!}
                     overrides={overrides}
                     onOverridesChange={handleOverridesChange}
+                    caseSnippet={caseText.slice(0, 300)}
                   />
                 )}
 
@@ -738,6 +757,7 @@ export default function CaseAnalysisPage() {
                     recommendationRationale={result.recommendation_rationale}
                     overrides={overrides}
                     onOverridesChange={handleOverridesChange}
+                    caseSnippet={caseText.slice(0, 300)}
                   />
 
                   {/* Add New Findings */}

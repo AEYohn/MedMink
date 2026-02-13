@@ -11,18 +11,22 @@ import {
   Check,
   Pencil,
   Clock,
+  Trash2,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { AcuteManagement } from '@/types/case';
-import type { ClinicianOverrides, AcuteActionOverride } from '@/lib/storage';
+import type { ClinicianOverrides, AcuteActionOverride, SectionCustomAction } from '@/lib/storage';
+import { InlineAIAssist } from '@/components/case/InlineAIAssist';
 
 interface AcuteManagementEditorProps {
   acuteManagement: AcuteManagement;
   overrides: ClinicianOverrides;
   onOverridesChange: (overrides: ClinicianOverrides) => void;
+  caseSnippet?: string;
 }
 
 interface ActionItemProps {
@@ -98,10 +102,14 @@ function ActionItem({ id, text, override, onToggle, onEditText }: ActionItemProp
   );
 }
 
+// Sections that allow adding custom actions
+const ADDABLE_SECTIONS = new Set(['immediate', 'monitoring', 'consult', 'counseling', 'metabolic']);
+
 export function AcuteManagementEditor({
   acuteManagement,
   overrides,
   onOverridesChange,
+  caseSnippet,
 }: AcuteManagementEditorProps) {
   const [newActionText, setNewActionText] = useState('');
   const [addingToSection, setAddingToSection] = useState<string | null>(null);
@@ -135,6 +143,7 @@ export function AcuteManagementEditor({
     updateAction(id, { editedText: text });
   }, [updateAction]);
 
+  // Legacy global custom actions
   const addCustomAction = useCallback((text: string) => {
     if (!text.trim()) return;
     onOverridesChange({
@@ -159,7 +168,62 @@ export function AcuteManagementEditor({
     });
   }, [overrides, onOverridesChange]);
 
-  // Count completed items
+  const deleteCustomAction = useCallback((index: number) => {
+    onOverridesChange({
+      ...overrides,
+      customActions: overrides.customActions.filter((_, i) => i !== index),
+      lastModified: new Date().toISOString(),
+    });
+  }, [overrides, onOverridesChange]);
+
+  // Per-section custom actions
+  const sectionCustomActions = overrides.sectionCustomActions || {};
+
+  const addSectionAction = useCallback((sectionId: string, text: string) => {
+    if (!text.trim()) return;
+    const existing = sectionCustomActions[sectionId] || [];
+    onOverridesChange({
+      ...overrides,
+      sectionCustomActions: {
+        ...sectionCustomActions,
+        [sectionId]: [
+          ...existing,
+          { id: `sca-${Date.now()}`, text: text.trim(), checked: false, addedAt: new Date().toISOString() },
+        ],
+      },
+      lastModified: new Date().toISOString(),
+    });
+    setNewActionText('');
+    setAddingToSection(null);
+  }, [overrides, sectionCustomActions, onOverridesChange]);
+
+  const deleteSectionAction = useCallback((sectionId: string, actionId: string) => {
+    const existing = sectionCustomActions[sectionId] || [];
+    onOverridesChange({
+      ...overrides,
+      sectionCustomActions: {
+        ...sectionCustomActions,
+        [sectionId]: existing.filter(a => a.id !== actionId),
+      },
+      lastModified: new Date().toISOString(),
+    });
+  }, [overrides, sectionCustomActions, onOverridesChange]);
+
+  const toggleSectionAction = useCallback((sectionId: string, actionId: string) => {
+    const existing = sectionCustomActions[sectionId] || [];
+    onOverridesChange({
+      ...overrides,
+      sectionCustomActions: {
+        ...sectionCustomActions,
+        [sectionId]: existing.map(a =>
+          a.id === actionId ? { ...a, checked: !a.checked } : a
+        ),
+      },
+      lastModified: new Date().toISOString(),
+    });
+  }, [overrides, sectionCustomActions, onOverridesChange]);
+
+  // Count completed items (AI + global custom + section custom)
   const allActionIds = [
     ...(acuteManagement.immediate_actions || []).map((_, i) => `immediate-${i}`),
     ...(acuteManagement.monitoring_plan || []).map((_, i) => `monitoring-${i}`),
@@ -167,27 +231,43 @@ export function AcuteManagementEditor({
     ...(acuteManagement.metabolic_corrections || []).map((_, i) => `metabolic-${i}`),
     ...(acuteManagement.key_counseling || []).map((_, i) => `counseling-${i}`),
   ];
+  const sectionCustomCount = Object.values(sectionCustomActions).reduce((sum, arr) => sum + arr.length, 0);
+  const sectionCustomChecked = Object.values(sectionCustomActions).reduce(
+    (sum, arr) => sum + arr.filter(a => a.checked).length, 0
+  );
   const completedCount = allActionIds.filter(id => overrides.acuteActions[id]?.checked).length
-    + overrides.customActions.filter(a => a.checked).length;
-  const totalCount = allActionIds.length + overrides.customActions.length;
+    + overrides.customActions.filter(a => a.checked).length
+    + sectionCustomChecked;
+  const totalCount = allActionIds.length + overrides.customActions.length + sectionCustomCount;
 
   const renderSection = (
     title: string,
     items: string[] | undefined,
     idPrefix: string,
     icon: React.ReactNode,
-    className?: string
+    className?: string,
+    allowAdd: boolean = false,
   ) => {
-    if (!items || items.length === 0) return null;
+    const sectionActions = sectionCustomActions[idPrefix] || [];
+    if ((!items || items.length === 0) && sectionActions.length === 0 && !allowAdd) return null;
     return (
       <div className={className}>
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-orange-600 flex items-center gap-1.5">
-            {icon} {title}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-orange-600 flex items-center gap-1.5">
+              {icon} {title}
+            </p>
+            {caseSnippet && (
+              <InlineAIAssist
+                contextType="section"
+                contextItem={title}
+                caseSnippet={caseSnippet}
+              />
+            )}
+          </div>
         </div>
         <ol className="space-y-1.5">
-          {items.map((item, i) => {
+          {(items || []).map((item, i) => {
             const id = `${idPrefix}-${i}`;
             return (
               <ActionItem
@@ -200,7 +280,66 @@ export function AcuteManagementEditor({
               />
             );
           })}
+          {/* Per-section custom actions */}
+          {sectionActions.map((action) => (
+            <li key={action.id} className="flex items-start gap-2.5 group">
+              <button
+                onClick={() => toggleSectionAction(idPrefix, action.id)}
+                className={cn(
+                  'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors',
+                  action.checked
+                    ? 'bg-green-500 border-green-500 text-white'
+                    : 'border-muted-foreground/40 hover:border-primary'
+                )}
+              >
+                {action.checked && <Check className="w-3 h-3" />}
+              </button>
+              <span className={cn('text-sm flex-1', action.checked && 'line-through text-muted-foreground')}>
+                {action.text}
+                <Badge variant="outline" className="ml-2 text-[9px] px-1 py-0 h-4 text-blue-600 border-blue-300">
+                  Clinician
+                </Badge>
+                <span className="text-[10px] text-muted-foreground ml-2">
+                  <Clock className="w-3 h-3 inline" /> {new Date(action.addedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </span>
+              <button
+                onClick={() => deleteSectionAction(idPrefix, action.id)}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
+              </button>
+            </li>
+          ))}
         </ol>
+        {/* Inline add for this section */}
+        {allowAdd && (
+          addingToSection === idPrefix ? (
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="text"
+                value={newActionText}
+                onChange={(e) => setNewActionText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') addSectionAction(idPrefix, newActionText);
+                  if (e.key === 'Escape') { setAddingToSection(null); setNewActionText(''); }
+                }}
+                autoFocus
+                placeholder={`Add to ${title.toLowerCase()}...`}
+                className="flex-1 h-7 rounded-md border border-input bg-background px-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+              <Button size="sm" className="h-7 text-xs" onClick={() => addSectionAction(idPrefix, newActionText)}>Add</Button>
+              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { setAddingToSection(null); setNewActionText(''); }}>Cancel</Button>
+            </div>
+          ) : (
+            <button
+              onClick={() => { setAddingToSection(idPrefix); setNewActionText(''); }}
+              className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground mt-1.5 transition-colors"
+            >
+              <Plus className="w-3 h-3" /> Add
+            </button>
+          )
+        )}
       </div>
     );
   };
@@ -245,6 +384,8 @@ export function AcuteManagementEditor({
           acuteManagement.immediate_actions,
           'immediate',
           <ShieldAlert className="w-3.5 h-3.5" />,
+          undefined,
+          true,
         )}
 
         {/* Do Not Do — read-only warnings */}
@@ -270,6 +411,8 @@ export function AcuteManagementEditor({
           acuteManagement.monitoring_plan,
           'monitoring',
           <Activity className="w-3.5 h-3.5" />,
+          undefined,
+          true,
         )}
 
         {/* Metabolic Corrections */}
@@ -279,9 +422,10 @@ export function AcuteManagementEditor({
           'metabolic',
           <Beaker className="w-3.5 h-3.5" />,
           'p-3 bg-purple-500/10 rounded-lg border border-purple-500/20',
+          true,
         )}
 
-        {/* Disposition */}
+        {/* Disposition — read-only */}
         {acuteManagement.disposition && (
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Disposition:</span>
@@ -297,6 +441,8 @@ export function AcuteManagementEditor({
           acuteManagement.consults,
           'consult',
           <MessageCircle className="w-3.5 h-3.5" />,
+          undefined,
+          true,
         )}
 
         {/* Key Counseling */}
@@ -305,9 +451,11 @@ export function AcuteManagementEditor({
           acuteManagement.key_counseling,
           'counseling',
           <MessageCircle className="w-3.5 h-3.5" />,
+          undefined,
+          true,
         )}
 
-        {/* Activity Restrictions */}
+        {/* Activity Restrictions — read-only */}
         {acuteManagement.activity_restrictions && acuteManagement.activity_restrictions.toLowerCase() !== 'none' && (
           <div className="p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
             <p className="text-xs font-semibold uppercase tracking-wider text-amber-600 mb-1">Activity Restrictions</p>
@@ -315,7 +463,7 @@ export function AcuteManagementEditor({
           </div>
         )}
 
-        {/* Custom actions */}
+        {/* Legacy global custom actions */}
         {overrides.customActions.length > 0 && (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-2">
@@ -323,7 +471,7 @@ export function AcuteManagementEditor({
             </p>
             <ol className="space-y-1.5">
               {overrides.customActions.map((action, i) => (
-                <li key={`custom-${i}`} className="flex items-start gap-2.5">
+                <li key={`custom-${i}`} className="flex items-start gap-2.5 group">
                   <button
                     onClick={() => toggleCustomAction(i)}
                     className={cn(
@@ -341,13 +489,19 @@ export function AcuteManagementEditor({
                       <Clock className="w-3 h-3 inline" /> {new Date(action.addedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </span>
+                  <button
+                    onClick={() => deleteCustomAction(i)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
+                  </button>
                 </li>
               ))}
             </ol>
           </div>
         )}
 
-        {/* Add action button */}
+        {/* Add action button (global fallback) */}
         {addingToSection === 'custom' ? (
           <div className="flex items-center gap-2">
             <input

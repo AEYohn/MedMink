@@ -182,6 +182,19 @@ export function useCaseSession() {
     return sessionRef.current?.overrides || createEmptyOverrides();
   }, []);
 
+  const updatePatientId = useCallback((patientId: string) => {
+    const cur = sessionRef.current;
+    if (!cur) return;
+    const updated = {
+      ...cur,
+      patientId,
+      updatedAt: new Date().toISOString(),
+    };
+    saveCaseSession(updated);
+    setSession(updated);
+    refreshSessions();
+  }, [refreshSessions, setSession]);
+
   return {
     currentSession,
     allSessions,
@@ -197,5 +210,6 @@ export function useCaseSession() {
     updateFollowUpMessages,
     updateOverrides,
     getOverrides,
+    updatePatientId,
   };
 }

@@ -118,7 +118,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-4 border-b border-border">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
             <Stethoscope className="w-4 h-4 text-white" />
           </div>
           <span className="text-sm font-semibold">MedLit Agent</span>
@@ -161,7 +161,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         <div className="px-3 pb-3">
           <button
             onClick={startNewConversation}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white text-sm font-medium rounded-xl shadow-sm hover:shadow-md transition-all"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-xl shadow-sm hover:shadow-md transition-all"
           >
             <Plus className="w-4 h-4" />
             New Chat
@@ -304,7 +304,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
       {/* Footer — Powered by MedGemma */}
       <div className="p-3 border-t border-border">
-        <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl">
+        <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-xl">
           <div className="w-2 h-2 bg-emerald-500 rounded-full status-pulse" />
           <span className="text-xs font-medium text-primary">Powered by MedGemma</span>
         </div>

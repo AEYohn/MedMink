@@ -299,7 +299,7 @@ export default function InterviewPage() {
             <button
               onClick={startInterview}
               disabled={isLoading}
-              className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-primary to-accent text-white font-medium rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+              className="flex items-center gap-2 px-8 py-3 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

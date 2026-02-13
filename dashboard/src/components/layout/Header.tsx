@@ -19,7 +19,7 @@ export function Header({ onOpenCommandPalette }: HeaderProps) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   return (
-    <header className="h-16 glass border-b border-surface-200/50 dark:border-surface-700/50 flex items-center px-4 lg:px-6 gap-4 sticky top-0 z-40">
+    <header className="h-16 bg-card border-b border-border flex items-center px-4 lg:px-6 gap-4 sticky top-0 z-40">
       {/* Logo */}
       <Link href="/" className="flex items-center gap-3 flex-shrink-0 group">
         <div className="relative">

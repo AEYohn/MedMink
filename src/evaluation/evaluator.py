@@ -6,7 +6,7 @@ against anchor papers with known scores to produce calibrated ratings.
 """
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 import structlog
 
@@ -16,7 +16,7 @@ from src.gemini.client import get_gemini_client
 logger = structlog.get_logger()
 
 
-class ComparisonResult(str, Enum):
+class ComparisonResult(StrEnum):
     """Result of comparing target to anchor."""
 
     BETTER = "better"

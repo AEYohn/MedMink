@@ -4,7 +4,7 @@ Uses DSPy to classify queries and route to the optimal model.
 """
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 import dspy
@@ -20,7 +20,7 @@ from src.routing.model_registry import (
 logger = structlog.get_logger()
 
 
-class TaskType(str, Enum):
+class TaskType(StrEnum):
     """Types of healthcare tasks."""
 
     # Clinical literature tasks

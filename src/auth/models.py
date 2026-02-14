@@ -4,14 +4,14 @@ Defines User, Patient, and Provider models for the healthcare platform.
 """
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, EmailStr, Field
 
 
-class UserRole(str, Enum):
+class UserRole(StrEnum):
     """User roles in the system."""
 
     PATIENT = "patient"

@@ -6,7 +6,7 @@ consensus scoring and identify areas of disagreement.
 
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 import structlog
@@ -17,7 +17,7 @@ from src.medgemma.prompts import CLINICAL_REASONING_SYSTEM
 logger = structlog.get_logger()
 
 
-class ConsensusStep(str, Enum):
+class ConsensusStep(StrEnum):
     """Steps in the consensus pipeline."""
     PARSING = "parsing"
     PRIMARY_ANALYSIS = "primary_analysis"

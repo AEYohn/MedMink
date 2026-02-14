@@ -4,7 +4,7 @@ Manages available models and their capabilities for intelligent routing.
 """
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Protocol
 
 import structlog
@@ -14,7 +14,7 @@ from src.config import settings
 logger = structlog.get_logger()
 
 
-class ModelCapability(str, Enum):
+class ModelCapability(StrEnum):
     """Capabilities that models can provide."""
 
     # Clinical capabilities

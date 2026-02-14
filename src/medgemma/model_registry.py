@@ -10,7 +10,7 @@ Provides dynamic model loading and hot-swapping for different MedGemma variants:
 
 import asyncio
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 import structlog
@@ -18,7 +18,7 @@ import structlog
 logger = structlog.get_logger()
 
 
-class ModelType(str, Enum):
+class ModelType(StrEnum):
     """Available MedGemma model types."""
     TEXT_4B = "text_4b"           # google/medgemma-1.5-4b-it
     TEXT_27B = "text_27b"         # google/medgemma-27b-it

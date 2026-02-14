@@ -1,7 +1,7 @@
 """Novelty checker for assessing research originality."""
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 import structlog
@@ -11,7 +11,7 @@ from src.novelty.index import NoveltyIndex, get_novelty_index
 logger = structlog.get_logger()
 
 
-class NoveltyLevel(str, Enum):
+class NoveltyLevel(StrEnum):
     """Novelty classification levels."""
 
     HIGHLY_NOVEL = "highly_novel"  # < 0.70 max similarity

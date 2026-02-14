@@ -5,7 +5,7 @@ import * as d3 from 'd3';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Info } from 'lucide-react';
 
 interface ConsensusGaugeProps {
   score: number;
@@ -25,9 +25,9 @@ function scoreToLabel(value: number): string {
 }
 
 function scoreToBadgeClass(value: number): string {
-  if (value <= 0.4) return 'bg-red-500/10 text-red-400 border-red-500/30';
-  if (value <= 0.7) return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
-  return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+  if (value <= 0.4) return 'bg-red-50 text-red-700 border-red-300';
+  if (value <= 0.7) return 'bg-amber-50 text-amber-700 border-amber-300';
+  return 'bg-emerald-50 text-emerald-700 border-emerald-300';
 }
 
 export function ConsensusGauge({ score, divergencePoints = [] }: ConsensusGaugeProps) {
@@ -94,7 +94,7 @@ export function ConsensusGauge({ score, divergencePoints = [] }: ConsensusGaugeP
 
     g.append('path')
       .attr('d', bgArc({}) as string)
-      .attr('fill', 'hsl(240 3.7% 15.9%)');
+      .attr('fill', 'hsl(240 6% 92%)');
 
     // Gradient definition
     const defs = svg.append('defs');
@@ -141,7 +141,7 @@ export function ConsensusGauge({ score, divergencePoints = [] }: ConsensusGaugeP
         .attr('y1', y1)
         .attr('x2', x2)
         .attr('y2', y2)
-        .attr('stroke', 'hsl(240 5% 64.9%)')
+        .attr('stroke', 'hsl(240 6% 45%)')
         .attr('stroke-width', 1.5);
     });
 
@@ -173,7 +173,15 @@ export function ConsensusGauge({ score, divergencePoints = [] }: ConsensusGaugeP
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Model Consensus</CardTitle>
+          <div className="flex items-center gap-1.5">
+            <CardTitle className="text-base">Model Consensus</CardTitle>
+            <div className="relative group">
+              <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 px-3 py-2 rounded-lg border bg-popover text-popover-foreground shadow-md text-xs opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-50">
+                Measures agreement between AI-generated treatment options and supporting evidence from PubMed literature
+              </div>
+            </div>
+          </div>
           <Badge
             variant="outline"
             className={cn('text-[10px] px-1.5 py-0', scoreToBadgeClass(clampedScore))}

@@ -39,9 +39,9 @@ const VERDICT_LABELS: Record<string, string> = {
 };
 
 const VERDICT_BADGE_CLASSES: Record<string, string> = {
-  recommended: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
-  consider: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
-  not_recommended: 'bg-red-500/10 text-red-400 border-red-500/30',
+  recommended: 'bg-emerald-50 text-emerald-700 border-emerald-300',
+  consider: 'bg-amber-50 text-amber-700 border-amber-300',
+  not_recommended: 'bg-red-50 text-red-700 border-red-300',
 };
 
 function CustomTooltip({ active, payload }: any) {
@@ -77,7 +77,7 @@ function ConfidenceLabel(props: any) {
     <text
       x={labelX}
       y={labelY}
-      fill="hsl(0 0% 98%)"
+      fill="hsl(240 6% 25%)"
       fontSize={12}
       fontWeight={500}
       dominantBaseline="central"
@@ -87,9 +87,9 @@ function ConfidenceLabel(props: any) {
   );
 }
 
-function truncateName(name: string, maxLen = 32): string {
-  // Strip parenthetical dosing details first, e.g. "Aspirin (325 mg PO)" → "Aspirin"
-  const short = name.replace(/\s*\(e\.g\..*?\)\s*/g, '').replace(/\s*\(.*?mg.*?\)\s*/g, '');
+function truncateName(name: string, maxLen = 42): string {
+  // Strip only "e.g." parentheticals, keep dosing info like "(325 mg PO daily)"
+  const short = name.replace(/\s*\(e\.g\..*?\)\s*/g, '');
   if (short.length <= maxLen) return short;
   return short.slice(0, maxLen - 1).trimEnd() + '…';
 }
@@ -100,7 +100,7 @@ function CustomYTick({ x, y, payload }: any) {
     <text
       x={x - 4}
       y={y}
-      fill="hsl(0 0% 98%)"
+      fill="hsl(240 6% 25%)"
       fontSize={12}
       textAnchor="end"
       dominantBaseline="central"
@@ -156,15 +156,15 @@ export function TreatmentComparisonChart({ treatments }: TreatmentComparisonChar
               <CartesianGrid
                 strokeDasharray="3 3"
                 horizontal={false}
-                stroke="hsl(240 3.7% 15.9%)"
+                stroke="hsl(240 6% 90%)"
               />
               <XAxis
                 type="number"
                 domain={[0, 1]}
                 tickFormatter={(v: number) => `${Math.round(v * 100)}%`}
-                tick={{ fill: 'hsl(240 5% 64.9%)', fontSize: 11 }}
-                axisLine={{ stroke: 'hsl(240 3.7% 15.9%)' }}
-                tickLine={{ stroke: 'hsl(240 3.7% 15.9%)' }}
+                tick={{ fill: 'hsl(240 6% 45%)', fontSize: 11 }}
+                axisLine={{ stroke: 'hsl(240 6% 80%)' }}
+                tickLine={{ stroke: 'hsl(240 6% 80%)' }}
               />
               <YAxis
                 type="category"
@@ -176,7 +176,7 @@ export function TreatmentComparisonChart({ treatments }: TreatmentComparisonChar
               />
               <Tooltip
                 content={<CustomTooltip />}
-                cursor={{ fill: 'hsl(240 3.7% 15.9% / 0.5)' }}
+                cursor={{ fill: 'hsl(240 6% 90% / 0.5)' }}
               />
               <Bar
                 dataKey="confidence"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   FileText,
   Loader2,
@@ -96,6 +96,34 @@ export function DischargeEditor({
   // Clinician discharge meds
   const dischargeMeds = overrides.dischargeMeds;
   const instructions = overrides.dischargeInstructions;
+
+  // Auto-populate from accepted treatments when discharge meds are empty
+  const hasPopulatedRef = useRef(false);
+  useEffect(() => {
+    if (hasPopulatedRef.current || dischargeMeds.length > 0) return;
+    const acceptedMeds: DischargeMedOverride[] = [];
+    for (const t of treatmentOptions) {
+      const name = (t.name as string) || '';
+      const treatmentOverride = overrides.treatments[name];
+      if (treatmentOverride?.verdict === 'accepted') {
+        acceptedMeds.push({
+          name,
+          dose: treatmentOverride.modifiedDose || '',
+          frequency: '',
+          source: 'ai',
+          action: 'new',
+        });
+      }
+    }
+    if (acceptedMeds.length > 0) {
+      hasPopulatedRef.current = true;
+      onOverridesChange({
+        ...overrides,
+        dischargeMeds: acceptedMeds,
+        lastModified: new Date().toISOString(),
+      });
+    }
+  }, [treatmentOptions, overrides, dischargeMeds.length, onOverridesChange]);
 
   const handleGenerate = async () => {
     setIsLoading(true);

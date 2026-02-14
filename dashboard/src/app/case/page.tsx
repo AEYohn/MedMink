@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect, useCallback, FormEvent } from 'react';
 import Link from 'next/link';
-import ReactMarkdown from 'react-markdown';
 import {
   Stethoscope,
   Loader2,
@@ -17,17 +16,20 @@ import {
   Beaker,
   ArrowLeft,
   Clipboard,
-  MessageCircle,
-  Send,
   Mic,
   Camera,
   BarChart3,
+  Save,
+  Shield,
+  ClipboardList,
+  Wrench,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Collapsible,
   CollapsibleContent,
@@ -57,6 +59,8 @@ import { TreatmentPlanEditor } from '@/components/case/TreatmentPlanEditor';
 import { AcuteManagementEditor } from '@/components/case/AcuteManagementEditor';
 import { DischargeEditor } from '@/components/case/DischargeEditor';
 import { SafetyAlertsPanel } from '@/components/case/SafetyAlertsPanel';
+import { FollowUpChatDrawer } from '@/components/case/FollowUpChatDrawer';
+import { SafetyAlertBanner } from '@/components/case/SafetyAlertBanner';
 
 import type { NewFindings, ClinicianOverrides } from '@/lib/storage';
 import {
@@ -202,6 +206,12 @@ export default function CaseAnalysisPage() {
 
   // Clinician overrides
   const [overrides, setOverrides] = useState<ClinicianOverrides>(createEmptyOverrides());
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Tab & drawer state
+  const [activeTab, setActiveTab] = useState('assessment');
+  const [chatOpen, setChatOpen] = useState(false);
 
   // Patient ID
   const [patientId, setPatientId] = useState('');
@@ -212,6 +222,12 @@ export default function CaseAnalysisPage() {
   const handleOverridesChange = useCallback((newOverrides: ClinicianOverrides) => {
     setOverrides(newOverrides);
     session.updateOverrides(newOverrides);
+    setSaveStatus('saving');
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      setSaveStatus('saved');
+      saveTimerRef.current = setTimeout(() => setSaveStatus('idle'), 1500);
+    }, 300);
   }, [session]);
 
   // Restore session state on mount
@@ -441,6 +457,15 @@ export default function CaseAnalysisPage() {
             : `Reassessment complete: recommendation unchanged (${resultData.top_recommendation})`,
         });
         if (session.currentSession) setCaseText(session.currentSession.currentCaseText);
+        // Insert divider in follow-up chat so doctor knows context changed
+        const dividerMsg: FollowUpMessage = {
+          id: `divider-${Date.now()}`,
+          role: 'assistant',
+          content: changed
+            ? `--- Case reassessed with new findings. Recommendation changed to: **${resultData.top_recommendation}**. Subsequent answers reference the updated analysis. ---`
+            : `--- Case reassessed with new findings. Recommendation unchanged: **${resultData.top_recommendation}**. Subsequent answers reference the updated analysis. ---`,
+        };
+        setFollowUpMessages(prev => [...prev, dividerMsg]);
       });
       setPendingFindings([]);
     } catch (err) {
@@ -568,19 +593,34 @@ export default function CaseAnalysisPage() {
                 </p>
               </div>
             </div>
-            {result && (
-              <CaseReportExport
-                data={{
-                  parsedCase: result.parsed_case || { clinical_question: '', case_category: '' },
-                  topRecommendation: result.top_recommendation,
-                  recommendationRationale: result.recommendation_rationale,
-                  treatmentOptions: result.treatment_options,
-                  acuteManagement: result.acute_management,
-                  clinicalPearls: result.clinical_pearls,
-                  papersReviewed: result.papers_reviewed,
-                }}
-              />
-            )}
+            <div className="flex items-center gap-3">
+              {saveStatus !== 'idle' && (
+                <div className={cn(
+                  'flex items-center gap-1.5 text-xs transition-opacity duration-300',
+                  saveStatus === 'saved' ? 'text-emerald-600' : 'text-muted-foreground',
+                )}>
+                  {saveStatus === 'saving' ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Save className="w-3 h-3" />
+                  )}
+                  {saveStatus === 'saving' ? 'Saving...' : 'Saved'}
+                </div>
+              )}
+              {result && (
+                <CaseReportExport
+                  data={{
+                    parsedCase: result.parsed_case || { clinical_question: '', case_category: '' },
+                    topRecommendation: result.top_recommendation,
+                    recommendationRationale: result.recommendation_rationale,
+                    treatmentOptions: result.treatment_options,
+                    acuteManagement: result.acute_management,
+                    clinicalPearls: result.clinical_pearls,
+                    papersReviewed: result.papers_reviewed,
+                  }}
+                />
+              )}
+            </div>
           </div>
         </header>
 
@@ -721,37 +761,109 @@ export default function CaseAnalysisPage() {
         )}
 
         {/* ═══════════════════════════════════════════════════════════════
-            RESULTS — Two-Column Priority Layout
+            RESULTS — Tab-Based Case File Layout
             ═══════════════════════════════════════════════════════════════ */}
         {result && (
-          <div className="space-y-6 animate-fade-in">
+          <div className="space-y-4 animate-fade-in">
             {/* Case Summary — always visible */}
             {parsedCase && <CaseSummaryCard parsedCase={parsedCase} />}
 
-            {/* Two-column grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-              {/* ─── LEFT COLUMN (60%) — Actionable items ─── */}
-              <div className="lg:col-span-3 space-y-6">
-                {/* Acute Management */}
-                {hasAcuteManagement(result.acute_management) && (
-                  <AcuteManagementEditor
-                    acuteManagement={result.acute_management!}
-                    overrides={overrides}
-                    onOverridesChange={handleOverridesChange}
-                    caseSnippet={caseText.slice(0, 300)}
-                  />
-                )}
+            {/* Safety Alert Banner */}
+            <SafetyAlertBanner
+              count={unackedAlerts}
+              onReview={() => setActiveTab('safety')}
+            />
 
-                {/* Treatment Plan */}
-                <Section
-                  title="Treatment Plan"
-                  icon={<Pill className="w-4 h-4 text-primary" />}
-                  badge={
-                    <Badge variant="outline" className="text-xs">
-                      {result.treatment_options.length} options
-                    </Badge>
-                  }
-                >
+            {/* Tabbed Interface */}
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="w-full justify-start overflow-x-auto">
+                <TabsTrigger value="assessment" className="gap-1.5">
+                  <Stethoscope className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Assessment</span>
+                </TabsTrigger>
+                <TabsTrigger value="treatment" className="gap-1.5">
+                  <Pill className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Treatment</span>
+                </TabsTrigger>
+                <TabsTrigger value="safety" className="gap-1.5 relative">
+                  <Shield className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Safety</span>
+                  {unackedAlerts > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                      {unackedAlerts}
+                    </span>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="orders" className="gap-1.5">
+                  <ClipboardList className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Orders</span>
+                </TabsTrigger>
+                <TabsTrigger value="tools" className="gap-1.5">
+                  <Wrench className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Tools</span>
+                </TabsTrigger>
+              </TabsList>
+
+              {/* ─── Assessment Tab ─── */}
+              <TabsContent value="assessment">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                  <div className="lg:col-span-3 space-y-6">
+                    {hasAcuteManagement(result.acute_management) && (
+                      <AcuteManagementEditor
+                        acuteManagement={result.acute_management!}
+                        overrides={overrides}
+                        onOverridesChange={handleOverridesChange}
+                        caseSnippet={caseText.slice(0, 300)}
+                      />
+                    )}
+                  </div>
+                  <div className="lg:col-span-2 space-y-6">
+                    <RiskScoresTab
+                      riskScores={result.clinical_risk_scores || null}
+                      caseText={caseText}
+                      parsedCase={result.parsed_case as unknown as Record<string, unknown>}
+                      overrides={overrides}
+                      onOverridesChange={handleOverridesChange}
+                    />
+                    <Section
+                      title="Differential Diagnosis"
+                      icon={<Stethoscope className="w-4 h-4 text-purple-600" />}
+                    >
+                      <DifferentialDiagnosisTab
+                        ddxResult={result.differential_diagnosis || null}
+                        caseText={caseText}
+                        parsedCase={result.parsed_case as unknown as Record<string, unknown>}
+                      />
+                    </Section>
+                    {result.clinical_pearls.length > 0 && (
+                      <Section
+                        title="Clinical Pearls"
+                        icon={<Lightbulb className="w-4 h-4 text-amber-500" />}
+                        defaultOpen={false}
+                      >
+                        <Card className="border-amber-500/30 bg-amber-500/5">
+                          <CardContent className="pt-3 pb-3">
+                            <ul className="space-y-1.5">
+                              {result.clinical_pearls.map((pearl, i) => (
+                                <li key={i} className="flex items-start gap-2">
+                                  <span className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center text-[10px] font-bold text-amber-600 flex-shrink-0">
+                                    {i + 1}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">{pearl}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </CardContent>
+                        </Card>
+                      </Section>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* ─── Treatment Tab ─── */}
+              <TabsContent value="treatment">
+                <div className="space-y-6">
                   <TreatmentPlanEditor
                     treatmentOptions={result.treatment_options}
                     topRecommendation={result.top_recommendation}
@@ -760,56 +872,14 @@ export default function CaseAnalysisPage() {
                     onOverridesChange={handleOverridesChange}
                     caseSnippet={caseText.slice(0, 300)}
                   />
-
-                  {/* Add New Findings */}
                   {!isLoading && (
-                    <div className="mt-4">
-                      <AddFindingsForm
-                        onAddFindings={handleAddFindings}
-                        onReassess={handleReassess}
-                        pendingFindings={pendingFindings}
-                        isReassessing={isReassessing}
-                      />
-                    </div>
+                    <AddFindingsForm
+                      onAddFindings={handleAddFindings}
+                      onReassess={handleReassess}
+                      pendingFindings={pendingFindings}
+                      isReassessing={isReassessing}
+                    />
                   )}
-                </Section>
-
-                {/* Discharge Plan */}
-                <Section
-                  title="Discharge Plan"
-                  icon={<FileText className="w-4 h-4 text-blue-600" />}
-                  defaultOpen={false}
-                >
-                  <DischargeEditor
-                    parsedCase={result.parsed_case as unknown as Record<string, unknown>}
-                    treatmentOptions={result.treatment_options as unknown as Array<Record<string, unknown>>}
-                    acuteManagement={(result.acute_management || {}) as Record<string, unknown>}
-                    topRecommendation={result.top_recommendation}
-                    overrides={overrides}
-                    onOverridesChange={handleOverridesChange}
-                  />
-                </Section>
-
-                {/* Referral */}
-                <Section
-                  title="Referral"
-                  icon={<MessageCircle className="w-4 h-4 text-teal-600" />}
-                  defaultOpen={false}
-                >
-                  <ReferralTab
-                    parsedCase={result.parsed_case as unknown as Record<string, unknown>}
-                    treatmentOptions={result.treatment_options as unknown as Array<Record<string, unknown>>}
-                    acuteManagement={(result.acute_management || {}) as Record<string, unknown>}
-                    suggestedConsults={result.acute_management?.consults || []}
-                  />
-                </Section>
-
-                {/* Visual Charts */}
-                <Section
-                  title="Visual Summary"
-                  icon={<BarChart3 className="w-4 h-4 text-indigo-600" />}
-                  defaultOpen={false}
-                >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <TreatmentComparisonChart
                       treatments={result.treatment_options.map(t => ({
@@ -818,54 +888,11 @@ export default function CaseAnalysisPage() {
                     />
                     <EvidenceRadar />
                   </div>
-                  {session.currentSession && session.currentSession.events.length > 0 && (
-                    <div className="mt-4">
-                      <CaseTimelineD3
-                        events={session.currentSession.events.map(e => ({
-                          type: e.type, timestamp: e.timestamp, changeSummary: e.changeSummary || '',
-                          findings: e.findings ? { [e.findings.category]: e.findings.text } : undefined,
-                        }))}
-                      />
-                    </div>
-                  )}
-                </Section>
+                </div>
+              </TabsContent>
 
-                {/* Media (Image + Lab + SOAP) */}
-                <Section
-                  title="Media & Tools"
-                  icon={<Camera className="w-4 h-4 text-pink-600" />}
-                  defaultOpen={false}
-                >
-                  <div className="space-y-4">
-                    <ImageAnalysisCard
-                      result={imageResult}
-                      imagePreview={imagePreview}
-                      isLoading={isImageLoading}
-                      onUpload={handleImageUpload}
-                      onClear={() => { setImagePreview(null); setImageResult(null); }}
-                      onImportToCase={handleImageImportToCase}
-                    />
-                    <LabExtractorCard
-                      result={labResult}
-                      imagePreview={labPreview}
-                      isLoading={isLabLoading}
-                      onUpload={handleLabUpload}
-                      onClear={() => { setLabPreview(null); setLabResult(null); }}
-                      onImportToCase={handleLabImportToCase}
-                    />
-                    <SOAPExportCard
-                      caseText={caseText}
-                      topRecommendation={result.top_recommendation}
-                      acuteManagement={result.acute_management}
-                      treatmentOptions={result.treatment_options.map(t => ({ name: t.name, verdict: t.verdict }))}
-                    />
-                  </div>
-                </Section>
-              </div>
-
-              {/* ─── RIGHT COLUMN (40%) — Reference & Alerts ─── */}
-              <div className="lg:col-span-2 space-y-6">
-                {/* Safety Alerts */}
+              {/* ─── Safety Tab (forceMount to preserve state) ─── */}
+              <TabsContent value="safety" forceMount className={activeTab !== 'safety' ? 'hidden' : ''}>
                 <SafetyAlertsPanel
                   medicationReview={result.medication_review}
                   currentMedications={result.parsed_case?.management?.medications || []}
@@ -882,141 +909,93 @@ export default function CaseAnalysisPage() {
                   overrides={overrides}
                   onOverridesChange={handleOverridesChange}
                 />
+              </TabsContent>
 
-                {/* Risk Scores */}
-                <Section
-                  title="Risk Scores"
-                  icon={<Activity className="w-4 h-4 text-blue-600" />}
-                >
-                  <RiskScoresTab
-                    riskScores={result.clinical_risk_scores || null}
-                    caseText={caseText}
+              {/* ─── Orders Tab (forceMount to preserve state) ─── */}
+              <TabsContent value="orders" forceMount className={activeTab !== 'orders' ? 'hidden' : ''}>
+                <div className="space-y-6">
+                  <DischargeEditor
                     parsedCase={result.parsed_case as unknown as Record<string, unknown>}
+                    treatmentOptions={result.treatment_options as unknown as Array<Record<string, unknown>>}
+                    acuteManagement={(result.acute_management || {}) as Record<string, unknown>}
+                    topRecommendation={result.top_recommendation}
                     overrides={overrides}
                     onOverridesChange={handleOverridesChange}
                   />
-                </Section>
-
-                {/* DDx */}
-                <Section
-                  title="Differential Diagnosis"
-                  icon={<Stethoscope className="w-4 h-4 text-purple-600" />}
-                  defaultOpen={false}
-                >
-                  <DifferentialDiagnosisTab
-                    ddxResult={result.differential_diagnosis || null}
-                    caseText={caseText}
+                  <ReferralTab
                     parsedCase={result.parsed_case as unknown as Record<string, unknown>}
+                    treatmentOptions={result.treatment_options as unknown as Array<Record<string, unknown>>}
+                    acuteManagement={(result.acute_management || {}) as Record<string, unknown>}
+                    suggestedConsults={result.acute_management?.consults || []}
                   />
-                </Section>
+                </div>
+              </TabsContent>
 
-                {/* Clinical Pearls */}
-                {result.clinical_pearls.length > 0 && (
-                  <Section
-                    title="Clinical Pearls"
-                    icon={<Lightbulb className="w-4 h-4 text-amber-500" />}
-                    defaultOpen={false}
-                  >
-                    <Card className="border-amber-500/30 bg-amber-500/5">
-                      <CardContent className="pt-3 pb-3">
-                        <ul className="space-y-1.5">
-                          {result.clinical_pearls.map((pearl, i) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <span className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center text-[10px] font-bold text-amber-600 flex-shrink-0">
-                                {i + 1}
-                              </span>
-                              <span className="text-xs text-muted-foreground">{pearl}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  </Section>
-                )}
-
-                {/* Follow-Up Chat */}
-                <Section
-                  title="Follow-Up Chat"
-                  icon={<MessageCircle className="w-4 h-4 text-primary" />}
-                >
-                  <Card>
-                    <CardContent className="pt-3 pb-3 space-y-3">
-                      {followUpMessages.length > 0 && (
-                        <div className="max-h-[300px] overflow-y-auto space-y-2 p-2 bg-muted/30 rounded-lg">
-                          {followUpMessages.map((msg) => (
-                            <div key={msg.id} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-                              <div className={cn(
-                                'max-w-[85%] rounded-lg px-3 py-1.5 text-xs',
-                                msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-background border shadow-sm'
-                              )}>
-                                {msg.role === 'assistant' ? (
-                                  <div className="text-xs [&>p]:mb-1.5 [&>ol]:list-decimal [&>ol]:pl-4 [&>ol]:mb-1.5 [&>ul]:list-disc [&>ul]:pl-4 [&>ul]:mb-1.5 [&_strong]:font-semibold [&_em]:italic [&>p:last-child]:mb-0">
-                                    <ReactMarkdown>{msg.content}</ReactMarkdown>
-                                  </div>
-                                ) : (
-                                  <p className="whitespace-pre-wrap">{msg.content}</p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                          {isFollowUpLoading && (
-                            <div className="flex justify-start">
-                              <div className="bg-background border shadow-sm rounded-lg px-3 py-1.5">
-                                <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
-                              </div>
-                            </div>
-                          )}
-                          <div ref={followUpEndRef} />
-                        </div>
-                      )}
-
-                      {suggestedQuestions.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {suggestedQuestions.map((q, i) => (
-                            <button
-                              key={i}
-                              onClick={() => handleFollowUpSubmit(q)}
-                              disabled={isFollowUpLoading}
-                              className="text-[10px] px-2 py-1 rounded-full border bg-background hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-50 text-left"
-                            >
-                              {q}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      <form
-                        onSubmit={(e) => { e.preventDefault(); handleFollowUpSubmit(followUpInput); }}
-                        className="flex gap-1.5"
+              {/* ─── Tools Tab ─── */}
+              <TabsContent value="tools">
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <ImageAnalysisCard
+                      result={imageResult}
+                      imagePreview={imagePreview}
+                      isLoading={isImageLoading}
+                      onUpload={handleImageUpload}
+                      onClear={() => { setImagePreview(null); setImageResult(null); }}
+                      onImportToCase={handleImageImportToCase}
+                    />
+                    <LabExtractorCard
+                      result={labResult}
+                      imagePreview={labPreview}
+                      isLoading={isLabLoading}
+                      onUpload={handleLabUpload}
+                      onClear={() => { setLabPreview(null); setLabResult(null); }}
+                      onImportToCase={handleLabImportToCase}
+                    />
+                  </div>
+                  <SOAPExportCard
+                    caseText={caseText}
+                    topRecommendation={result.top_recommendation}
+                    acuteManagement={result.acute_management}
+                    treatmentOptions={result.treatment_options.map(t => ({ name: t.name, verdict: t.verdict }))}
+                  />
+                  {session.currentSession && session.currentSession.events.length > 0 && (
+                    <>
+                      <Section
+                        title="Visual Timeline"
+                        icon={<BarChart3 className="w-4 h-4 text-indigo-600" />}
                       >
-                        <input
-                          type="text"
-                          value={followUpInput}
-                          onChange={(e) => setFollowUpInput(e.target.value)}
-                          placeholder="Ask a follow-up question..."
-                          className="flex-1 h-8 rounded-md border border-input bg-background px-2 text-xs shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                          disabled={isFollowUpLoading}
+                        <CaseTimelineD3
+                          events={session.currentSession.events.map(e => ({
+                            type: e.type, timestamp: e.timestamp, changeSummary: e.changeSummary || '',
+                            findings: e.findings ? { [e.findings.category]: e.findings.text } : undefined,
+                          }))}
                         />
-                        <Button type="submit" size="sm" className="h-8 w-8 p-0" disabled={!followUpInput.trim() || isFollowUpLoading}>
-                          {isFollowUpLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-                        </Button>
-                      </form>
-                    </CardContent>
-                  </Card>
-                </Section>
-              </div>
-            </div>
+                      </Section>
+                      <Section
+                        title="Case Timeline"
+                        icon={<Activity className="w-4 h-4 text-muted-foreground" />}
+                        defaultOpen={false}
+                      >
+                        <CaseTimeline events={session.currentSession.events} />
+                      </Section>
+                    </>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
 
-            {/* Timeline (bottom, full width) */}
-            {session.currentSession && session.currentSession.events.length > 0 && (
-              <Section
-                title="Case Timeline"
-                icon={<Activity className="w-4 h-4 text-muted-foreground" />}
-                defaultOpen={false}
-              >
-                <CaseTimeline events={session.currentSession.events} />
-              </Section>
-            )}
+            {/* Floating Follow-Up Chat Drawer */}
+            <FollowUpChatDrawer
+              isOpen={chatOpen}
+              onToggle={() => setChatOpen(prev => !prev)}
+              followUpMessages={followUpMessages}
+              followUpInput={followUpInput}
+              setFollowUpInput={setFollowUpInput}
+              handleFollowUpSubmit={handleFollowUpSubmit}
+              isFollowUpLoading={isFollowUpLoading}
+              suggestedQuestions={suggestedQuestions}
+              followUpEndRef={followUpEndRef}
+            />
 
             <p className="text-center text-[10px] text-muted-foreground pt-2">
               Powered by MedGemma 27B on Modal &middot; Evidence from PubMed &middot; For educational purposes only

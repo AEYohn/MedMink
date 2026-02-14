@@ -49,6 +49,12 @@ const likelihoodColor = {
   low: 'bg-gray-100 text-gray-700 border-gray-300',
 };
 
+const likelihoodRange: Record<string, string> = {
+  high: '>60%',
+  moderate: '20\u201360%',
+  low: '<20%',
+};
+
 const likelihoodBorder = {
   high: 'border-l-green-500',
   moderate: 'border-l-amber-500',
@@ -160,7 +166,7 @@ export function DifferentialDiagnosisTab({
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge className={cn('text-xs', likelihoodColor[dx.likelihood])}>
-                      {dx.likelihood}
+                      {dx.likelihood} ({likelihoodRange[dx.likelihood]})
                     </Badge>
                     <ChevronDown className={cn('w-4 h-4 transition-transform', expanded[i] && 'rotate-180')} />
                   </div>

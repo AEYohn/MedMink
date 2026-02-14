@@ -22,24 +22,24 @@ const EVENT_TYPE_CONFIG: Record<string, { color: string; label: string; badgeCla
   initial_analysis: {
     color: '#3b82f6',
     label: 'Initial Analysis',
-    badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+    badgeClass: 'bg-blue-50 text-blue-700 border-blue-300',
   },
   new_findings: {
     color: '#f59e0b',
     label: 'New Findings',
-    badgeClass: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+    badgeClass: 'bg-amber-50 text-amber-700 border-amber-300',
   },
   reassessment_complete: {
     color: '#22c55e',
     label: 'Reassessment',
-    badgeClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-300',
   },
 };
 
 const DEFAULT_CONFIG = {
   color: '#94a3b8',
   label: 'Event',
-  badgeClass: 'bg-slate-500/10 text-slate-400 border-slate-500/30',
+  badgeClass: 'bg-slate-100 text-slate-700 border-slate-300',
 };
 
 function formatTimestamp(ts: string): { date: string; time: string } {
@@ -102,7 +102,7 @@ export function CaseTimelineD3({ events }: CaseTimelineD3Props) {
         .attr('y1', y1 + nodeRadius)
         .attr('x2', leftMargin)
         .attr('y2', y2 - nodeRadius)
-        .attr('stroke', 'hsl(240 3.7% 15.9%)')
+        .attr('stroke', 'hsl(240 6% 80%)')
         .attr('stroke-width', 2)
         .attr('stroke-dasharray', '4 3')
         .style('opacity', 0);
@@ -175,7 +175,7 @@ export function CaseTimelineD3({ events }: CaseTimelineD3Props) {
         .append('text')
         .attr('x', contentLeftOffset)
         .attr('y', cy - 10)
-        .attr('fill', 'hsl(240 5% 64.9%)')
+        .attr('fill', 'hsl(240 6% 45%)')
         .attr('font-size', '10px')
         .attr('font-weight', 500)
         .text(`${date} ${time}`)
@@ -186,7 +186,7 @@ export function CaseTimelineD3({ events }: CaseTimelineD3Props) {
         .append('text')
         .attr('x', contentLeftOffset)
         .attr('y', cy + 6)
-        .attr('fill', 'hsl(0 0% 98%)')
+        .attr('fill', 'hsl(240 6% 25%)')
         .attr('font-size', '12px')
         .attr('font-weight', 400)
         .text(truncateText(event.changeSummary, svgWidth - contentLeftOffset - 20))
@@ -252,15 +252,15 @@ export function CaseTimelineD3({ events }: CaseTimelineD3Props) {
           .attr('width', fWidth + badgePadding.x * 2)
           .attr('height', 16)
           .attr('rx', 4)
-          .attr('fill', 'hsl(240 3.7% 15.9%)')
-          .attr('stroke', 'hsl(240 3.7% 15.9%)')
+          .attr('fill', 'hsl(240 6% 92%)')
+          .attr('stroke', 'hsl(240 6% 80%)')
           .attr('stroke-width', 1);
 
         fGroup
           .append('text')
           .attr('x', findingsX + badgePadding.x)
           .attr('y', badgeY + 1)
-          .attr('fill', 'hsl(240 5% 64.9%)')
+          .attr('fill', 'hsl(240 6% 45%)')
           .attr('font-size', '10px')
           .attr('dominant-baseline', 'central')
           .text(findingsLabel);

@@ -4,23 +4,19 @@ Combines all healthcare capabilities into a single assistant that
 intelligently routes queries to the optimal model.
 """
 
-import asyncio
 from dataclasses import dataclass
 from typing import Any
 
 import structlog
 
-from src.agents.base import BaseAgent, AgentResult
-from src.agents.medical_agent import MedicalLiteratureAgent, ClinicalAnswer
-from src.config import settings
+from src.agents.base import AgentResult, BaseAgent
+from src.agents.medical_agent import ClinicalAnswer, MedicalLiteratureAgent
 from src.models import Task
 from src.routing import (
-    TaskRouter,
-    TaskType,
     RoutingDecision,
-    ModelCapability,
-    get_task_router,
+    TaskType,
     get_model_registry,
+    get_task_router,
 )
 
 logger = structlog.get_logger()

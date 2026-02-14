@@ -6,13 +6,11 @@ Idea2Paper's anchored multi-agent review system.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import Any
 
 import structlog
 
 from src.rag.embeddings import get_embedding_service
-from src.rag.vector_store import get_vector_store
 
 logger = structlog.get_logger()
 
@@ -286,7 +284,7 @@ class AnchorStore:
 
     def _cosine_similarity(self, vec1: list[float], vec2: list[float]) -> float:
         """Compute cosine similarity between two vectors."""
-        dot_product = sum(a * b for a, b in zip(vec1, vec2))
+        dot_product = sum(a * b for a, b in zip(vec1, vec2, strict=False))
         norm1 = sum(a * a for a in vec1) ** 0.5
         norm2 = sum(b * b for b in vec2) ** 0.5
 

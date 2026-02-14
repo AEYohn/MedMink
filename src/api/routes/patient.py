@@ -6,14 +6,13 @@ Provides endpoints for:
 - Appointment booking (patient-side)
 """
 
-from typing import Any
 
 import structlog
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from src.agents.symptom_checker import analyze_symptoms
 from src.agents.medication_manager import check_drug_interactions
+from src.agents.symptom_checker import analyze_symptoms
 
 logger = structlog.get_logger()
 router = APIRouter(prefix="/patient", tags=["patient"])
@@ -149,7 +148,7 @@ async def check_symptoms(request: SymptomCheckRequest):
 
     except Exception as e:
         logger.error("Symptom analysis failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/medications/check", response_model=MedicationCheckResponse)
@@ -176,7 +175,7 @@ async def check_medication_interactions(request: MedicationCheckRequest):
 
     except Exception as e:
         logger.error("Medication interaction check failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/appointments/book")
@@ -205,7 +204,7 @@ async def book_appointment(request: AppointmentRequest):
 
     except Exception as e:
         logger.error("Appointment booking failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/appointments/available-slots")
@@ -239,7 +238,7 @@ async def get_available_slots(request: AvailableSlotsRequest):
 
     except Exception as e:
         logger.error("Failed to get available slots", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/health")

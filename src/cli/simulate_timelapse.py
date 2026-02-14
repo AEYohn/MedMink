@@ -8,9 +8,9 @@ from uuid import uuid4
 import click
 import structlog
 
-from src.db import init_databases, close_databases
+from src.db import close_databases, init_databases
 from src.kg import get_knowledge_graph
-from src.kg.models import PaperNode, ClaimNode, TrendNode
+from src.kg.models import ClaimNode, PaperNode
 
 logger = structlog.get_logger()
 
@@ -69,11 +69,11 @@ async def simulate_trend_update(kg, day: int):
 
         # Update direction based on velocity
         if new_velocity > 6:
-            direction = "rising"
+            pass
         elif new_velocity < 4:
-            direction = "declining"
+            pass
         else:
-            direction = "stable"
+            pass
 
         # Note: Would need to add update method to KG
 

@@ -2,11 +2,11 @@
 
 from typing import Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter
 from pydantic import BaseModel
 
-from src.evaluation.evaluator import get_anchored_evaluator
 from src.evaluation.anchors import get_anchor_store
+from src.evaluation.evaluator import get_anchored_evaluator
 
 router = APIRouter(prefix="/evaluate", tags=["Evaluation"])
 

@@ -7,8 +7,9 @@ and evaluates each option against medical literature evidence.
 import asyncio
 import json
 import re
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import Any, AsyncIterator
+from typing import Any
 
 import structlog
 
@@ -1095,8 +1096,8 @@ class ClinicalCaseAnalyzer:
 
             # Build parsed_case_dict once for parallel steps
             from src.medgemma.differential_diagnosis import (
-                generate_differential_diagnosis,
                 ddx_result_to_dict,
+                generate_differential_diagnosis,
             )
             from src.medgemma.risk_scores import (
                 calculate_risk_scores,

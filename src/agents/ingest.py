@@ -1,15 +1,13 @@
 """Ingest agent for fetching papers from arxiv."""
 
-import asyncio
 from datetime import datetime, timedelta
-from typing import Any
 from uuid import uuid4
 
 import feedparser
 import httpx
 import structlog
 
-from src.agents.base import BaseAgent, AgentResult
+from src.agents.base import AgentResult, BaseAgent
 from src.config import settings
 from src.kg.models import PaperNode
 from src.models import Task

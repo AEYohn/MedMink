@@ -2,10 +2,10 @@
 
 from typing import Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter
 from pydantic import BaseModel
 
-from src.novelty.checker import get_novelty_checker, NoveltyLevel
+from src.novelty.checker import NoveltyLevel, get_novelty_checker
 
 router = APIRouter(prefix="/novelty", tags=["Novelty"])
 

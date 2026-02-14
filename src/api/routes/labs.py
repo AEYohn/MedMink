@@ -1,11 +1,10 @@
 """API routes for lab report extraction."""
 
 import base64
-from typing import Any
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
-from pydantic import BaseModel, Field
 import structlog
+from fastapi import APIRouter, File, HTTPException, UploadFile
+from pydantic import BaseModel
 
 from src.medgemma.vision import get_vision_client
 

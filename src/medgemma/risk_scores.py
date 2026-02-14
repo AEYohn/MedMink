@@ -9,14 +9,13 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 import structlog
 
 from src.medgemma.client import get_medgemma_client
 from src.medgemma.score_definitions import (
-    ALL_SCORES,
     CATEGORY_SCORE_MAP,
     SCORE_BY_ID,
     SEPSIS_KEYWORDS,

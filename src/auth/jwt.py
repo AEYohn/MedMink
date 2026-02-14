@@ -4,10 +4,9 @@ Provides token creation and verification using python-jose.
 """
 
 from datetime import datetime, timedelta
-from typing import Any
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 
 from src.auth.models import TokenData, UserRole

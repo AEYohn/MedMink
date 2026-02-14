@@ -6,8 +6,7 @@ from typing import Any
 
 import structlog
 
-from src.novelty.index import get_novelty_index, NoveltyIndex
-from src.rag.vector_store import SearchResult
+from src.novelty.index import NoveltyIndex, get_novelty_index
 
 logger = structlog.get_logger()
 

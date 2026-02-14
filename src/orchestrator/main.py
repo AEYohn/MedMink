@@ -7,9 +7,16 @@ from typing import Any
 
 import structlog
 
-from src.agents import IngestAgent, AnalyzeAgent, SynthesizeAgent, CorrectionAgent, ProjectAnalyzerAgent, PatternAgent
+from src.agents import (
+    AnalyzeAgent,
+    CorrectionAgent,
+    IngestAgent,
+    PatternAgent,
+    ProjectAnalyzerAgent,
+    SynthesizeAgent,
+)
 from src.config import settings
-from src.db import init_databases, close_databases
+from src.db import close_databases, init_databases
 from src.kg import get_knowledge_graph
 from src.models import Task, TaskType
 from src.orchestrator.scheduler import TaskScheduler

@@ -5,33 +5,23 @@ from datetime import datetime, timedelta
 from typing import Any, TypeVar
 
 import structlog
-from neo4j import AsyncDriver, AsyncSession
-from neo4j.exceptions import ConstraintError
+from neo4j import AsyncDriver
 
-from src.db import get_neo4j_driver, get_neo4j_session
+from src.db import get_neo4j_driver
 from src.kg.models import (
-    BaseNode,
-    BaseRelation,
-    PaperNode,
-    ClaimNode,
-    MethodNode,
-    TrendNode,
-    PredictionNode,
-    ProjectNode,
-    ProblemNode,
-    ApproachNode,
-    PatternNode,
-    TechniqueNode,
-    ContainsRelation,
-    SupportsRelation,
-    ContradictsRelation,
-    UsesMethodRelation,
-    InvolvesTrendRelation,
-    BasedOnTrendRelation,
-    HasProblemRelation,
     AddressedByRelation,
-    SolvedByRelation,
-    FollowsPatternRelation,
+    ApproachNode,
+    BaseNode,
+    ClaimNode,
+    ContradictsRelation,
+    MethodNode,
+    PaperNode,
+    PatternNode,
+    PredictionNode,
+    ProblemNode,
+    ProjectNode,
+    TechniqueNode,
+    TrendNode,
 )
 from src.kg.queries import CypherQueries
 
@@ -100,7 +90,7 @@ class KnowledgeGraph:
                 CypherQueries.merge_node("Paper", "arxiv_id"),
                 props=paper.to_dict(),
             )
-            record = await result.single()
+            await result.single()
             logger.info("Paper added/updated", arxiv_id=paper.arxiv_id)
             return paper
 
@@ -301,7 +291,7 @@ class KnowledgeGraph:
                 name=method.name,
                 props=method.to_dict(),
             )
-            record = await result.single()
+            await result.single()
 
             # Link to paper if provided
             if paper_id:
@@ -334,7 +324,6 @@ class KnowledgeGraph:
 
     async def add_technique(self, technique: "TechniqueNode", paper_id: str | None = None) -> "TechniqueNode":
         """Add or update a technique."""
-        from src.kg.models import TechniqueNode
         driver = await self._get_driver()
         async with driver.session() as session:
             # Merge by name
@@ -1134,13 +1123,12 @@ _kg: KnowledgeGraph | None = None
 
 async def get_knowledge_graph(timeout: float = 10.0) -> KnowledgeGraph:
     """Get or create knowledge graph singleton."""
-    import asyncio
     global _kg
     if _kg is None:
         _kg = KnowledgeGraph()
         try:
             await asyncio.wait_for(_kg.setup_schema(), timeout=timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError as e:
             _kg = None
-            raise TimeoutError(f"Knowledge graph setup timed out after {timeout}s")
+            raise TimeoutError(f"Knowledge graph setup timed out after {timeout}s") from e
     return _kg

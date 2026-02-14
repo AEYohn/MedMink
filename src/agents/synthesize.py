@@ -1,13 +1,11 @@
 """Synthesize agent for generating weekly reports."""
 
-import json
-from datetime import datetime, date, timedelta
-from typing import Any
+from datetime import date, datetime, timedelta
 from uuid import uuid4
 
 import structlog
 
-from src.agents.base import BaseAgent, AgentResult
+from src.agents.base import AgentResult, BaseAgent
 from src.models import Task, WeeklyReport
 
 logger = structlog.get_logger()
@@ -41,7 +39,7 @@ class SynthesizeAgent(BaseAgent):
             )
 
             # Gather data from the knowledge graph
-            stats = await kg.get_stats()
+            await kg.get_stats()
             weekly_stats = await kg.get_weekly_stats(datetime.combine(week_start, datetime.min.time()))
 
             # Get relevant data
@@ -52,7 +50,7 @@ class SynthesizeAgent(BaseAgent):
             prediction_accuracy = await kg.get_prediction_accuracy()
 
             # Check for due predictions
-            due_predictions = await kg.get_due_predictions()
+            await kg.get_due_predictions()
 
             # Prepare data for synthesis
             papers_data = []  # Would need to add method to get recent papers
@@ -260,7 +258,7 @@ class SynthesizeAgent(BaseAgent):
         """Check and update prediction outcomes."""
         try:
             kg = await self._get_kg()
-            gemini = await self._get_gemini()
+            await self._get_gemini()
 
             # Get predictions that are due
             due_predictions = await kg.get_due_predictions()
@@ -275,8 +273,8 @@ class SynthesizeAgent(BaseAgent):
             self.logger.info("Reviewing due predictions", count=len(due_predictions))
 
             # Get recent claims and trends to evaluate predictions
-            claims = await kg.get_all_claims(limit=100)
-            trends = await kg.get_trends(limit=20)
+            await kg.get_all_claims(limit=100)
+            await kg.get_trends(limit=20)
 
             reviewed = 0
             outcomes = []

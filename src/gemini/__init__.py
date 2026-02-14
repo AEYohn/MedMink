@@ -2,12 +2,12 @@
 
 from src.gemini.client import GeminiClient, get_gemini_client
 from src.gemini.schemas import (
-    PaperAnalysisSchema,
     ClaimExtractionSchema,
     ContradictionAnalysisSchema,
-    TrendAnalysisSchema,
+    PaperAnalysisSchema,
     PredictionSchema,
     SynthesisSchema,
+    TrendAnalysisSchema,
 )
 
 __all__ = [

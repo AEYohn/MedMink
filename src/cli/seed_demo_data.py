@@ -8,9 +8,9 @@ from uuid import uuid4
 import click
 import structlog
 
-from src.db import init_databases, close_databases
+from src.db import close_databases, init_databases
 from src.kg import get_knowledge_graph
-from src.kg.models import PaperNode, ClaimNode, MethodNode, TrendNode, PredictionNode
+from src.kg.models import ClaimNode, MethodNode, PaperNode, PredictionNode, TrendNode
 
 logger = structlog.get_logger()
 
@@ -120,7 +120,7 @@ async def seed_demo_data(clear_existing: bool = False):
 
     # Add papers
     papers = []
-    for i, paper_data in enumerate(DEMO_PAPERS):
+    for _i, paper_data in enumerate(DEMO_PAPERS):
         paper = PaperNode(
             id=str(uuid4()),
             arxiv_id=paper_data["arxiv_id"],

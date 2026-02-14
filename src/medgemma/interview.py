@@ -15,11 +15,11 @@ import structlog
 
 from src.medgemma.client import get_medgemma_client
 from src.medgemma.interview_prompts import (
+    GREETING_PROMPT,
     INTERVIEW_SYSTEM_PROMPT,
     INTERVIEW_TURN_PROMPT,
-    GREETING_PROMPT,
-    TRIAGE_PROMPT,
     PHASE_GUIDANCE,
+    TRIAGE_PROMPT,
 )
 
 logger = structlog.get_logger()
@@ -164,10 +164,10 @@ class PatientInterviewer:
         })
 
         # Feed data to Management Reasoning Agent (async, non-blocking)
-        management_plan = None
         try:
-            from src.medgemma.management_agent import get_management_agent
             import asyncio
+
+            from src.medgemma.management_agent import get_management_agent
 
             agent = get_management_agent()
             # Fire-and-forget — don't block the interview response

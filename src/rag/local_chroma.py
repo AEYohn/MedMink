@@ -164,7 +164,7 @@ class LocalChromaStore:
                 if v is not None:
                     if isinstance(v, list):
                         filtered_meta[k] = ", ".join(str(x) for x in v[:10])
-                    elif isinstance(v, (str, int, float, bool)):
+                    elif isinstance(v, str | int | float | bool):
                         filtered_meta[k] = v
 
             self._collection.add(
@@ -226,7 +226,7 @@ class LocalChromaStore:
                 if v is not None:
                     if isinstance(v, list):
                         filtered_meta[k] = ", ".join(str(x) for x in v[:10])
-                    elif isinstance(v, (str, int, float, bool)):
+                    elif isinstance(v, str | int | float | bool):
                         filtered_meta[k] = v
 
             metadatas.append(filtered_meta)

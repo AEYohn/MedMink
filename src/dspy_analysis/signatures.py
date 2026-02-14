@@ -5,9 +5,9 @@ They are declarative specifications that DSPy uses to generate and optimize prom
 """
 
 from typing import Literal
-from pydantic import BaseModel, Field
-import dspy
 
+import dspy
+from pydantic import BaseModel, Field
 
 # ============================================================================
 # Pydantic models for structured outputs

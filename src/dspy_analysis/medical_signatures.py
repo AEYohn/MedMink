@@ -8,9 +8,9 @@ These signatures implement clinical evidence synthesis workflows including:
 """
 
 from typing import Literal
-from pydantic import BaseModel, Field, field_validator
-import dspy
 
+import dspy
+from pydantic import BaseModel, Field, field_validator
 
 # ============================================================================
 # Pydantic models for medical structured outputs

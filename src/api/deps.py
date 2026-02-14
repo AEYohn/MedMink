@@ -1,11 +1,10 @@
 """API dependencies."""
 
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
-from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db import get_db, get_redis
+from src.db import get_db
 from src.gemini import GeminiClient, get_gemini_client
 from src.kg import KnowledgeGraph, get_knowledge_graph
 from src.orchestrator.state import TaskQueue, ThoughtSignatureStore

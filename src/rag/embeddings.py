@@ -1,7 +1,6 @@
 """Embedding service using Gemini's embedding model."""
 
 import asyncio
-from typing import Any
 
 import structlog
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -127,7 +126,7 @@ class EmbeddingService:
 
         # Map back to original positions
         result_embeddings = [[0.0] * EMBEDDING_DIMENSION for _ in texts]
-        for idx, embedding in zip(valid_indices, all_embeddings):
+        for idx, embedding in zip(valid_indices, all_embeddings, strict=False):
             result_embeddings[idx] = embedding
 
         logger.info(

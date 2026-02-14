@@ -2,7 +2,6 @@
 
 from typing import Any
 
-
 # Paper Analysis Schema
 PaperAnalysisSchema: dict[str, Any] = {
     "type": "object",

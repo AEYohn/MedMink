@@ -13,11 +13,11 @@ import structlog
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from src.agents.healthcare_assistant import HealthcareAssistant, ask_healthcare_assistant
-from src.agents.medical_agent import ask_clinical_question
-from src.agents.ingest_pubmed import search_pubmed_papers
+from src.agents.healthcare_assistant import ask_healthcare_assistant
 from src.agents.ingest_medxiv import search_preprints
-from src.routing import get_task_router, get_model_registry
+from src.agents.ingest_pubmed import search_pubmed_papers
+from src.agents.medical_agent import ask_clinical_question
+from src.routing import get_model_registry, get_task_router
 
 logger = structlog.get_logger()
 router = APIRouter(prefix="/medical", tags=["medical"])
@@ -163,7 +163,7 @@ async def clinical_evidence_query(request: ClinicalQueryRequest):
 
     except Exception as e:
         logger.error("Clinical query failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/assistant", response_model=HealthcareQueryResponse)
@@ -195,7 +195,7 @@ async def healthcare_assistant_query(request: HealthcareQueryRequest):
 
     except Exception as e:
         logger.error("Healthcare assistant query failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/route")
@@ -222,7 +222,7 @@ async def route_query(request: HealthcareQueryRequest) -> RoutingInfo:
 
     except Exception as e:
         logger.error("Routing failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/models", response_model=list[ModelInfo])
@@ -274,7 +274,7 @@ async def ingest_pubmed_papers(request: PubMedSearchRequest):
 
     except Exception as e:
         logger.error("PubMed search failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/ingest/preprints", response_model=list[PaperResponse])
@@ -304,7 +304,7 @@ async def ingest_preprints(request: PreprintSearchRequest):
 
     except Exception as e:
         logger.error("Preprint search failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/health")

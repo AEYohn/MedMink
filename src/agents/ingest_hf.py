@@ -7,8 +7,7 @@ from uuid import uuid4
 import httpx
 import structlog
 
-from src.agents.base import BaseAgent, AgentResult
-from src.config import settings
+from src.agents.base import AgentResult, BaseAgent
 from src.kg.models import PaperNode
 from src.models import Task
 
@@ -89,7 +88,7 @@ class IngestHFAgent(BaseAgent):
             # Create thought signature
             thought = await self.create_thought_signature(
                 task=task,
-                context_summary=f"Ingested papers from HuggingFace Daily Papers",
+                context_summary="Ingested papers from HuggingFace Daily Papers",
                 decision_made=f"Added {added_count} new papers, skipped {skipped_count} existing",
                 reasoning=f"Fetched {len(papers)} papers from HuggingFace, filtered by upvotes and date",
                 confidence=0.9,
@@ -208,7 +207,7 @@ class IngestHFAgent(BaseAgent):
                 break
 
         # Sort by engagement (upvotes)
-        papers_with_scores = list(zip(papers, [item.get("numUpvotes", 0) for item in data[:len(papers)]]))
+        papers_with_scores = list(zip(papers, [item.get("numUpvotes", 0) for item in data[:len(papers)]], strict=False))
         papers_with_scores.sort(key=lambda x: x[1], reverse=True)
         papers = [p for p, _ in papers_with_scores]
 

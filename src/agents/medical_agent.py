@@ -5,26 +5,25 @@ medical literature retrieval and synthesis with MedGemma.
 """
 
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 import dspy
 import structlog
 
-from src.agents.base import BaseAgent, AgentResult
-from src.agents.ingest_pubmed import search_pubmed_papers
+from src.agents.base import AgentResult, BaseAgent
 from src.agents.ingest_medxiv import search_preprints
-from src.config import settings
+from src.agents.ingest_pubmed import search_pubmed_papers
 from src.dspy_analysis.medical_signatures import (
     ClinicalQueryUnderstanding,
-    EvidenceSynthesis,
     DrugInteractionCheck,
-    TreatmentComparisonAnalysis,
-    PICOElements,
+    EvidenceSynthesis,
     EvidenceSynthesisResult,
+    PICOElements,
+    TreatmentComparisonAnalysis,
 )
 from src.medgemma import get_medgemma_client
-from src.models import Task, Paper
+from src.models import Paper, Task
 from src.rag.local_chroma import get_local_chroma
 
 logger = structlog.get_logger()
@@ -125,7 +124,7 @@ class MedicalLiteratureAgent(BaseAgent):
             if check_interactions and drugs:
                 interactions = await self.check_drug_interactions(
                     drugs=drugs,
-                    papers=[p for p in answer.papers[:10]],
+                    papers=list(answer.papers[:10]),
                 )
 
             thought = await self.create_thought_signature(
@@ -213,7 +212,7 @@ class MedicalLiteratureAgent(BaseAgent):
 
         # Step 3: Grade evidence quality
         paper_dicts = [self._paper_to_dict(p) for p in papers]
-        graded_papers = await self._grade_evidence(paper_dicts)
+        await self._grade_evidence(paper_dicts)
 
         # Step 4: Detect contradictions
         contradictions = await self._detect_contradictions(paper_dicts)
@@ -396,7 +395,7 @@ class MedicalLiteratureAgent(BaseAgent):
             )
             papers.extend(pubmed_papers)
             self.logger.info("PubMed search complete", found=len(pubmed_papers))
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self.logger.warning("PubMed search timed out after 60s")
         except Exception as e:
             self.logger.warning("PubMed search failed", error=str(e))
@@ -415,7 +414,7 @@ class MedicalLiteratureAgent(BaseAgent):
                 )
                 papers.extend(preprints)
                 self.logger.info("medRxiv search complete", found=len(preprints))
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 self.logger.warning("medRxiv search timed out after 60s")
             except Exception as e:
                 self.logger.warning("medRxiv search failed", error=str(e))

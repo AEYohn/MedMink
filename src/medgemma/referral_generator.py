@@ -4,7 +4,6 @@ Generates specialty-filtered referral notes and structured handoff notes
 in I-PASS or SBAR format.
 """
 
-import json
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -257,18 +256,18 @@ async def generate_handoff_note(
         acute_bits.append(f"Avoid: {', '.join(acute_management['do_not_do'][:3])}")
     acute_summary = "; ".join(acute_bits) or "See management plan"
 
-    template_args = dict(
-        age=patient.get("age", "unknown"),
-        sex=patient.get("sex", "unknown"),
-        presentation=findings.get("presentation", ""),
-        history=", ".join(patient.get("relevant_history", [])) or "None",
-        medications=", ".join(management.get("medications", [])) or "None",
-        acute_summary=acute_summary,
-        treatments=treatments_str or "See plan",
-        disposition=acute_management.get("disposition", "Pending"),
-        monitoring=", ".join(acute_management.get("monitoring_plan", [])[:4]) or "Standard",
-        pending_tasks=", ".join(pending_tasks) if pending_tasks else "None specified",
-    )
+    template_args = {
+        "age": patient.get("age", "unknown"),
+        "sex": patient.get("sex", "unknown"),
+        "presentation": findings.get("presentation", ""),
+        "history": ", ".join(patient.get("relevant_history", [])) or "None",
+        "medications": ", ".join(management.get("medications", [])) or "None",
+        "acute_summary": acute_summary,
+        "treatments": treatments_str or "See plan",
+        "disposition": acute_management.get("disposition", "Pending"),
+        "monitoring": ", ".join(acute_management.get("monitoring_plan", [])[:4]) or "Standard",
+        "pending_tasks": ", ".join(pending_tasks) if pending_tasks else "None specified",
+    }
 
     if format == "sbar":
         prompt = HANDOFF_SBAR_PROMPT.format(**template_args)

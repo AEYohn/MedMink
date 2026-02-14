@@ -10,12 +10,30 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from src.api.routes import graph, tasks, review, projects, chat, search, patterns, novelty, evaluation, medical, patient, admin, consensus, case_analysis, charting, labs, interview
+from src.api.routes import (
+    admin,
+    case_analysis,
+    charting,
+    chat,
+    consensus,
+    evaluation,
+    graph,
+    interview,
+    labs,
+    medical,
+    novelty,
+    patient,
+    patterns,
+    projects,
+    review,
+    search,
+    tasks,
+)
 from src.auth.routes import router as auth_router
-from src.config import settings
-from src.db import init_databases, close_databases, health_check
-from src.kg import get_knowledge_graph
 from src.cache import get_analysis_cache
+from src.config import settings
+from src.db import close_databases, health_check, init_databases
+from src.kg import get_knowledge_graph
 from src.medgemma import get_medgemma_client
 
 logger = structlog.get_logger()

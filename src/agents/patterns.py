@@ -6,10 +6,9 @@ from uuid import uuid4
 
 import structlog
 
-from src.agents.base import BaseAgent, AgentResult
+from src.agents.base import AgentResult, BaseAgent
 from src.kg.models import PatternNode
 from src.models import Task
-from src.config import settings
 
 logger = structlog.get_logger()
 

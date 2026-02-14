@@ -1,7 +1,7 @@
 """State persistence for the orchestrator."""
 
 import json
-from datetime import datetime, date
+from datetime import date, datetime
 from typing import Any
 
 import structlog
@@ -18,7 +18,7 @@ class DateTimeEncoder(json.JSONEncoder):
     """JSON encoder that handles datetime objects."""
 
     def default(self, obj):
-        if isinstance(obj, (datetime, date)):
+        if isinstance(obj, datetime | date):
             return obj.isoformat()
         return super().default(obj)
 

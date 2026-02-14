@@ -1,8 +1,7 @@
 """Hybrid search engine combining vector similarity with keyword filtering."""
 
-import asyncio
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any
 
 import structlog
 

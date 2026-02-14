@@ -106,7 +106,7 @@ class RateLimiter:
     async def record_actual_tokens(self, estimated: int, actual: int) -> None:
         """Update token count with actual usage."""
         async with self._lock:
-            current_time = time.time()
+            time.time()
             # Find and update the most recent entry with matching estimate
             for i in range(len(self.state.tokens) - 1, -1, -1):
                 timestamp, count = self.state.tokens[i]

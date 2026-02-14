@@ -1,13 +1,13 @@
 """Database connection management."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 import redis.asyncio as redis
 import structlog
-from neo4j import AsyncGraphDatabase, AsyncDriver
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from neo4j import AsyncDriver, AsyncGraphDatabase
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
 from src.config import settings

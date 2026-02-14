@@ -7,7 +7,6 @@ against anchor papers with known scores to produce calibrated ratings.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
 
 import structlog
 
@@ -116,7 +115,7 @@ class AnchoredEvaluator:
 
         # Compare against each anchor using LLM
         comparisons = []
-        for anchor, similarity in similar_anchors:
+        for anchor, _similarity in similar_anchors:
             comparison = await self._compare_to_anchor(
                 target_title=title,
                 target_abstract=abstract,

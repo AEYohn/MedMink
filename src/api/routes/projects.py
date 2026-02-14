@@ -3,14 +3,14 @@
 from typing import Any
 from uuid import uuid4
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, HttpUrl
-import structlog
+from pydantic import BaseModel
 
-from src.api.deps import get_task_queue, get_kg
+from src.api.deps import get_kg, get_task_queue
 from src.kg import KnowledgeGraph
-from src.models import Task, TaskType, TaskStatus
+from src.models import Task, TaskStatus, TaskType
 from src.orchestrator.state import TaskQueue
 
 logger = structlog.get_logger()
@@ -94,8 +94,9 @@ async def analyze_project(
     4. Build a knowledge graph
     5. Synthesize solution approaches
     """
-    from src.kg.models import ProjectNode
     from datetime import datetime
+
+    from src.kg.models import ProjectNode
 
     # Detect source from URL
     source = "custom"
@@ -130,7 +131,7 @@ async def analyze_project(
         await kg.add_project(project)
     except Exception as e:
         logger.error("Failed to create project", error=str(e))
-        raise HTTPException(status_code=500, detail=f"Failed to create project: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create project: {str(e)}") from e
 
     # Create analysis task
     task = Task(
@@ -199,7 +200,6 @@ async def get_project(
     problems = await kg.get_problems_for_project(project_id)
 
     # Get approaches
-    from src.kg.models import ApproachNode
     driver = await kg._get_driver()
     async with driver.session() as session:
         result = await session.run(

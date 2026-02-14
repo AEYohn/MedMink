@@ -4,29 +4,28 @@ import asyncio
 import json
 import time
 from datetime import datetime, timedelta
-from functools import lru_cache
 from typing import Any, TypeVar
 
 import structlog
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
+from src.cache import get_analysis_cache
 from src.config import settings
 from src.gemini.rate_limiter import RateLimiter
 from src.gemini.schemas import (
-    PaperAnalysisSchema,
     ClaimExtractionSchema,
     ContradictionAnalysisSchema,
-    TrendAnalysisSchema,
+    PaperAnalysisSchema,
     PredictionSchema,
-    SynthesisSchema,
     SelfCorrectionSchema,
+    SynthesisSchema,
+    TrendAnalysisSchema,
 )
-from src.cache import get_analysis_cache
 
 logger = structlog.get_logger()
 
@@ -612,7 +611,7 @@ REQUIREMENTS:
             try:
                 results = await self._dspy_client.analyze_papers_batch(papers, mode=mode)
                 # Cache individual results
-                for paper, result in zip(papers, results):
+                for paper, result in zip(papers, results, strict=False):
                     if result.get("summary"):  # Only cache successful analyses
                         await self.cache.set(paper["title"], paper["abstract"], result)
                 return results

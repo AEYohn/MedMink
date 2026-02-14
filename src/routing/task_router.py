@@ -10,11 +10,10 @@ from typing import Any
 import dspy
 import structlog
 
-from src.config import settings
 from src.routing.model_registry import (
-    ModelRegistry,
     ModelCapability,
     ModelConfig,
+    ModelRegistry,
     get_model_registry,
 )
 

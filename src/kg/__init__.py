@@ -2,16 +2,16 @@
 
 from src.kg.graph import KnowledgeGraph, get_knowledge_graph
 from src.kg.models import (
-    PaperNode,
     ClaimNode,
-    MethodNode,
-    TrendNode,
-    PredictionNode,
     ContainsRelation,
-    SupportsRelation,
     ContradictsRelation,
-    UsesMethodRelation,
     InvolvesTrendRelation,
+    MethodNode,
+    PaperNode,
+    PredictionNode,
+    SupportsRelation,
+    TrendNode,
+    UsesMethodRelation,
 )
 
 __all__ = [

@@ -7,8 +7,7 @@ from uuid import uuid4
 import httpx
 import structlog
 
-from src.agents.base import BaseAgent, AgentResult
-from src.config import settings
+from src.agents.base import AgentResult, BaseAgent
 from src.kg.models import PaperNode
 from src.models import Task
 

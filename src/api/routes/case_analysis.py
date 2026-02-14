@@ -7,40 +7,40 @@ import random
 from collections import OrderedDict
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+import structlog
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-import structlog
 
 from src.medgemma.case_analyzer import get_case_analyzer
 from src.medgemma.client import get_medgemma_client
-from src.medgemma.vision import get_vision_client
+from src.medgemma.cxr_foundation import get_cxr_foundation_client
+from src.medgemma.derm_foundation import get_derm_foundation_client
 from src.medgemma.differential_diagnosis import (
-    generate_differential_diagnosis,
     ddx_result_to_dict,
+    generate_differential_diagnosis,
+)
+from src.medgemma.discharge_planner import (
+    discharge_plan_to_dict,
+    generate_discharge_plan,
 )
 from src.medgemma.medication_safety import (
     check_medication_safety,
     safety_result_to_dict,
 )
-from src.medgemma.discharge_planner import (
-    generate_discharge_plan,
-    discharge_plan_to_dict,
-)
+from src.medgemma.path_foundation import get_path_foundation_client
 from src.medgemma.referral_generator import (
-    generate_referral_note,
     generate_handoff_note,
-    referral_note_to_dict,
+    generate_referral_note,
     handoff_note_to_dict,
+    referral_note_to_dict,
 )
 from src.medgemma.risk_scores import (
     calculate_risk_scores,
     risk_score_report_to_dict,
 )
-from src.medgemma.cxr_foundation import get_cxr_foundation_client
-from src.medgemma.derm_foundation import get_derm_foundation_client
-from src.medgemma.path_foundation import get_path_foundation_client
 from src.medgemma.txgemma import get_txgemma_client
+from src.medgemma.vision import get_vision_client
 
 logger = structlog.get_logger()
 router = APIRouter(prefix="/api/case", tags=["case-analysis"])
@@ -120,7 +120,7 @@ async def case_analysis_stream_generator(case_text: str):
                 yield f"data: {json.dumps(update)}\n\n"
                 if update.get("type") in ("done", "error"):
                     break
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Send SSE comment as keepalive to prevent browser timeout
                 yield ": heartbeat\n\n"
     finally:
@@ -225,7 +225,7 @@ def _generate_followup_suggestions(
         suggestions.append(f"When should we expect clinical improvement with {top_recommendation}?")
 
     not_rec = [t for t in treatment_options if t.get("verdict") == "not_recommended"]
-    if not_rec and f"not recommended" not in q_lower:
+    if not_rec and "not recommended" not in q_lower:
         suggestions.append(f"Why was {not_rec[0].get('name', 'that option')} rated not recommended?")
 
     if "discharge" not in q_lower and "disposition" not in q_lower:
@@ -373,7 +373,7 @@ async def case_reassessment_stream_generator(request: CaseReassessmentRequest):
                 yield f"data: {json.dumps(update)}\n\n"
                 if update.get("type") in ("done", "error"):
                     break
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 yield ": heartbeat\n\n"
     finally:
         producer.cancel()
@@ -483,7 +483,7 @@ async def get_example_case(category: str | None = None):
 @router.get("/examples")
 async def get_all_examples():
     """Get all example cases."""
-    return {"examples": {k: v for k, v in EXAMPLE_CASES.items()}}
+    return {"examples": dict(EXAMPLE_CASES.items())}
 
 
 # --- Differential Diagnosis ---
@@ -505,7 +505,7 @@ async def generate_ddx(request: DDxRequest):
         return ddx_result_to_dict(result)
     except Exception as e:
         logger.error("DDx generation failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # --- Risk Scores ---
@@ -527,7 +527,7 @@ async def compute_risk_scores(request: RiskScoreRequest):
         return risk_score_report_to_dict(report)
     except Exception as e:
         logger.error("Risk score calculation failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # --- Medication Safety ---
@@ -559,7 +559,7 @@ async def medication_safety_check(request: MedicationSafetyRequest):
         return safety_result_to_dict(result)
     except Exception as e:
         logger.error("Medication safety check failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # --- Discharge Planning ---
@@ -585,7 +585,7 @@ async def discharge_plan_endpoint(request: DischargePlanRequest):
         return discharge_plan_to_dict(result)
     except Exception as e:
         logger.error("Discharge plan generation failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # --- Referral Note ---
@@ -611,7 +611,7 @@ async def referral_endpoint(request: ReferralRequest):
         return referral_note_to_dict(result)
     except Exception as e:
         logger.error("Referral note generation failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # --- Handoff Note ---
@@ -639,7 +639,7 @@ async def handoff_endpoint(request: HandoffRequest):
         return handoff_note_to_dict(result)
     except Exception as e:
         logger.error("Handoff note generation failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # --- CXR Foundation (Chest X-ray Classification) ---
@@ -669,7 +669,7 @@ async def cxr_classify(request: CXRClassifyRequest):
         raise
     except Exception as e:
         logger.error("CXR classification failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # --- Derm Foundation (Skin Lesion Classification) ---
@@ -695,7 +695,7 @@ async def derm_classify(request: DermClassifyRequest):
         raise
     except Exception as e:
         logger.error("Derm classification failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # --- Path Foundation (Digital Pathology) ---
@@ -725,7 +725,7 @@ async def pathology_classify(request: PathClassifyRequest):
         raise
     except Exception as e:
         logger.error("Pathology classification failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # --- TxGemma (Drug Property Prediction) ---
@@ -757,7 +757,7 @@ async def drug_properties(request: DrugPropertyRequest):
         raise
     except Exception as e:
         logger.error("Drug property prediction failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/drug-interaction")
@@ -776,7 +776,7 @@ async def drug_interaction(request: DrugInteractionRequest):
         raise
     except Exception as e:
         logger.error("Drug interaction prediction failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 class AIAssistRequest(BaseModel):
@@ -848,4 +848,4 @@ async def drug_toxicity(request: DrugPropertyRequest):
         raise
     except Exception as e:
         logger.error("Drug toxicity prediction failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

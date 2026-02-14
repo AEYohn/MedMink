@@ -6,13 +6,10 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from src.api.deps import get_task_queue, get_thought_store, get_kg
+from src.api.deps import get_task_queue, get_thought_store
 from src.config import settings
-from src.kg import KnowledgeGraph
-from src.models import Task, TaskType, TaskStatus
+from src.models import Task, TaskStatus, TaskType
 from src.orchestrator.state import TaskQueue, ThoughtSignatureStore
-from src.orchestrator.scheduler import TaskScheduler
-from src.orchestrator.state import OrchestratorState
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
@@ -74,11 +71,11 @@ async def create_task(
     """Create a new task."""
     try:
         task_type = TaskType(request.type)
-    except ValueError:
+    except ValueError as e:
         raise HTTPException(
             status_code=400,
             detail=f"Invalid task type: {request.type}. Valid types: {[t.value for t in TaskType]}",
-        )
+        ) from e
 
     task = Task(
         id=str(uuid4()),
@@ -420,7 +417,7 @@ async def get_dspy_status():
             training_examples=len(client._training_examples),
             model=client.model_name,
         )
-    except Exception as e:
+    except Exception:
         return DSPyStatusResponse(
             enabled=False,
             optimized=False,
@@ -445,8 +442,8 @@ async def optimize_dspy_modules(request: DSPyOptimizeRequest):
         from src.dspy_analysis import get_dspy_client
         from src.dspy_analysis.training import (
             create_training_examples,
-            load_training_data,
             extraction_quality_metric,
+            load_training_data,
         )
 
         client = get_dspy_client()
@@ -490,7 +487,7 @@ async def optimize_dspy_modules(request: DSPyOptimizeRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Optimization failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Optimization failed: {str(e)}") from e
 
 
 @router.post("/dspy/load")
@@ -502,8 +499,9 @@ async def load_optimized_dspy(model_path: str = "models/dspy_optimized.json"):
         raise HTTPException(status_code=400, detail="DSPy is not enabled")
 
     try:
-        from src.dspy_analysis import get_dspy_client
         from pathlib import Path
+
+        from src.dspy_analysis import get_dspy_client
 
         if not Path(model_path).exists():
             raise HTTPException(status_code=404, detail=f"Model file not found: {model_path}")
@@ -519,4 +517,4 @@ async def load_optimized_dspy(model_path: str = "models/dspy_optimized.json"):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to load: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to load: {str(e)}") from e

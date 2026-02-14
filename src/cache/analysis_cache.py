@@ -5,7 +5,6 @@ Research-backed optimization from "Trajectory Recycling" technique:
 """
 
 import hashlib
-import json
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -92,7 +91,7 @@ class AnalysisCache:
         best_match = None
         best_score = 0.0
 
-        for content_hash, entry in self._cache.items():
+        for _content_hash, entry in self._cache.items():
             if self._is_expired(entry["cached_at"]):
                 continue
 

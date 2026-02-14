@@ -4,17 +4,15 @@ AI-optimized appointment scheduling and calendar management
 for healthcare practices.
 """
 
-import asyncio
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta, time
+from dataclasses import dataclass
+from datetime import datetime, time, timedelta
 from typing import Any, Literal
 from uuid import uuid4
 
 import dspy
 import structlog
 
-from src.agents.base import BaseAgent, AgentResult
-from src.config import settings
+from src.agents.base import AgentResult, BaseAgent
 from src.models import Task
 
 logger = structlog.get_logger()
@@ -469,8 +467,8 @@ class SchedulerAgent(BaseAgent):
         hours = DEFAULT_WORKING_HOURS
         day_start = datetime.combine(date, hours["start"])
         day_end = datetime.combine(date, hours["end"])
-        lunch_start = datetime.combine(date, hours["lunch_start"])
-        lunch_end = datetime.combine(date, hours["lunch_end"])
+        datetime.combine(date, hours["lunch_start"])
+        datetime.combine(date, hours["lunch_end"])
 
         # Sort appointments by time
         sorted_apts = sorted(appointments, key=lambda a: a.datetime)

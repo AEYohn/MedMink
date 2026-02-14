@@ -352,7 +352,7 @@ async def score_case(test_case: dict) -> CaseScore:
     parsed_case = result_data.get("parsed_case", {})
     treatment_options = result_data.get("treatment_options", [])
     acute_mgmt = result_data.get("acute_management", {})
-    top_rec = result_data.get("top_recommendation", "")
+    result_data.get("top_recommendation", "")
     category = parsed_case.get("case_category", "")
 
     option_names = [opt["name"] for opt in treatment_options]

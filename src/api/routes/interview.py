@@ -1,19 +1,17 @@
 """API routes for the patient interview system."""
 
-import asyncio
 import json
-import tempfile
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+import structlog
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-import structlog
 
 from src.medgemma.interview import (
     create_session,
-    get_session,
     get_interviewer,
+    get_session,
 )
 
 logger = structlog.get_logger()
@@ -234,8 +232,8 @@ async def analyze_cough(audio: UploadFile = File(...)):
             raise HTTPException(status_code=503, detail="HeAR model not configured")
 
         # Save to temp file for processing
-        import tempfile
         import os
+        import tempfile
 
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
             content = await audio.read()
@@ -252,11 +250,11 @@ async def analyze_cough(audio: UploadFile = File(...)):
 
     except HTTPException:
         raise
-    except ImportError:
-        raise HTTPException(status_code=503, detail="HeAR client not available")
+    except ImportError as e:
+        raise HTTPException(status_code=503, detail="HeAR client not available") from e
     except Exception as e:
         logger.error("Cough analysis failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # --- AMIE-style Management Plan ---
@@ -282,7 +280,7 @@ async def get_management_plan(session_id: str):
         return {"error": "Management agent not available", "plan": None}
     except Exception as e:
         logger.error("Management plan retrieval failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # --- Longitudinal Visit Management ---
@@ -300,7 +298,7 @@ async def get_visit_history(patient_id: str):
         return {"patient_id": patient_id, "visits": [], "error": "Visit tracker not available"}
     except Exception as e:
         logger.error("Visit history retrieval failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 class LinkVisitRequest(BaseModel):
@@ -324,11 +322,11 @@ async def link_visit(request: LinkVisitRequest):
             session=session,
         )
         return {"success": True, "visit": visit}
-    except ImportError:
-        raise HTTPException(status_code=503, detail="Visit tracker not available")
+    except ImportError as e:
+        raise HTTPException(status_code=503, detail="Visit tracker not available") from e
     except Exception as e:
         logger.error("Visit linking failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 async def _transcribe_audio(audio: UploadFile) -> str | None:

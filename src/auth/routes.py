@@ -8,28 +8,25 @@ Provides endpoints for:
 """
 
 from datetime import datetime
-from typing import Any
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field
 
 from src.auth.jwt import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
     create_access_token,
     create_refresh_token,
-    verify_token,
     get_current_user,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
+    verify_token,
 )
 from src.auth.models import (
-    User,
     Patient,
     Provider,
-    UserRole,
-    UserCreate,
-    UserLogin,
-    TokenResponse,
     TokenData,
+    TokenResponse,
+    User,
+    UserRole,
 )
 from src.auth.password import hash_password, verify_password
 
@@ -227,11 +224,11 @@ async def refresh_token(request: RefreshRequest):
     """
     try:
         token_data = verify_token(request.refresh_token, token_type="refresh")
-    except HTTPException:
+    except HTTPException as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
-        )
+        ) from e
 
     # Verify user still exists and is active
     user = _users.get(token_data.user_id)

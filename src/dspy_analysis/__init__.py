@@ -15,16 +15,16 @@ Using DSPy instead of manual prompts provides:
 
 from src.dspy_analysis.client import DSPyAnalysisClient, get_dspy_client
 from src.dspy_analysis.modules import (
-    PaperAnalyzer,
-    TechniqueExtractor,
     ClaimExtractor,
     ContradictionDetector,
+    PaperAnalyzer,
+    TechniqueExtractor,
 )
 from src.dspy_analysis.signatures import (
-    TechniqueExtraction,
     ClaimExtraction,
-    PaperAnalysis,
     ContradictionDetection,
+    PaperAnalysis,
+    TechniqueExtraction,
 )
 
 __all__ = [

@@ -4,7 +4,6 @@ Generates patient-readable discharge instructions, medication reconciliation,
 follow-up timelines, return-to-ED red flags, and readmission risk assessment.
 """
 
-import json
 from dataclasses import dataclass, field
 from typing import Any
 

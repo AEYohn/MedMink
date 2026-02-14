@@ -4,11 +4,10 @@ Runs clinical queries through multiple model perspectives to provide
 consensus scoring and identify areas of disagreement.
 """
 
-import asyncio
-import json
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import Any, AsyncIterator
 from enum import Enum
+from typing import Any
 
 import structlog
 

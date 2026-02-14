@@ -8,7 +8,6 @@ Provides endpoints for:
 """
 
 from datetime import datetime
-from typing import Any
 
 import structlog
 from fastapi import APIRouter, HTTPException, Query
@@ -109,7 +108,7 @@ async def create_appointment(request: AppointmentCreateRequest):
 
     except Exception as e:
         logger.error("Failed to create appointment", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/appointments")
@@ -139,7 +138,7 @@ async def list_appointments(
 
     except Exception as e:
         logger.error("Failed to list appointments", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/appointments/{appointment_id}")
@@ -191,7 +190,7 @@ async def update_appointment(appointment_id: str, request: AppointmentUpdateRequ
         raise
     except Exception as e:
         logger.error("Failed to update appointment", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.delete("/appointments/{appointment_id}")
@@ -211,7 +210,7 @@ async def cancel_appointment(appointment_id: str):
         raise
     except Exception as e:
         logger.error("Failed to cancel appointment", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # ============================================================================
@@ -238,7 +237,7 @@ async def optimize_schedule(request: ScheduleOptimizeRequest):
 
     except Exception as e:
         logger.error("Failed to optimize schedule", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/schedule/available-slots")
@@ -264,7 +263,7 @@ async def get_available_slots(
 
     except Exception as e:
         logger.error("Failed to get available slots", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # ============================================================================
@@ -334,7 +333,7 @@ async def send_reminders(request: ReminderSendRequest):
 
     except Exception as e:
         logger.error("Failed to send reminders", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/reminders/bulk")
@@ -371,7 +370,7 @@ async def send_bulk_reminders(request: BulkReminderRequest):
 
     except Exception as e:
         logger.error("Failed to send bulk reminders", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # ============================================================================

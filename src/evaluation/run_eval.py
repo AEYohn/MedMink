@@ -15,9 +15,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from src.evaluation.test_cases import TEST_CASES, get_test_case, get_all_test_case_ids
-from src.evaluation.scorer import score_case, CaseScore
-
+from src.evaluation.scorer import CaseScore, score_case
+from src.evaluation.test_cases import TEST_CASES, get_all_test_case_ids, get_test_case
 
 RESULTS_DIR = Path("results")
 

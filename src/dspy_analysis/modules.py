@@ -11,16 +11,16 @@ import dspy
 import structlog
 
 from src.dspy_analysis.signatures import (
-    TechniqueExtraction,
     ClaimExtraction,
-    PaperAnalysis,
     ContradictionDetection,
-    FormulaExtraction,
-    PseudocodeGeneration,
-    ExtractedTechnique,
-    ExtractedClaim,
-    PaperAnalysisResult,
     DetectedContradiction,
+    ExtractedClaim,
+    ExtractedTechnique,
+    FormulaExtraction,
+    PaperAnalysis,
+    PaperAnalysisResult,
+    PseudocodeGeneration,
+    TechniqueExtraction,
 )
 
 logger = structlog.get_logger()

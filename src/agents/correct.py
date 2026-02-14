@@ -1,14 +1,11 @@
 """Self-correction agent for handling failures and errors."""
 
-import json
-from datetime import datetime
 from typing import Any
-from uuid import uuid4
 
 import structlog
 
-from src.agents.base import BaseAgent, AgentResult
-from src.models import Task, TaskStatus, TaskType, ThoughtSignature
+from src.agents.base import AgentResult, BaseAgent
+from src.models import Task
 
 logger = structlog.get_logger()
 

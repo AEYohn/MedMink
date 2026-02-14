@@ -1,6 +1,5 @@
 """Cypher query builders for Neo4j operations."""
 
-from typing import Any
 
 
 class CypherQueries:

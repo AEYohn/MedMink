@@ -158,7 +158,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
     except Exception as e:
         logger.error("Chat error", error=str(e))
-        raise HTTPException(status_code=500, detail=f"Failed to process chat: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to process chat: {str(e)}") from e
 
 
 @router.get("/conversations/{conversation_id}", response_model=ConversationResponse)
@@ -215,7 +215,7 @@ async def get_conversation(conversation_id: str) -> ConversationResponse:
         raise
     except Exception as e:
         logger.error("Failed to get conversation", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.delete("/conversations/{conversation_id}")
@@ -233,7 +233,7 @@ async def delete_conversation(conversation_id: str) -> dict[str, str]:
 
     except Exception as e:
         logger.error("Failed to delete conversation", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 async def _get_conversation_history(

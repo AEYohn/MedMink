@@ -1,19 +1,17 @@
 """Analyze agent for extracting claims, methods, and detecting contradictions."""
 
-import asyncio
 from datetime import datetime
-from typing import Any
 from uuid import uuid4
 
 import structlog
 
-from src.agents.base import BaseAgent, AgentResult
-from src.kg.models import ClaimNode, MethodNode, TrendNode, TechniqueNode
-from src.models import Task
-from src.rag import get_vector_store, get_rag_engine
+from src.agents.base import AgentResult, BaseAgent
 from src.config import settings
+from src.kg.models import ClaimNode, MethodNode, TechniqueNode, TrendNode
+from src.models import Task
+from src.novelty.checker import get_novelty_checker
 from src.pdf.extractor import extract_paper_text_safe
-from src.novelty.checker import get_novelty_checker, NoveltyChecker
+from src.rag import get_rag_engine, get_vector_store
 
 logger = structlog.get_logger()
 
@@ -444,7 +442,7 @@ class AnalyzeAgent(BaseAgent):
                         analyses.append({})
 
             # Process each analysis result
-            for paper, analysis in zip(batch, analyses):
+            for paper, analysis in zip(batch, analyses, strict=False):
                 if not analysis:
                     continue
 
@@ -611,7 +609,7 @@ class AnalyzeAgent(BaseAgent):
             contradictions_added = 0
             for contradiction in analysis.get("contradictions", []):
                 idx1 = contradiction.get("claim1_index", 0)
-                idx2 = contradiction.get("claim2_index", 1)
+                contradiction.get("claim2_index", 1)
 
                 # Map indices to original pairs
                 pair_idx = idx1 // 2
@@ -663,7 +661,6 @@ class AnalyzeAgent(BaseAgent):
     async def identify_trends(self, task: Task) -> AgentResult:
         """Identify research trends from recent papers and claims."""
         try:
-            payload = task.payload or {}
 
             kg = await self._get_kg()
             gemini = await self._get_gemini()
@@ -783,8 +780,9 @@ class AnalyzeAgent(BaseAgent):
                 recent_developments=developments,
             )
 
-            from src.kg.models import PredictionNode
             from datetime import timedelta
+
+            from src.kg.models import PredictionNode
 
             predictions_added = 0
             for pred_data in analysis.get("predictions", []):

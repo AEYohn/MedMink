@@ -7,14 +7,14 @@ Routes queries to the optimal model based on task type:
 """
 
 from src.routing.model_registry import (
-    ModelRegistry,
     ModelCapability,
+    ModelRegistry,
     get_model_registry,
 )
 from src.routing.task_router import (
+    RoutingDecision,
     TaskRouter,
     TaskType,
-    RoutingDecision,
     get_task_router,
 )
 

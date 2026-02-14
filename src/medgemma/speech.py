@@ -199,8 +199,8 @@ class MedASRClient:
             return {"text": "", "error": "Speech recognition not available", "confidence": 0.0}
 
         try:
-            import torch
             import librosa
+            import torch
 
             audio_file = Path(audio_path)
             if not audio_file.exists():
@@ -293,8 +293,8 @@ class MedASRClient:
         chunk_samples = int(chunk_duration_seconds * sample_rate)
 
         try:
-            import torch
             import numpy as np
+            import torch
 
             async for chunk in audio_stream:
                 accumulated_audio.append(chunk)

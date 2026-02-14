@@ -9,8 +9,8 @@ Provides dynamic model loading and hot-swapping for different MedGemma variants:
 """
 
 import asyncio
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any
 
 import structlog
@@ -217,7 +217,7 @@ class ModelRegistry:
     def _load_model_sync(self, model_type: ModelType, config: ModelConfig) -> bool:
         """Synchronous model loading."""
         import torch
-        from transformers import AutoTokenizer, AutoModelForCausalLM
+        from transformers import AutoModelForCausalLM, AutoTokenizer
 
         logger.info("Loading model", model=config.model_id)
 
@@ -289,8 +289,9 @@ class ModelRegistry:
             return False
 
         try:
-            import torch
             import gc
+
+            import torch
 
             # Delete model and tokenizer
             del self._loaded_models[model_type]

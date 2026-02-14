@@ -6,14 +6,13 @@ Focus on COVID, oncology, cardiology, neurology, and other medical specialties.
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any
 
 import httpx
 import structlog
 
-from src.agents.base import BaseAgent, AgentResult
+from src.agents.base import AgentResult, BaseAgent
 from src.config import settings
-from src.models import Task, Paper
+from src.models import Paper, Task
 
 logger = structlog.get_logger()
 

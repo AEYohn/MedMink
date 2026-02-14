@@ -3,23 +3,20 @@
 Provides real-time streaming updates during multi-model analysis.
 """
 
-import asyncio
 import json
 from typing import Any
 
 import structlog
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from src.agents.medical_agent import MedicalLiteratureAgent
 from src.medgemma.consensus import (
-    get_consensus_engine,
-    StepUpdate,
     ConsensusResult,
-    ConsensusStep,
+    StepUpdate,
+    get_consensus_engine,
 )
-from src.dspy_analysis.medical_signatures import PICOElements
 
 logger = structlog.get_logger()
 router = APIRouter(prefix="/consensus", tags=["consensus"])
@@ -249,7 +246,7 @@ async def analyze_with_consensus(request: ConsensusRequest):
 
     except Exception as e:
         logger.error("Consensus analysis failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/analyze/image/stream")
@@ -264,8 +261,8 @@ async def analyze_image_with_consensus_stream(
     Supports X-rays, CT scans, MRI, pathology slides, dermatology images.
     """
     # Save uploaded image temporarily
-    import tempfile
     import os
+    import tempfile
 
     try:
         suffix = os.path.splitext(image.filename)[1] if image.filename else ".png"
@@ -289,4 +286,4 @@ async def analyze_image_with_consensus_stream(
         )
     except Exception as e:
         logger.error("Image analysis failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

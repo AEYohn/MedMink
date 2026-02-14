@@ -5,14 +5,14 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+import structlog
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-import structlog
 
 from src.medgemma.client import get_medgemma_client
-from src.medgemma.speech import get_medasr_client
 from src.medgemma.prompts import SOAP_STRUCTURING_PROMPT
+from src.medgemma.speech import get_medasr_client
 
 logger = structlog.get_logger()
 router = APIRouter(prefix="/api/chart", tags=["charting"])
@@ -148,7 +148,7 @@ async def enhance_dictation_sync(request: EnhanceRequest):
 
     except Exception as e:
         logger.error("Enhancement failed", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 async def transcribe_and_structure_generator(audio_path: str):
@@ -263,7 +263,7 @@ async def transcribe_and_structure(audio: UploadFile = File(...)):
 
     except Exception as e:
         logger.error("Failed to process audio upload", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # Example dictation for testing

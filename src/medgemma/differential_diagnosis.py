@@ -4,7 +4,6 @@ Generates ranked differential diagnoses with Bayesian-style reasoning,
 supporting/refuting findings, and must-rule-out flags.
 """
 
-import json
 from dataclasses import dataclass, field
 from typing import Any
 

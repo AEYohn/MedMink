@@ -7,7 +7,7 @@ from uuid import uuid4
 import structlog
 
 from src.config import settings
-from src.models import Task, TaskType, TaskStatus
+from src.models import Task, TaskStatus, TaskType
 from src.orchestrator.state import OrchestratorState, TaskQueue
 
 logger = structlog.get_logger()

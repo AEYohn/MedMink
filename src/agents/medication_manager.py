@@ -11,8 +11,7 @@ from typing import Any, Literal
 import dspy
 import structlog
 
-from src.agents.base import BaseAgent, AgentResult
-from src.config import settings
+from src.agents.base import AgentResult, BaseAgent
 from src.medgemma import get_medgemma_client
 from src.models import Task
 
@@ -153,7 +152,7 @@ class MedicationManagerAgent(BaseAgent):
                 task=task,
                 context_summary=f"Checking {len(medications)} medications",
                 decision_made=f"Safe: {result.safe}, Found {len(result.interactions)} interactions",
-                reasoning=f"Analyzed interactions between all medication pairs",
+                reasoning="Analyzed interactions between all medication pairs",
                 confidence=result.confidence,
                 expected_outcomes=[
                     "Patient informed of potential interactions",

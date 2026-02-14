@@ -1,12 +1,11 @@
 """Novelty index for tracking existing techniques and claims."""
 
 from dataclasses import dataclass
-from typing import Any
 
 import structlog
 
 from src.rag.embeddings import get_embedding_service
-from src.rag.vector_store import get_vector_store, SearchResult
+from src.rag.vector_store import SearchResult, get_vector_store
 
 logger = structlog.get_logger()
 

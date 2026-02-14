@@ -1,10 +1,9 @@
 """Semantic search API endpoints."""
 
-from typing import Literal
 
 import structlog
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from src.rag import get_hybrid_search, get_vector_store
 
@@ -141,7 +140,7 @@ async def semantic_search(
         raise
     except Exception as e:
         logger.error("Semantic search error", error=str(e))
-        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}") from e
 
 
 @router.get("/similar/{paper_id}", response_model=SimilarPapersResponse)
@@ -180,7 +179,7 @@ async def find_similar_papers(
 
     except Exception as e:
         logger.error("Similar papers search error", error=str(e))
-        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}") from e
 
 
 @router.get("/stats", response_model=EmbeddingStatsResponse)
@@ -203,7 +202,7 @@ async def get_embedding_stats() -> EmbeddingStatsResponse:
 
     except Exception as e:
         logger.error("Failed to get embedding stats", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/index/create")
@@ -225,4 +224,4 @@ async def create_search_indexes() -> dict[str, str]:
 
     except Exception as e:
         logger.error("Failed to create indexes", error=str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

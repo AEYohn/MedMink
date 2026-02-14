@@ -11,9 +11,7 @@ served on Modal GPU infrastructure. Supports:
 - Lab report document extraction
 """
 
-import base64
 import json
-from pathlib import Path
 from typing import Any
 
 import aiohttp
@@ -211,7 +209,6 @@ class MedVisionClient:
         modality: str,
     ) -> dict[str, Any]:
         """Enhance MedGemma analysis with specialized foundation model scores."""
-        import asyncio
 
         if modality == "xray":
             try:

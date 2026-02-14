@@ -5,7 +5,6 @@ by using MedGemma directly for PICO extraction and PubMed for paper search.
 """
 
 import json
-from typing import Any
 
 import structlog
 from fastapi import APIRouter, HTTPException
@@ -14,9 +13,9 @@ from pydantic import BaseModel, Field
 
 from src.medgemma.client import get_medgemma_client
 from src.medgemma.consensus import (
-    get_consensus_engine,
-    StepUpdate,
     ConsensusResult,
+    StepUpdate,
+    get_consensus_engine,
 )
 
 logger = structlog.get_logger()

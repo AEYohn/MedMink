@@ -11,7 +11,6 @@ Models:
 """
 
 import asyncio
-import base64
 import json
 from pathlib import Path
 from typing import Any
@@ -21,10 +20,10 @@ import structlog
 from src.config import settings
 from src.medgemma.prompts import (
     CLINICAL_REASONING_SYSTEM,
-    PICO_EXTRACTION_PROMPT,
+    DRUG_INTERACTION_PROMPT,
     EVIDENCE_GRADING_PROMPT,
     EVIDENCE_SYNTHESIS_PROMPT,
-    DRUG_INTERACTION_PROMPT,
+    PICO_EXTRACTION_PROMPT,
 )
 
 logger = structlog.get_logger()
@@ -115,7 +114,7 @@ class MedGemmaClient:
 
         try:
             import torch
-            from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+            from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
             logger.info("Loading MedGemma model...", model=self.model_name)
 
@@ -855,7 +854,6 @@ class MedGemmaClient:
 
             # Get basic image info
             width, height = image.size
-            mode = image.mode
             format_type = image.format or image_file.suffix.upper().replace(".", "")
 
             # Determine likely modality from filename or format

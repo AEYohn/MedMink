@@ -13,7 +13,7 @@ router = APIRouter(prefix="/graph", tags=["Knowledge Graph"])
 
 def parse_confidence(value: Any) -> float:
     """Convert confidence value to float."""
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return float(value)
     if isinstance(value, str):
         mapping = {

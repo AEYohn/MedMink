@@ -8,16 +8,15 @@ This module provides utilities to:
 
 import json
 from pathlib import Path
-from typing import Any
 
 import dspy
 import structlog
 
 from src.dspy_analysis.signatures import (
-    PaperAnalysisResult,
-    ExtractedTechnique,
     ExtractedClaim,
     ExtractedMethod,
+    ExtractedTechnique,
+    PaperAnalysisResult,
 )
 
 logger = structlog.get_logger()

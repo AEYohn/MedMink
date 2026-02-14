@@ -6,15 +6,14 @@ Focuses on clinical trials, systematic reviews, and meta-analyses.
 
 import asyncio
 from datetime import datetime
-from typing import Any
 from xml.etree import ElementTree
 
 import httpx
 import structlog
 
-from src.agents.base import BaseAgent, AgentResult
+from src.agents.base import AgentResult, BaseAgent
 from src.config import settings
-from src.models import Task, Paper
+from src.models import Paper, Task
 
 logger = structlog.get_logger()
 
@@ -87,7 +86,7 @@ class IngestPubMedAgent(BaseAgent):
                 reasoning=f"Search returned {len(pmids)} PMIDs, successfully parsed {len(papers)}",
                 confidence=0.9,
                 expected_outcomes=[
-                    f"Papers ready for analysis",
+                    "Papers ready for analysis",
                     "Medical claims can be extracted",
                 ],
             )

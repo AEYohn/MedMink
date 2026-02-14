@@ -6,9 +6,9 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from src.api.deps import get_task_queue, get_kg
+from src.api.deps import get_kg, get_task_queue
 from src.kg import KnowledgeGraph
-from src.models import Task, TaskType, TaskStatus
+from src.models import Task, TaskStatus, TaskType
 from src.orchestrator.state import TaskQueue
 
 router = APIRouter(prefix="/patterns", tags=["Patterns"])

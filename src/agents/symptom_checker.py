@@ -11,8 +11,7 @@ from typing import Any, Literal
 import dspy
 import structlog
 
-from src.agents.base import BaseAgent, AgentResult
-from src.config import settings
+from src.agents.base import AgentResult, BaseAgent
 from src.medgemma import get_medgemma_client
 from src.models import Task
 from src.routing import get_task_router

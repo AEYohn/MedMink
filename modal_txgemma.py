@@ -14,13 +14,17 @@ import modal
 
 app = modal.App("txgemma")
 
+hf_cache = modal.Volume.from_name("hf-cache", create_if_missing=True)
+
 txgemma_image = (
-    modal.Image.debian_slim(python_version="3.12")
+    modal.Image.from_registry(
+        "nvidia/cuda:12.8.0-devel-ubuntu22.04", add_python="3.12"
+    )
+    .entrypoint([])
     .pip_install(
         "fastapi==0.109.2",
         "uvicorn[standard]==0.27.1",
-        "vllm>=0.4.0",
-        "torch>=2.1.0",
+        "vllm>=0.6.0",
         "transformers>=4.40.0",
         "structlog==24.1.0",
         "huggingface-hub>=0.20.0",
@@ -32,7 +36,11 @@ txgemma_image = (
     image=txgemma_image,
     gpu="A10G",
     scaledown_window=300,
-    timeout=300,
+    timeout=600,
+    secrets=[modal.Secret.from_name("huggingface-secret")],
+    volumes={
+        "/root/.cache/huggingface": hf_cache,
+    },
 )
 @modal.asgi_app()
 def serve():

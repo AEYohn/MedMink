@@ -1,6 +1,6 @@
 """Agent implementations for the Research Synthesizer."""
 
-from src.agents.base import BaseAgent, AgentResult
+from src.agents.base import AgentResult, BaseAgent
 
 # Lazy imports — other agents pull in heavy deps (neo4j, google.generativeai)
 # that aren't needed in lightweight contexts like case analysis.

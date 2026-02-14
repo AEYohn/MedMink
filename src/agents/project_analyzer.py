@@ -1,7 +1,6 @@
 """Project Analyzer agent for analyzing project/competition URLs and building solution approaches."""
 
 import asyncio
-import re
 from datetime import datetime
 from typing import Any
 from urllib.parse import urlparse
@@ -11,8 +10,8 @@ import httpx
 import structlog
 from bs4 import BeautifulSoup
 
-from src.agents.base import BaseAgent, AgentResult
-from src.kg.models import ProjectNode, ProblemNode, ApproachNode, PaperNode
+from src.agents.base import AgentResult, BaseAgent
+from src.kg.models import ApproachNode, PaperNode, ProblemNode, ProjectNode
 from src.models import Task
 
 logger = structlog.get_logger()
@@ -406,7 +405,7 @@ Be thorough but precise. Focus on extracting actionable problem components."""
                         sort_by=arxiv.SortCriterion.Relevance,
                     )
 
-                    async def fetch_arxiv():
+                    async def fetch_arxiv(search=search):
                         papers = []
                         for result in search.results():
                             paper = PaperNode(
@@ -415,7 +414,7 @@ Be thorough but precise. Focus on extracting actionable problem components."""
                                 title=result.title,
                                 abstract=result.summary,
                                 authors=[a.name for a in result.authors],
-                                categories=[c for c in result.categories],
+                                categories=list(result.categories),
                                 published_date=result.published,
                                 pdf_url=result.pdf_url,
                                 source_url=result.entry_id,

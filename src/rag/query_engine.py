@@ -3,13 +3,12 @@
 import json
 from dataclasses import dataclass, field
 from typing import Any
-from uuid import uuid4
 
 import structlog
 
 from src.gemini import get_gemini_client
 from src.kg import get_knowledge_graph
-from src.rag.search import HybridSearch, RankedResult, get_hybrid_search
+from src.rag.search import RankedResult, get_hybrid_search
 
 logger = structlog.get_logger()
 
@@ -196,7 +195,7 @@ Format your response as JSON with these fields:
             answer=answer,
             sources=sources,
             follow_up_questions=follow_ups if isinstance(follow_ups, list) else [],
-            confidence=confidence if isinstance(confidence, (int, float)) else 0.7,
+            confidence=confidence if isinstance(confidence, int | float) else 0.7,
             context_used=len(search_results.results),
         )
 

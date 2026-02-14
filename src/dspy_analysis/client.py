@@ -5,19 +5,19 @@ modules for better extraction quality and optimizability.
 """
 
 import asyncio
-import json
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import dspy
 import structlog
 
 from src.config import settings
 from src.dspy_analysis.modules import (
-    PaperAnalyzer,
-    TechniqueExtractor,
+    BatchPaperAnalyzer,
     ClaimExtractor,
     ContradictionDetector,
-    BatchPaperAnalyzer,
+    PaperAnalyzer,
+    TechniqueExtractor,
 )
 from src.dspy_analysis.signatures import PaperAnalysisResult
 

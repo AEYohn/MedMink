@@ -22,12 +22,9 @@ txgemma_image = (
     )
     .entrypoint([])
     .pip_install(
-        "fastapi==0.109.2",
-        "uvicorn[standard]==0.27.1",
-        "vllm>=0.6.0",
-        "transformers>=4.40.0",
+        "vllm==0.8.5.post1",
+        "transformers>=4.48.2,<5.0",
         "structlog==24.1.0",
-        "huggingface-hub>=0.20.0",
     )
 )
 
@@ -70,8 +67,9 @@ def serve():
     llm = LLM(
         model="google/txgemma-9b-chat",
         trust_remote_code=True,
-        max_model_len=4096,
-        gpu_memory_utilization=0.9,
+        max_model_len=2048,
+        gpu_memory_utilization=0.95,
+        enforce_eager=True,
     )
     logger.info("TxGemma-9B-chat loaded successfully")
 

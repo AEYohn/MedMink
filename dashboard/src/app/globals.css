@@ -71,7 +71,7 @@
 
   /* Instrument Serif for display headings */
   .font-display {
-    font-family: 'Instrument Serif', Georgia, serif;
+    font-family: var(--font-display), Georgia, serif;
   }
 }
 

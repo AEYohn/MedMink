@@ -86,8 +86,8 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-outfit)', 'Outfit', 'system-ui', 'sans-serif'],
-        display: ['Instrument Serif', 'Georgia', 'serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        display: ['var(--font-display)', 'Georgia', 'serif'],
+        mono: ['var(--font-mono)', 'monospace'],
       },
       fontSize: {
         '2xs': ['0.625rem', { lineHeight: '0.875rem' }],

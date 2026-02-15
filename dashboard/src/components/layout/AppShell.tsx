@@ -35,16 +35,10 @@ export function AppShell({ children }: AppShellProps) {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col bg-surface-50 dark:bg-surface-950">
-      {/* Subtle gradient background */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-br from-brand-500/5 via-transparent to-accent-500/5 blur-3xl" />
-        <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-brand-500/5 via-transparent to-accent-500/5 blur-3xl" />
-      </div>
-
+    <div className="h-screen flex flex-col bg-background">
       <Header onOpenCommandPalette={() => setCommandPaletteOpen(true)} />
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex min-h-0">
         <Sidebar
           isCollapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}

@@ -51,67 +51,61 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   const isExpanded = (section: string) => expandedSections.includes(section);
 
-  const navItems = [
+  const mainNav = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/patients', icon: Users, label: 'Patients' },
     { href: '/cases', icon: FolderOpen, label: 'Cases' },
     { href: '/documents', icon: FileText, label: 'Documents' },
-    { href: '/case', icon: Stethoscope, label: 'New Analysis' },
-    { href: '/interview', icon: ClipboardList, label: 'Interview' },
-    { href: '/imaging', icon: Camera, label: 'Medical Imaging' },
-    { href: '/labs', icon: Beaker, label: 'Lab Reports' },
-    { href: '/chart', icon: FileText, label: 'Charting' },
   ];
 
-  const quickActions = [
-    { icon: Search, label: 'Search', action: () => {}, color: 'blue' },
-    { icon: MessageCircle, label: 'Chat', action: () => startNewConversation(), color: 'purple' },
+  const toolsNav = [
+    { href: '/case', icon: Stethoscope, label: 'Case Analysis' },
+    { href: '/interview', icon: ClipboardList, label: 'Interview' },
+    { href: '/imaging', icon: Camera, label: 'Imaging' },
+    { href: '/labs', icon: Beaker, label: 'Labs' },
+    { href: '/chart', icon: FileText, label: 'Charting' },
   ];
 
   if (isCollapsed) {
     return (
-      <aside className="w-16 bg-card border-r border-border flex flex-col py-4">
+      <aside className="w-14 bg-card/50 border-r border-border flex flex-col py-3">
         <button
           onClick={onToggle}
-          className="mx-auto p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-all"
+          className="mx-auto p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all"
         >
-          <PanelLeft className="w-5 h-5" />
+          <PanelLeft className="w-4 h-4" />
         </button>
 
-        <nav className="mt-6 space-y-2 px-2">
-          {navItems.map(item => (
+        <nav className="mt-4 space-y-1 px-2">
+          {[...mainNav, ...toolsNav].map(item => (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center justify-center p-3 rounded-xl transition-all ${
+              className={`flex items-center justify-center p-2.5 rounded-lg transition-all ${
                 pathname === item.href
-                  ? 'bg-primary/10 text-primary shadow-sm'
+                  ? 'bg-primary/10 text-primary'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
               title={item.label}
             >
-              <item.icon className="w-5 h-5" />
+              <item.icon className="w-4 h-4" />
             </Link>
           ))}
         </nav>
 
-        <div className="mt-auto px-2 space-y-2">
-          {quickActions.map((action, i) => (
-            <button
-              key={i}
-              onClick={action.action}
-              className="w-full flex items-center justify-center p-3 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-              title={action.label}
-            >
-              <action.icon className="w-5 h-5" />
-            </button>
-          ))}
+        <div className="mt-auto px-2 space-y-1">
+          <button
+            onClick={startNewConversation}
+            className="w-full flex items-center justify-center p-2.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+            title="New Chat"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* MedGemma badge */}
         <div className="mt-2 px-2">
-          <div className="flex items-center justify-center p-2">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full status-pulse" />
+          <div className="flex items-center justify-center p-1.5">
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full status-pulse" />
           </div>
         </div>
       </aside>
@@ -119,56 +113,66 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   }
 
   return (
-    <aside className="w-64 bg-card border-r border-border flex flex-col overflow-hidden">
+    <aside className="w-60 bg-card/50 border-r border-border flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-border">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-            <Stethoscope className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-sm font-semibold">MedLit Agent</span>
-        </div>
+      <div className="flex items-center justify-between px-3 py-3 border-b border-border">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Navigation</span>
         <button
           onClick={onToggle}
-          className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all"
+          className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-all"
         >
-          <PanelLeftClose className="w-4 h-4" />
+          <PanelLeftClose className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
-        {/* Quick Navigation */}
-        <nav className="p-3 space-y-1">
-          {navItems.map(item => (
+        {/* Main Navigation */}
+        <nav className="p-2 space-y-0.5">
+          {mainNav.map(item => (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
+              className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all text-[13px] ${
                 pathname === item.href
-                  ? 'bg-primary/10 text-primary shadow-sm'
+                  ? 'bg-primary/8 text-primary font-medium'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
-              <span className={`p-1.5 rounded-lg ${
-                pathname === item.href
-                  ? 'bg-primary/20'
-                  : 'bg-muted'
-              }`}>
-                <item.icon className="w-4 h-4" />
-              </span>
-              <span className="text-sm font-medium">{item.label}</span>
+              <item.icon className={`w-4 h-4 ${pathname === item.href ? 'text-primary' : ''}`} />
+              <span>{item.label}</span>
             </Link>
           ))}
         </nav>
+
+        {/* Tools Section */}
+        <div className="px-2 pt-1 pb-2">
+          <p className="px-2.5 py-1.5 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Tools</p>
+          <div className="space-y-0.5">
+            {toolsNav.map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all text-[13px] ${
+                  pathname === item.href
+                    ? 'bg-primary/8 text-primary font-medium'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <item.icon className={`w-4 h-4 ${pathname === item.href ? 'text-primary' : ''}`} />
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
 
         {/* New Chat Button */}
         <div className="px-3 pb-3">
           <button
             onClick={startNewConversation}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-xl shadow-sm hover:shadow-md transition-all"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/15 text-primary text-[13px] font-medium rounded-lg transition-all"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             New Chat
           </button>
         </div>
@@ -177,37 +181,37 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         <div className="border-t border-border">
           <button
             onClick={() => toggleSection('conversations')}
-            className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-widest hover:bg-muted/50 transition-colors"
           >
             <span className="flex items-center gap-2">
-              <MessageCircle className="w-4 h-4" />
+              <MessageCircle className="w-3.5 h-3.5" />
               Conversations
             </span>
-            <ChevronDown className={`w-4 h-4 transition-transform ${
+            <ChevronDown className={`w-3 h-3 transition-transform ${
               isExpanded('conversations') ? '' : '-rotate-90'
             }`} />
           </button>
 
           {isExpanded('conversations') && (
-            <div className="px-2 pb-3 space-y-0.5 animate-fade-in">
+            <div className="px-2 pb-2 space-y-0.5 animate-fade-in">
               {conversations.length === 0 ? (
                 <div className="px-3 py-4 text-center">
-                  <Sparkles className="w-8 h-8 mx-auto text-muted-foreground/30 mb-2" />
-                  <p className="text-xs text-muted-foreground">No conversations yet</p>
+                  <Sparkles className="w-6 h-6 mx-auto text-muted-foreground/20 mb-1.5" />
+                  <p className="text-[11px] text-muted-foreground/60">No conversations yet</p>
                 </div>
               ) : (
                 conversations.slice(0, 8).map(conv => (
                   <div
                     key={conv.id}
-                    className={`group flex items-center gap-2 px-3 py-2 rounded-lg transition-all cursor-pointer ${
+                    className={`group flex items-center gap-2 px-2.5 py-1.5 rounded-md transition-all cursor-pointer ${
                       currentConversation?.id === conv.id
                         ? 'bg-muted'
                         : 'hover:bg-muted/50'
                     }`}
                     onClick={() => loadConversation(conv.id)}
                   >
-                    <MessageCircle className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                    <span className="flex-1 text-sm text-foreground/80 truncate">
+                    <MessageCircle className="w-3 h-3 text-muted-foreground/50 flex-shrink-0" />
+                    <span className="flex-1 text-[12px] text-foreground/70 truncate">
                       {conv.title}
                     </span>
                     <button
@@ -215,7 +219,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                         e.stopPropagation();
                         deleteConversation(conv.id);
                       }}
-                      className="hidden group-hover:flex p-1 text-muted-foreground hover:text-destructive rounded transition-colors"
+                      className="hidden group-hover:flex p-0.5 text-muted-foreground hover:text-destructive rounded transition-colors"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -230,36 +234,36 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         <div className="border-t border-border">
           <button
             onClick={() => toggleSection('history')}
-            className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-widest hover:bg-muted/50 transition-colors"
           >
             <span className="flex items-center gap-2">
-              <History className="w-4 h-4" />
-              Recent Searches
+              <History className="w-3.5 h-3.5" />
+              Recent
             </span>
-            <ChevronDown className={`w-4 h-4 transition-transform ${
+            <ChevronDown className={`w-3 h-3 transition-transform ${
               isExpanded('history') ? '' : '-rotate-90'
             }`} />
           </button>
 
           {isExpanded('history') && (
-            <div className="px-2 pb-3 space-y-0.5 animate-fade-in">
+            <div className="px-2 pb-2 space-y-0.5 animate-fade-in">
               {history.length === 0 ? (
-                <p className="px-3 py-2 text-xs text-muted-foreground text-center">No recent searches</p>
+                <p className="px-3 py-2 text-[11px] text-muted-foreground/60 text-center">No recent searches</p>
               ) : (
                 <>
                   {history.slice(0, 5).map(item => (
                     <button
                       key={item.id}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 rounded-lg transition-colors text-left"
+                      className="w-full flex items-center gap-2 px-2.5 py-1.5 text-[12px] text-muted-foreground hover:bg-muted/50 rounded-md transition-colors text-left"
                     >
-                      <Search className="w-3.5 h-3.5 flex-shrink-0" />
+                      <Search className="w-3 h-3 flex-shrink-0 opacity-50" />
                       <span className="flex-1 truncate">{item.query}</span>
-                      <span className="text-xs tabular-nums">{item.resultCount}</span>
+                      <span className="text-[10px] font-mono tabular-nums opacity-40">{item.resultCount}</span>
                     </button>
                   ))}
                   <button
                     onClick={clearHistory}
-                    className="w-full px-3 py-1.5 text-xs text-muted-foreground hover:text-destructive text-left transition-colors"
+                    className="w-full px-2.5 py-1 text-[11px] text-muted-foreground/60 hover:text-destructive text-left transition-colors"
                   >
                     Clear history
                   </button>
@@ -273,31 +277,31 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         <div className="border-t border-border">
           <button
             onClick={() => toggleSection('bookmarks')}
-            className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2.5 text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-widest hover:bg-muted/50 transition-colors"
           >
             <span className="flex items-center gap-2">
-              <Bookmark className="w-4 h-4" />
+              <Bookmark className="w-3.5 h-3.5" />
               Bookmarks
             </span>
-            <ChevronDown className={`w-4 h-4 transition-transform ${
+            <ChevronDown className={`w-3 h-3 transition-transform ${
               isExpanded('bookmarks') ? '' : '-rotate-90'
             }`} />
           </button>
 
           {isExpanded('bookmarks') && (
-            <div className="px-2 pb-3 space-y-0.5 animate-fade-in">
+            <div className="px-2 pb-2 space-y-0.5 animate-fade-in">
               {bookmarks.length === 0 ? (
-                <p className="px-3 py-2 text-xs text-muted-foreground text-center">No bookmarks yet</p>
+                <p className="px-3 py-2 text-[11px] text-muted-foreground/60 text-center">No bookmarks</p>
               ) : (
                 bookmarks.slice(0, 8).map(bookmark => (
                   <Link
                     key={bookmark.id}
                     href={`/${bookmark.entityType}/${bookmark.entityId}`}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-2.5 py-1.5 text-[12px] text-muted-foreground hover:bg-muted/50 rounded-md transition-colors"
                   >
-                    {bookmark.entityType === 'paper' && <FileText className="w-3.5 h-3.5 text-blue-500" />}
-                    {bookmark.entityType === 'claim' && <Lightbulb className="w-3.5 h-3.5 text-purple-500" />}
-                    {bookmark.entityType === 'technique' && <Beaker className="w-3.5 h-3.5 text-cyan-500" />}
+                    {bookmark.entityType === 'paper' && <FileText className="w-3 h-3 text-chart-1" />}
+                    {bookmark.entityType === 'claim' && <Lightbulb className="w-3 h-3 text-chart-4" />}
+                    {bookmark.entityType === 'technique' && <Beaker className="w-3 h-3 text-chart-2" />}
                     <span className="flex-1 truncate">{bookmark.title}</span>
                   </Link>
                 ))
@@ -307,11 +311,11 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         </div>
       </div>
 
-      {/* Footer — Powered by MedGemma */}
-      <div className="p-3 border-t border-border">
-        <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-xl">
-          <div className="w-2 h-2 bg-emerald-500 rounded-full status-pulse" />
-          <span className="text-xs font-medium text-primary">Powered by MedGemma</span>
+      {/* Footer */}
+      <div className="p-2.5 border-t border-border">
+        <div className="flex items-center gap-2 px-2.5 py-1.5">
+          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full status-pulse" />
+          <span className="text-[10px] font-mono text-muted-foreground/60 uppercase tracking-wider">MedGemma Online</span>
         </div>
       </div>
     </aside>

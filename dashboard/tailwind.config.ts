@@ -50,6 +50,34 @@ const config: Config = {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
+        // Brand scale — teal-based, replaces ghost references
+        brand: {
+          50: '#edfaf6',
+          100: '#d2f3e9',
+          200: '#a8e7d6',
+          300: '#70d4bd',
+          400: '#3dba9f',
+          500: '#1f9a82',
+          600: '#157a68',
+          700: '#126155',
+          800: '#114d44',
+          900: '#104039',
+          950: '#062622',
+        },
+        // Surface scale — warm neutral, replaces ghost references
+        surface: {
+          50: '#faf9f7',
+          100: '#f3f2ee',
+          200: '#e8e6e0',
+          300: '#d5d2ca',
+          400: '#b8b4a9',
+          500: '#9f9a8e',
+          600: '#8a8478',
+          700: '#726d63',
+          800: '#5f5b53',
+          900: '#504d47',
+          950: '#2a2825',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -57,8 +85,12 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['Inter var', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-outfit)', 'Outfit', 'system-ui', 'sans-serif'],
+        display: ['Instrument Serif', 'Georgia', 'serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+      },
+      fontSize: {
+        '2xs': ['0.625rem', { lineHeight: '0.875rem' }],
       },
       keyframes: {
         'accordion-down': {

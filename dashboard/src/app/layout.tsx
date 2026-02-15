@@ -1,10 +1,13 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Outfit } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { Toaster } from 'sonner';
 
-const inter = Inter({ subsets: ['latin'] });
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-outfit',
+});
 
 export const metadata: Metadata = {
   title: 'MedLit Agent — Evidence-Based Clinical Decision Support',
@@ -18,9 +21,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className={`${outfit.variable} font-sans`}>
         <Providers>{children}</Providers>
-        <Toaster position="bottom-right" richColors closeButton />
+        <Toaster
+          position="bottom-right"
+          richColors
+          closeButton
+          toastOptions={{
+            className: 'font-sans',
+          }}
+        />
       </body>
     </html>
   );

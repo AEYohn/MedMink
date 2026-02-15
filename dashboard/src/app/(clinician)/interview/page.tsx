@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { ClipboardList, Phone, Loader2, ChevronRight } from 'lucide-react';
 import { InterviewChat } from '@/components/interview/InterviewChat';
 import { TriageResult } from '@/components/interview/TriageResult';
@@ -9,6 +9,9 @@ import { VisitHistory } from '@/components/interview/VisitHistory';
 import { CoughRecorder } from '@/components/interview/CoughRecorder';
 import { RespiratoryRiskCard } from '@/components/interview/RespiratoryRiskCard';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { PatientBanner } from '@/components/shared/PatientBanner';
+import { usePatientFromUrl } from '@/hooks/usePatientFromUrl';
+import { useActivePatient } from '@/contexts/ActivePatientContext';
 import { getApiUrl } from '@/lib/api-url';
 
 const API_URL = getApiUrl() || '';
@@ -57,6 +60,8 @@ const PHASES = [
 ];
 
 export default function InterviewPage() {
+  usePatientFromUrl();
+  const { patientId: activePatientId } = useActivePatient();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentPhase, setCurrentPhase] = useState<string>('greeting');
@@ -69,6 +74,13 @@ export default function InterviewPage() {
   const [showVisitHistory, setShowVisitHistory] = useState(false);
   const [promptCough, setPromptCough] = useState(false);
   const [respiratoryResults, setRespiratoryResults] = useState<any>(null);
+
+  // Sync active patient context into local patientId
+  useEffect(() => {
+    if (activePatientId && !patientId) {
+      setPatientId(activePatientId);
+    }
+  }, [activePatientId, patientId]);
 
   const { isRecording, audioBlob, audioDuration, start: startRecording, stop: stopRecording, clear: clearRecording } = useAudioRecorder();
 
@@ -206,6 +218,7 @@ export default function InterviewPage() {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="border-b border-border px-6 py-4">
+        <PatientBanner className="mb-3" />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-xl">

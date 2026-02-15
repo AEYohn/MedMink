@@ -26,8 +26,10 @@ import {
 } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
 import { useChat } from '@/contexts/ChatContext';
+import { useActivePatient } from '@/contexts/ActivePatientContext';
 import { usePersistentState } from '@/hooks/usePersistentState';
 import { getBookmarks, Bookmark as BookmarkType } from '@/lib/storage';
+import { PatientBanner } from '@/components/shared/PatientBanner';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -38,6 +40,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const { history, clearHistory } = useSearch();
   const { conversations, currentConversation, startNewConversation, loadConversation, deleteConversation } = useChat();
+  const { patientId, patient } = useActivePatient();
   const [expandedSections, setExpandedSections] = usePersistentState<string[]>('sidebar-sections', ['conversations']);
   const [bookmarks] = useState<BookmarkType[]>(() => getBookmarks());
 
@@ -67,6 +70,9 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   ];
 
   if (isCollapsed) {
+    const toolHref = (href: string) => patientId ? `${href}?patient=${patientId}` : href;
+    const isToolLink = (href: string) => toolsNav.some(t => t.href === href);
+
     return (
       <aside className="w-14 bg-card/50 border-r border-border flex flex-col py-3">
         <button
@@ -76,12 +82,22 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           <PanelLeft className="w-4 h-4" />
         </button>
 
+        {patient && (
+          <Link
+            href={`/patients/${patient.id}`}
+            className="mx-auto mt-3 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[10px] font-semibold text-primary hover:bg-primary/20 transition-colors"
+            title={`${patient.firstName} ${patient.lastName}`}
+          >
+            {patient.firstName[0]}{patient.lastName[0]}
+          </Link>
+        )}
+
         <nav className="mt-4 space-y-1 px-2">
           {[...mainNav, ...toolsNav].map(item => (
             <Link
               key={item.href}
-              href={item.href}
-              className={`flex items-center justify-center p-2.5 rounded-lg transition-all ${
+              href={isToolLink(item.href) ? toolHref(item.href) : item.href}
+              className={`relative flex items-center justify-center p-2.5 rounded-lg transition-all ${
                 pathname === item.href
                   ? 'bg-primary/10 text-primary'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -89,6 +105,9 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               title={item.label}
             >
               <item.icon className="w-4 h-4" />
+              {patientId && isToolLink(item.href) && (
+                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full" />
+              )}
             </Link>
           ))}
         </nav>
@@ -147,13 +166,14 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
         {/* Tools Section */}
         <div className="px-2 pt-1 pb-2">
+          <PatientBanner showClear className="mb-2" />
           <p className="px-2.5 py-1.5 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Tools</p>
           <div className="space-y-0.5">
             {toolsNav.map(item => (
               <Link
                 key={item.href}
-                href={item.href}
-                className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all text-[13px] ${
+                href={patientId ? `${item.href}?patient=${patientId}` : item.href}
+                className={`relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all text-[13px] ${
                   pathname === item.href
                     ? 'bg-primary/8 text-primary font-medium'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -161,6 +181,9 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               >
                 <item.icon className={`w-4 h-4 ${pathname === item.href ? 'text-primary' : ''}`} />
                 <span>{item.label}</span>
+                {patientId && (
+                  <span className="ml-auto w-1.5 h-1.5 bg-primary rounded-full" />
+                )}
               </Link>
             ))}
           </div>

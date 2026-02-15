@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { LabExtractorCard } from '@/components/case/LabExtractorCard';
+import { PatientBanner } from '@/components/shared/PatientBanner';
+import { usePatientFromUrl } from '@/hooks/usePatientFromUrl';
 import { getApiUrl } from '@/lib/api-url';
 
 interface LabValue {
@@ -27,6 +29,7 @@ interface LabExtractionResult {
 }
 
 export default function LabsPage() {
+  usePatientFromUrl();
   const [labResult, setLabResult] = useState<LabExtractionResult | null>(null);
   const [labPreview, setLabPreview] = useState<string | null>(null);
   const [isLabLoading, setIsLabLoading] = useState(false);
@@ -97,6 +100,8 @@ export default function LabsPage() {
             </Badge>
           </div>
         </header>
+
+        <PatientBanner className="mb-4" />
 
         {/* Lab Extraction */}
         <LabExtractorCard

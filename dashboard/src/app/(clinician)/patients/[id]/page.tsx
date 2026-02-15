@@ -25,6 +25,7 @@ import {
   getPatientDisplayName,
   getPatientAge,
 } from '@/lib/patient-storage';
+import { useActivePatient } from '@/contexts/ActivePatientContext';
 import { getCaseSessions, CaseSession } from '@/lib/storage';
 import { PatientFormData } from '@/lib/validations/patient';
 import { PatientForm } from '@/components/patients/PatientForm';
@@ -34,6 +35,7 @@ import { Badge } from '@/components/ui/badge';
 export default function PatientDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { setActivePatient } = useActivePatient();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [encounters, setEncounters] = useState<CaseSession[]>([]);
   const [editOpen, setEditOpen] = useState(false);
@@ -46,10 +48,11 @@ export default function PatientDetailPage() {
       return;
     }
     setPatient(p);
+    setActivePatient(id);
 
     const sessions = getCaseSessions().filter(s => s.patientId === id);
     setEncounters(sessions);
-  }, [params.id, router]);
+  }, [params.id, router, setActivePatient]);
 
   const handleEdit = (data: PatientFormData) => {
     if (!patient) return;

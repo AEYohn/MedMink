@@ -20,6 +20,8 @@ import { DictationInput } from '@/components/charting/DictationInput';
 import { TranscriptDisplay } from '@/components/charting/TranscriptDisplay';
 import { SOAPEditor, SOAPData } from '@/components/charting/SOAPEditor';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { PatientBanner } from '@/components/shared/PatientBanner';
+import { usePatientFromUrl } from '@/hooks/usePatientFromUrl';
 import { getApiUrl } from '@/lib/api-url';
 
 interface Correction {
@@ -41,6 +43,7 @@ interface SSEEvent {
 }
 
 export default function ChartingPage() {
+  usePatientFromUrl();
   const [transcript, setTranscript] = useState('');
   const [isInterim, setIsInterim] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -185,6 +188,8 @@ export default function ChartingPage() {
             </div>
           </div>
         </header>
+
+        <PatientBanner className="mb-4" />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Input */}

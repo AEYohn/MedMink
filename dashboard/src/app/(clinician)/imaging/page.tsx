@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ImageAnalysisCard } from '@/components/case/ImageAnalysisCard';
+import { PatientBanner } from '@/components/shared/PatientBanner';
+import { usePatientFromUrl } from '@/hooks/usePatientFromUrl';
 import { getApiUrl } from '@/lib/api-url';
 
 interface ImageAnalysisResult {
@@ -22,6 +24,7 @@ interface ImageAnalysisResult {
 }
 
 export default function ImagingPage() {
+  usePatientFromUrl();
   const [imageResult, setImageResult] = useState<ImageAnalysisResult | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isImageLoading, setIsImageLoading] = useState(false);
@@ -94,6 +97,8 @@ export default function ImagingPage() {
             </Badge>
           </div>
         </header>
+
+        <PatientBanner className="mb-4" />
 
         {/* Image Analysis */}
         <ImageAnalysisCard

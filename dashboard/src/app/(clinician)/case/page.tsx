@@ -62,6 +62,9 @@ import { DischargeEditor } from '@/components/case/DischargeEditor';
 import { SafetyAlertsPanel } from '@/components/case/SafetyAlertsPanel';
 import { FollowUpChatDrawer } from '@/components/case/FollowUpChatDrawer';
 import { SafetyAlertBanner } from '@/components/case/SafetyAlertBanner';
+import { PatientBanner } from '@/components/shared/PatientBanner';
+import { usePatientFromUrl } from '@/hooks/usePatientFromUrl';
+import { useActivePatient } from '@/contexts/ActivePatientContext';
 
 import type { NewFindings, ClinicianOverrides } from '@/lib/storage';
 import {
@@ -160,6 +163,8 @@ function Section({
 
 // ─── Main Page Component ────────────────────────────────────────────────────
 export default function CaseAnalysisPage() {
+  usePatientFromUrl();
+  const { patientId: activePatientId } = useActivePatient();
   const [caseText, setCaseText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<string | null>(null);
@@ -219,6 +224,13 @@ export default function CaseAnalysisPage() {
 
   // Case session state
   const session = useCaseSession();
+
+  // Sync active patient context into local patientId
+  useEffect(() => {
+    if (activePatientId && !patientId) {
+      setPatientId(activePatientId);
+    }
+  }, [activePatientId, patientId]);
 
   const handleOverridesChange = useCallback((newOverrides: ClinicianOverrides) => {
     setOverrides(newOverrides);
@@ -629,6 +641,8 @@ export default function CaseAnalysisPage() {
             </div>
           </div>
         </header>
+
+        <PatientBanner className="mb-4" />
 
         {/* Case Sessions */}
         {session.allSessions.length > 0 && (

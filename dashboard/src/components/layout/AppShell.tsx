@@ -3,8 +3,11 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+import { Breadcrumbs } from '@/components/shared/Breadcrumbs';
 import { usePersistentState } from '@/hooks/usePersistentState';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { CommandPalette } from './CommandPalette';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 interface AppShellProps {
   children: ReactNode;
@@ -13,6 +16,7 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = usePersistentState('sidebar-collapsed', false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  useKeyboardShortcuts();
 
   // Command palette keyboard shortcut
   useEffect(() => {
@@ -45,9 +49,12 @@ export function AppShell({ children }: AppShellProps) {
           isCollapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
-        <main className="flex-1 overflow-y-auto">
-          <div className="animate-fade-in">
-            {children}
+        <main className="flex-1 overflow-y-auto flex flex-col">
+          <Breadcrumbs />
+          <div className="flex-1 animate-fade-in">
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
           </div>
         </main>
       </div>

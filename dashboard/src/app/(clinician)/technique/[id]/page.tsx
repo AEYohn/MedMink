@@ -18,7 +18,6 @@ import {
   Check,
   Hash,
 } from 'lucide-react';
-import { AppShell } from '@/components/layout/AppShell';
 import { api, Technique } from '@/lib/api';
 import { MathRenderer, MathText } from '@/components/shared/MathRenderer';
 import { addBookmark, removeBookmark, isBookmarked } from '@/lib/storage';
@@ -104,7 +103,7 @@ export default function TechniqueDetailPage() {
   const hasActionableContent = technique?.formula || technique?.pseudocode || technique?.implementation_notes;
 
   return (
-    <AppShell>
+    <>
       <div className="max-w-4xl mx-auto px-4 lg:px-6 py-6">
         {/* Back button */}
         <button
@@ -311,6 +310,6 @@ export default function TechniqueDetailPage() {
           </div>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }

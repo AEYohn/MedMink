@@ -14,21 +14,58 @@ import {
   getCurrentCaseSessionId,
   setCurrentCaseSessionId,
 } from '@/lib/storage';
+import { apiCreateEncounter, apiUpdateEncounter } from '@/lib/api/encounters';
+
+type SyncStatus = 'idle' | 'saving' | 'synced' | 'error';
 
 export function useCaseSession() {
   const [allSessions, setAllSessions] = useState<CaseSession[]>([]);
   const [currentSession, setCurrentSession] = useState<CaseSession | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
 
   // Ref to avoid stale closure issues in async callbacks (e.g. SSE stream handlers).
-  // Without this, updateResult/addEvent close over the old currentSession value
-  // from the render where handleSubmit was called, causing them to silently no-op.
   const sessionRef = useRef<CaseSession | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Helper: update both React state and ref synchronously
   const setSession = useCallback((s: CaseSession | null) => {
     sessionRef.current = s;
     setCurrentSession(s);
+  }, []);
+
+  // Debounced API sync — fire-and-forget, doesn't block UI
+  const syncToAPI = useCallback((session: CaseSession) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        setSyncStatus('saving');
+        // If the session has a server ID (UUID format), update; otherwise create
+        const isServerSession = session.id.includes('-') && session.id.length > 20 && !session.id.startsWith('case-');
+        if (isServerSession) {
+          await apiUpdateEncounter(session.id, {
+            title: session.title,
+            current_case_text: session.currentCaseText,
+            analysis_result: session.currentResult as Record<string, unknown> | undefined,
+            clinician_overrides: session.overrides as unknown as Record<string, unknown> | undefined,
+          });
+        } else {
+          // Try to create on the server — but don't block if API is down
+          await apiCreateEncounter({
+            patient_id: session.patientId,
+            title: session.title,
+            original_case_text: session.originalCaseText,
+            current_case_text: session.currentCaseText,
+            analysis_result: session.currentResult as Record<string, unknown> | undefined,
+            clinician_overrides: session.overrides as unknown as Record<string, unknown> | undefined,
+          });
+        }
+        setSyncStatus('synced');
+      } catch {
+        // API unavailable — localStorage is the fallback
+        setSyncStatus('error');
+      }
+    }, 2000);
   }, []);
 
   // Load sessions on mount
@@ -67,14 +104,16 @@ export function useCaseSession() {
     setCurrentCaseSessionId(session.id);
     setSession(session);
     refreshSessions();
+    syncToAPI(session);
     return session;
-  }, [refreshSessions, setSession]);
+  }, [refreshSessions, setSession, syncToAPI]);
 
   const saveSession = useCallback((session: CaseSession) => {
     saveCaseSession(session);
     setSession(session);
     refreshSessions();
-  }, [refreshSessions, setSession]);
+    syncToAPI(session);
+  }, [refreshSessions, setSession, syncToAPI]);
 
   const loadSession = useCallback((id: string) => {
     const sessions = getCaseSessions();
@@ -116,13 +155,13 @@ export function useCaseSession() {
     saveCaseSession(updated);
     setSession(updated);
     refreshSessions();
-  }, [refreshSessions, setSession]);
+    syncToAPI(updated);
+  }, [refreshSessions, setSession, syncToAPI]);
 
   const addFindings = useCallback((findings: NewFindings): string => {
     const cur = sessionRef.current;
     if (!cur) return '';
 
-    // Append new findings to case text
     const findingsLabel = findings.category.replace('_', ' ');
     const timePrefix = findings.clinicalTime ? `[${findings.clinicalTime}] ` : '';
     const addition = `\n\n--- New ${findingsLabel} ${timePrefix}---\n${findings.text}`;
@@ -136,8 +175,9 @@ export function useCaseSession() {
     saveCaseSession(updated);
     setSession(updated);
     refreshSessions();
+    syncToAPI(updated);
     return updatedText;
-  }, [refreshSessions, setSession]);
+  }, [refreshSessions, setSession, syncToAPI]);
 
   const updateResult = useCallback((result: Record<string, unknown>) => {
     const cur = sessionRef.current;
@@ -150,7 +190,8 @@ export function useCaseSession() {
     saveCaseSession(updated);
     setSession(updated);
     refreshSessions();
-  }, [refreshSessions, setSession]);
+    syncToAPI(updated);
+  }, [refreshSessions, setSession, syncToAPI]);
 
   const updateFollowUpMessages = useCallback((messages: CaseFollowUpMessage[]) => {
     const cur = sessionRef.current;
@@ -176,7 +217,8 @@ export function useCaseSession() {
     saveCaseSession(updated);
     setSession(updated);
     refreshSessions();
-  }, [refreshSessions, setSession]);
+    syncToAPI(updated);
+  }, [refreshSessions, setSession, syncToAPI]);
 
   const getOverrides = useCallback((): ClinicianOverrides => {
     return sessionRef.current?.overrides || createEmptyOverrides();
@@ -193,12 +235,14 @@ export function useCaseSession() {
     saveCaseSession(updated);
     setSession(updated);
     refreshSessions();
-  }, [refreshSessions, setSession]);
+    syncToAPI(updated);
+  }, [refreshSessions, setSession, syncToAPI]);
 
   return {
     currentSession,
     allSessions,
     isLoaded,
+    syncStatus,
     createSession,
     saveSession,
     loadSession,

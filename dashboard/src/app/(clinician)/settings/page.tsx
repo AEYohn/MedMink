@@ -18,7 +18,7 @@ import {
   AlertTriangle,
   Loader2,
 } from 'lucide-react';
-import { AppShell } from '@/components/layout/AppShell';
+import { useTheme } from 'next-themes';
 import { useProgress } from '@/contexts/ProgressContext';
 import { api, SystemStatus } from '@/lib/api';
 import {
@@ -49,9 +49,9 @@ interface AnalysisSettings {
 
 export default function SettingsPage() {
   const { isConnected } = useProgress();
+  const { theme, setTheme } = useTheme();
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [loading, setLoading] = useState(true);
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [isClearingDatabase, setIsClearingDatabase] = useState(false);
   const [clearResult, setClearResult] = useState<{ success: boolean; message: string } | null>(null);
 
@@ -158,7 +158,6 @@ export default function SettingsPage() {
   };
 
   return (
-    <AppShell>
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         <div className="flex items-center gap-3">
           <Settings className="w-6 h-6 text-slate-500" />
@@ -555,7 +554,7 @@ export default function SettingsPage() {
           </button>
         </div>
 
-        {/* Theme (placeholder) */}
+        {/* Appearance — Theme */}
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
@@ -582,6 +581,5 @@ export default function SettingsPage() {
           </p>
         </div>
       </div>
-    </AppShell>
   );
 }

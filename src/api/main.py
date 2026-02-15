@@ -16,6 +16,8 @@ from src.api.routes import (
     charting,
     chat,
     consensus,
+    documents,
+    encounters,
     evaluation,
     graph,
     interview,
@@ -23,6 +25,7 @@ from src.api.routes import (
     medical,
     novelty,
     patient,
+    patients_crud,
     patterns,
     projects,
     review,
@@ -122,6 +125,9 @@ app.include_router(case_analysis.router)
 app.include_router(charting.router)
 app.include_router(labs.router)
 app.include_router(interview.router)
+app.include_router(patients_crud.router)
+app.include_router(encounters.router)
+app.include_router(documents.router)
 
 
 # WebSocket connection manager

@@ -20,7 +20,6 @@ import {
   Download,
   Sparkles,
 } from 'lucide-react';
-import { AppShell } from '@/components/layout/AppShell';
 import { EntityLink } from '@/components/shared/EntityLink';
 import { RelatedEntities } from '@/components/entities/RelatedEntities';
 import { api, Paper, Claim } from '@/lib/api';
@@ -78,7 +77,7 @@ export default function PaperDetailPage() {
   };
 
   return (
-    <AppShell>
+    <>
       <div className="max-w-5xl mx-auto px-4 lg:px-6 py-6">
         {/* Back button */}
         <button
@@ -295,6 +294,6 @@ export default function PaperDetailPage() {
           </div>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }

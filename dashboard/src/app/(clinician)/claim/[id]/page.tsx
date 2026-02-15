@@ -14,7 +14,6 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
-import { AppShell } from '@/components/layout/AppShell';
 import { EntityLink } from '@/components/shared/EntityLink';
 import { api, Claim, Contradiction } from '@/lib/api';
 import { addBookmark, removeBookmark, isBookmarked } from '@/lib/storage';
@@ -103,7 +102,7 @@ export default function ClaimDetailPage() {
   };
 
   return (
-    <AppShell>
+    <>
       <div className="max-w-4xl mx-auto px-4 lg:px-6 py-6">
         {/* Back button */}
         <button
@@ -283,6 +282,6 @@ export default function ClaimDetailPage() {
           </div>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }

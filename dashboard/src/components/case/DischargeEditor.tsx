@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { toast } from 'sonner';
+import { createDocument } from '@/lib/document-storage';
 import {
   FileText,
   Loader2,
@@ -13,6 +15,7 @@ import {
   ClipboardList,
   Plus,
   Trash2,
+  Save,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -267,6 +270,21 @@ export function DischargeEditor({
     <div className="space-y-4" ref={contentRef}>
       {/* Action bar */}
       <div className="flex justify-end gap-2">
+        <Button
+          onClick={() => {
+            if (!plan) return;
+            createDocument({
+              type: 'discharge_summary',
+              title: `Discharge Summary — ${new Date().toLocaleDateString()}`,
+              content: contentRef.current?.innerText || JSON.stringify(plan, null, 2),
+            });
+            toast.success('Discharge summary saved');
+          }}
+          size="sm"
+          variant="outline"
+        >
+          <Save className="w-3.5 h-3.5 mr-1" /> Save
+        </Button>
         <Button onClick={handleCopy} size="sm" variant="outline">
           {copied ? <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-green-600" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
           {copied ? 'Copied' : 'Copy'}

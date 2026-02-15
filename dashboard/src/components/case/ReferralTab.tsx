@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
+import { createDocument } from '@/lib/document-storage';
 import {
   Send,
   Loader2,
@@ -10,6 +12,7 @@ import {
   ChevronDown,
   FileText,
   ArrowRightLeft,
+  Save,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -208,6 +211,16 @@ export function ReferralTab({
                   <Badge className={cn('text-xs', urgencyColor[referral.urgency])}>
                     {referral.urgency}
                   </Badge>
+                  <Button size="sm" variant="ghost" onClick={() => {
+                    createDocument({
+                      type: 'referral',
+                      title: `Referral to ${referral.specialty} — ${new Date().toLocaleDateString()}`,
+                      content: JSON.stringify(referral, null, 2),
+                    });
+                    toast.success('Referral saved');
+                  }}>
+                    <Save className="w-3.5 h-3.5" />
+                  </Button>
                   <Button size="sm" variant="ghost" onClick={copyReferralText}>
                     {copiedReferral ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
                   </Button>

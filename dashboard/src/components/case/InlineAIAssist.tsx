@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Sparkles, Loader2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getApiUrl } from '@/lib/api-url';
 
 interface InlineAIAssistProps {
   contextType: string;
@@ -38,7 +39,8 @@ export function InlineAIAssist({ contextType, contextItem, caseSnippet }: Inline
     setIsLoading(true);
     setAnswer(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/ai-assist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

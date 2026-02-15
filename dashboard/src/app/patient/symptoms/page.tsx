@@ -16,6 +16,7 @@ import {
   Shield,
   Sparkles,
 } from 'lucide-react';
+import { getApiUrl } from '@/lib/api-url';
 
 interface Message {
   id: string;
@@ -107,7 +108,9 @@ export default function SymptomsPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/patient/symptoms', {
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
+      const response = await fetch(`${apiUrl}/api/patient/symptoms`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

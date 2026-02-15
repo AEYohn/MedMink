@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { getApiUrl } from '@/lib/api-url';
 import type { ClinicianOverrides, DischargeMedOverride } from '@/lib/storage';
 
 interface MedReconciliation {
@@ -132,7 +133,8 @@ export function DischargeEditor({
     setIsLoading(true);
     setError(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/discharge-plan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

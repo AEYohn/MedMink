@@ -9,8 +9,9 @@ import { VisitHistory } from '@/components/interview/VisitHistory';
 import { CoughRecorder } from '@/components/interview/CoughRecorder';
 import { RespiratoryRiskCard } from '@/components/interview/RespiratoryRiskCard';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { getApiUrl } from '@/lib/api-url';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = getApiUrl() || '';
 
 interface Message {
   role: 'assistant' | 'user';

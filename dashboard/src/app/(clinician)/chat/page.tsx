@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Chat } from '@/components/Chat';
 import { api, GraphStats } from '@/lib/api';
+import { getApiUrl } from '@/lib/api-url';
 
 interface SearchResult {
   id: string;
@@ -44,8 +45,10 @@ export default function ChatPage() {
 
     setIsSearching(true);
     try {
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/search/semantic?q=${encodeURIComponent(searchQuery)}&type=${searchType}&limit=20`
+        `${apiUrl}/api/search/semantic?q=${encodeURIComponent(searchQuery)}&type=${searchType}&limit=20`
       );
       if (response.ok) {
         const data = await response.json();
@@ -60,7 +63,7 @@ export default function ChatPage() {
 
   const handlePaperClick = useCallback((paperId: string) => {
     // Navigate to paper detail view
-    router.push(`/papers/${paperId}`);
+    router.push(`/paper/${paperId}`);
   }, [router]);
 
   const getTypeIcon = (type: string) => {

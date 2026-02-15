@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
   Users,
@@ -39,6 +40,7 @@ type SortField = 'name' | 'dob' | 'updatedAt';
 type StatusFilter = 'all' | 'active' | 'inactive';
 
 export default function PatientsPage() {
+  const router = useRouter();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -153,16 +155,13 @@ export default function PatientsPage() {
             <Download className="w-4 h-4" />
             Export
           </button>
-          <button
-            onClick={() => {
-              setEditingPatient(null);
-              setFormOpen(true);
-            }}
+          <Link
+            href="/patients/new"
             className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors inline-flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Add Patient
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -203,7 +202,7 @@ export default function PatientsPage() {
           icon={Users}
           title={search ? 'No patients found' : 'No patients yet'}
           description={search ? 'Try a different search term' : 'Add your first patient to get started'}
-          action={!search ? { label: 'Add Patient', onClick: () => setFormOpen(true) } : undefined}
+          action={!search ? { label: 'Add Patient', onClick: () => router.push('/patients/new') } : undefined}
         />
       ) : (
         <div className="bg-card rounded-xl border border-border overflow-hidden">

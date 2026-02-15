@@ -36,6 +36,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+import { getApiUrl } from '@/lib/api-url';
 import { useCaseSession } from '@/hooks/useCaseSession';
 import { createEmptyOverrides } from '@/lib/storage';
 import { CaseSessionList } from '@/components/case/CaseSessionList';
@@ -343,7 +344,8 @@ export default function CaseAnalysisPage() {
     setFollowUpInput('');
     setIsFollowUpLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       const slimSummary = {
         top_recommendation: result.top_recommendation,
         recommendation_rationale: result.recommendation_rationale,
@@ -400,7 +402,8 @@ export default function CaseAnalysisPage() {
     if (!session.currentSession) session.createSession(caseText.trim(), title);
     if (patientId.trim()) session.updatePatientId(patientId.trim());
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/analyze/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -433,7 +436,8 @@ export default function CaseAnalysisPage() {
     setStepProgress(0);
     setCompletedSteps(new Set());
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/reassess/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -513,7 +517,8 @@ export default function CaseAnalysisPage() {
     setIsImageLoading(true);
     setImageResult(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       const formData = new FormData();
       formData.append('image', file);
       formData.append('context', caseText || '');
@@ -538,7 +543,8 @@ export default function CaseAnalysisPage() {
     setIsLabLoading(true);
     setLabResult(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       const formData = new FormData();
       formData.append('image', file);
       const response = await fetch(`${apiUrl}/api/labs/extract`, { method: 'POST', body: formData });

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getApiUrl } from '@/lib/api-url';
 
 interface SOAPExportCardProps {
   caseText: string;
@@ -37,7 +38,8 @@ export function SOAPExportCard({
   const generateSOAP = async () => {
     setIsLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/chart/enhance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

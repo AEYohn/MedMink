@@ -351,7 +351,7 @@ export default function DashboardPage() {
           <div>
             <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-3">Quick Links</h2>
             <div className="space-y-1.5">
-              <Link href="/patients" className="group">
+              <Link href="/patients/new" className="group">
                 <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-card hover:border-primary/20 transition-all">
                   <div className="w-8 h-8 rounded-md bg-primary/8 flex items-center justify-center">
                     <Plus className="w-3.5 h-3.5 text-primary" />

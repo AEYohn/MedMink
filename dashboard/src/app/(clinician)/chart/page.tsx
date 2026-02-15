@@ -20,6 +20,7 @@ import { DictationInput } from '@/components/charting/DictationInput';
 import { TranscriptDisplay } from '@/components/charting/TranscriptDisplay';
 import { SOAPEditor, SOAPData } from '@/components/charting/SOAPEditor';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { getApiUrl } from '@/lib/api-url';
 
 interface Correction {
   original: string;
@@ -72,7 +73,8 @@ export default function ChartingPage() {
     setSoapData(null);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       let response: Response;
 
       if (audioBlob && processingMode === 'audio') {

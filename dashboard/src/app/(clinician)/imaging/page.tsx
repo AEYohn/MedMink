@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ImageAnalysisCard } from '@/components/case/ImageAnalysisCard';
+import { getApiUrl } from '@/lib/api-url';
 
 interface ImageAnalysisResult {
   modality: string;
@@ -35,7 +36,8 @@ export default function ImagingPage() {
     setImageResult(null);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       const formData = new FormData();
       formData.append('image', file);
 

@@ -16,6 +16,7 @@ import {
   ChevronUp,
   Sparkles,
 } from 'lucide-react';
+import { getApiUrl } from '@/lib/api-url';
 
 interface Medication {
   id: string;
@@ -102,7 +103,9 @@ export default function MedicationsPage() {
     setCheckResult(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/patient/medications/check', {
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
+      const response = await fetch(`${apiUrl}/api/patient/medications/check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

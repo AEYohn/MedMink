@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { getApiUrl } from '@/lib/api-url';
 
 interface SafetyInteraction {
   drug_a: string;
@@ -100,7 +101,8 @@ export function MedicationSafetyTab({
     setIsLoading(true);
     setError(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/medication-safety`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

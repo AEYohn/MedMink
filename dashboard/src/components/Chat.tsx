@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getApiUrl } from '@/lib/api-url';
 import {
   Send,
   Loader2,
@@ -95,8 +96,10 @@ export function Chat({ onPaperClick }: ChatProps) {
     setIsLoading(true);
 
     try {
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/chat`,
+        `${apiUrl}/api/chat`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

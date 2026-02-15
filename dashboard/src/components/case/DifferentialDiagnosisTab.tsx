@@ -20,6 +20,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+import { getApiUrl } from '@/lib/api-url';
 
 interface DDxDiagnosis {
   diagnosis: string;
@@ -75,7 +76,8 @@ export function DifferentialDiagnosisTab({
   const handleRegenerate = async () => {
     setIsRegenerating(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/ddx`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

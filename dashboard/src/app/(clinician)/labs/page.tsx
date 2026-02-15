@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { LabExtractorCard } from '@/components/case/LabExtractorCard';
+import { getApiUrl } from '@/lib/api-url';
 
 interface LabValue {
   test: string;
@@ -40,7 +41,8 @@ export default function LabsPage() {
     setLabResult(null);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
       const formData = new FormData();
       formData.append('image', file);
 

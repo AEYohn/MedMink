@@ -443,3 +443,182 @@ export async function getTechniqueById(id: string): Promise<Technique | null> {
   const techniques = await api.getTechniques(500);
   return techniques.find(t => t.id === id) || null;
 }
+
+// ── Patient API ──────────────────────────────────────────────────────
+
+export interface PatientAPI {
+  id: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth: string;
+  sex: string;
+  mrn: string | null;
+  phone: string | null;
+  email: string | null;
+  allergies: string[];
+  conditions: string[];
+  medications: string[];
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function fetchPatients(params?: { status?: string; search?: string }): Promise<PatientAPI[]> {
+  const query = new URLSearchParams();
+  if (params?.status) query.set('status', params.status);
+  if (params?.search) query.set('search', params.search);
+  return fetchApi<PatientAPI[]>(`/api/patients?${query}`);
+}
+
+export async function fetchPatient(id: string): Promise<PatientAPI> {
+  return fetchApi<PatientAPI>(`/api/patients/${id}`);
+}
+
+export async function apiCreatePatient(data: Omit<PatientAPI, 'id' | 'status' | 'created_at' | 'updated_at'>): Promise<PatientAPI> {
+  return fetchApi<PatientAPI>('/api/patients', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiUpdatePatient(id: string, data: Partial<PatientAPI>): Promise<PatientAPI> {
+  return fetchApi<PatientAPI>(`/api/patients/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiDeletePatient(id: string): Promise<void> {
+  const res = await fetch(`${API_URL}/api/patients/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to delete patient');
+}
+
+// ── Encounter API ────────────────────────────────────────────────────
+
+export interface EncounterAPI {
+  id: string;
+  patient_id: string | null;
+  encounter_type: string;
+  title: string | null;
+  original_case_text: string | null;
+  current_case_text: string | null;
+  analysis_result: Record<string, unknown> | null;
+  clinician_overrides: Record<string, unknown> | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EventAPI {
+  id: string;
+  encounter_id: string;
+  event_type: string;
+  sequence_num: number;
+  role: string | null;
+  message_content: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export async function fetchEncounters(params?: { patient_id?: string; status?: string }): Promise<EncounterAPI[]> {
+  const query = new URLSearchParams();
+  if (params?.patient_id) query.set('patient_id', params.patient_id);
+  if (params?.status) query.set('status', params.status);
+  return fetchApi<EncounterAPI[]>(`/api/encounters?${query}`);
+}
+
+export async function fetchEncounter(id: string): Promise<EncounterAPI> {
+  return fetchApi<EncounterAPI>(`/api/encounters/${id}`);
+}
+
+export async function apiCreateEncounter(data: {
+  patient_id?: string;
+  encounter_type?: string;
+  title?: string;
+  original_case_text?: string;
+  current_case_text?: string;
+  analysis_result?: Record<string, unknown>;
+  clinician_overrides?: Record<string, unknown>;
+}): Promise<EncounterAPI> {
+  return fetchApi<EncounterAPI>('/api/encounters', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiUpdateEncounter(id: string, data: Partial<EncounterAPI>): Promise<EncounterAPI> {
+  return fetchApi<EncounterAPI>(`/api/encounters/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiDeleteEncounter(id: string): Promise<void> {
+  const res = await fetch(`${API_URL}/api/encounters/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to delete encounter');
+}
+
+export async function fetchEvents(encounterId: string): Promise<EventAPI[]> {
+  return fetchApi<EventAPI[]>(`/api/encounters/${encounterId}/events`);
+}
+
+export async function apiCreateEvent(encounterId: string, data: {
+  event_type: string;
+  role?: string;
+  message_content?: string;
+  metadata?: Record<string, unknown>;
+}): Promise<EventAPI> {
+  return fetchApi<EventAPI>(`/api/encounters/${encounterId}/events`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+// ── Document API ─────────────────────────────────────────────────────
+
+export interface DocumentAPI {
+  id: string;
+  doc_type: string;
+  title: string;
+  content: Record<string, unknown> | string | null;
+  raw_text: string | null;
+  encounter_id: string | null;
+  patient_id: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function fetchDocuments(params?: { doc_type?: string; encounter_id?: string; patient_id?: string }): Promise<DocumentAPI[]> {
+  const query = new URLSearchParams();
+  if (params?.doc_type) query.set('doc_type', params.doc_type);
+  if (params?.encounter_id) query.set('encounter_id', params.encounter_id);
+  if (params?.patient_id) query.set('patient_id', params.patient_id);
+  return fetchApi<DocumentAPI[]>(`/api/documents?${query}`);
+}
+
+export async function fetchDocument(id: string): Promise<DocumentAPI> {
+  return fetchApi<DocumentAPI>(`/api/documents/${id}`);
+}
+
+export async function apiCreateDocument(data: {
+  doc_type: string;
+  title: string;
+  content?: Record<string, unknown> | string;
+  raw_text?: string;
+  encounter_id?: string;
+  patient_id?: string;
+  status?: string;
+}): Promise<DocumentAPI> {
+  return fetchApi<DocumentAPI>('/api/documents', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiUpdateDocument(id: string, data: Partial<DocumentAPI>): Promise<DocumentAPI> {
+  return fetchApi<DocumentAPI>(`/api/documents/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}

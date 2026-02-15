@@ -14,7 +14,7 @@ import {
   getCurrentCaseSessionId,
   setCurrentCaseSessionId,
 } from '@/lib/storage';
-import { apiCreateEncounter, apiUpdateEncounter } from '@/lib/api/encounters';
+import { apiCreateEncounter, apiUpdateEncounter } from '@/lib/api';
 
 type SyncStatus = 'idle' | 'saving' | 'synced' | 'error';
 

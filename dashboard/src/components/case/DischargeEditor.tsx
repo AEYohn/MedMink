@@ -51,7 +51,7 @@ interface ReadmissionRisk {
   mitigation: string[];
 }
 
-interface DischargePlanData {
+export interface DischargePlanData {
   patient_instructions: string;
   medication_reconciliation: MedReconciliation[];
   follow_up: FollowUp[];
@@ -67,6 +67,7 @@ interface DischargeEditorProps {
   topRecommendation: string;
   overrides: ClinicianOverrides;
   onOverridesChange: (overrides: ClinicianOverrides) => void;
+  onPlanChange?: (plan: DischargePlanData | null) => void;
 }
 
 const actionColor: Record<string, string> = {
@@ -90,12 +91,18 @@ export function DischargeEditor({
   topRecommendation,
   overrides,
   onOverridesChange,
+  onPlanChange,
 }: DischargeEditorProps) {
   const [plan, setPlan] = useState<DischargePlanData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Notify parent when plan changes
+  useEffect(() => {
+    onPlanChange?.(plan);
+  }, [plan, onPlanChange]);
 
   // Clinician discharge meds
   const dischargeMeds = overrides.dischargeMeds;

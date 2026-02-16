@@ -8,6 +8,7 @@ import {
   Stethoscope,
   Pill,
   Calendar,
+  FileText,
   Home,
   Menu,
   X,
@@ -37,6 +38,12 @@ const navItems = [
     label: 'Appointments',
     icon: Calendar,
     description: 'Book & manage visits',
+  },
+  {
+    href: '/patient/visit-summary',
+    label: 'Visit Summary',
+    icon: FileText,
+    description: 'Doctor-approved visit notes',
   },
 ];
 

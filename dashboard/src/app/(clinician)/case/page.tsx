@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback, FormEvent } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo, FormEvent } from 'react';
 import Link from 'next/link';
 import {
   Stethoscope,
@@ -23,6 +23,8 @@ import {
   Shield,
   ClipboardList,
   Wrench,
+  Send,
+  Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,12 +61,16 @@ import { CaseSummaryCard } from '@/components/case/CaseSummaryCard';
 import { TreatmentPlanEditor } from '@/components/case/TreatmentPlanEditor';
 import { AcuteManagementEditor } from '@/components/case/AcuteManagementEditor';
 import { DischargeEditor } from '@/components/case/DischargeEditor';
+import type { DischargePlanData } from '@/components/case/DischargeEditor';
 import { SafetyAlertsPanel } from '@/components/case/SafetyAlertsPanel';
 import { FollowUpChatDrawer } from '@/components/case/FollowUpChatDrawer';
 import { SafetyAlertBanner } from '@/components/case/SafetyAlertBanner';
+import { PatientSummaryPreview } from '@/components/case/PatientSummaryPreview';
 import { PatientBanner } from '@/components/shared/PatientBanner';
 import { usePatientFromUrl } from '@/hooks/usePatientFromUrl';
 import { useActivePatient } from '@/contexts/ActivePatientContext';
+import { buildVisitSummary } from '@/lib/visit-summary-builder';
+import { saveReleasedSummary, getReleasedSummaryBySession } from '@/lib/storage';
 
 import type { NewFindings, ClinicianOverrides } from '@/lib/storage';
 import {
@@ -219,6 +225,11 @@ export default function CaseAnalysisPage() {
   const [activeTab, setActiveTab] = useState('assessment');
   const [chatOpen, setChatOpen] = useState(false);
 
+  // Patient visit summary release state
+  const [showSummaryPreview, setShowSummaryPreview] = useState(false);
+  const [isReleasingSummary, setIsReleasingSummary] = useState(false);
+  const dischargePlanRef = useRef<DischargePlanData | null>(null);
+
   // Patient ID
   const [patientId, setPatientId] = useState('');
 
@@ -244,6 +255,36 @@ export default function CaseAnalysisPage() {
       setPatientId(activePatientId);
     }
   }, [activePatientId, patientId]);
+
+  // Released visit summary for current session
+  const existingSummary = useMemo(() => {
+    if (!session.currentSession?.id) return undefined;
+    return getReleasedSummaryBySession(session.currentSession.id);
+  }, [session.currentSession?.id, isReleasingSummary]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const previewSummary = useMemo(() => {
+    if (!result || !session.currentSession) return null;
+    return buildVisitSummary({
+      caseSessionId: session.currentSession.id,
+      patientId: patientId || 'unknown',
+      analysisData: result,
+      overrides,
+      dischargePlan: dischargePlanRef.current,
+      visitDate: session.currentSession.createdAt,
+    });
+  }, [result, session.currentSession, patientId, overrides, showSummaryPreview]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleReleaseSummary = useCallback(() => {
+    if (!previewSummary) return;
+    setIsReleasingSummary(true);
+    // If updating an existing summary, preserve the original id
+    const summaryToSave = existingSummary
+      ? { ...previewSummary, id: existingSummary.id, releasedAt: new Date().toISOString() }
+      : previewSummary;
+    saveReleasedSummary(summaryToSave);
+    setShowSummaryPreview(false);
+    setIsReleasingSummary(false);
+  }, [previewSummary, existingSummary]);
 
   const handleOverridesChange = useCallback((newOverrides: ClinicianOverrides) => {
     setOverrides(newOverrides);
@@ -996,6 +1037,9 @@ export default function CaseAnalysisPage() {
                     topRecommendation={result.top_recommendation}
                     overrides={overrides}
                     onOverridesChange={handleOverridesChange}
+                    onPlanChange={useCallback((plan: DischargePlanData | null) => {
+                      dischargePlanRef.current = plan;
+                    }, [])}
                   />
                   <ReferralTab
                     parsedCase={result.parsed_case as unknown as Record<string, unknown>}
@@ -1003,6 +1047,40 @@ export default function CaseAnalysisPage() {
                     acuteManagement={(result.acute_management || {}) as Record<string, unknown>}
                     suggestedConsults={result.acute_management?.consults || []}
                   />
+
+                  {/* Release to Patient */}
+                  <Card className="border-emerald-200 dark:border-emerald-800">
+                    <CardContent className="pt-5 pb-5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                            <Send className="w-4 h-4 text-emerald-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-semibold">Release to Patient</h3>
+                            {existingSummary ? (
+                              <p className="text-xs text-emerald-600">
+                                Released on {new Date(existingSummary.releasedAt).toLocaleString()}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">
+                                Patient will see diagnosis, medications, and instructions
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={existingSummary ? 'outline' : 'default'}
+                          className={existingSummary ? '' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}
+                          onClick={() => setShowSummaryPreview(true)}
+                        >
+                          <Eye className="w-4 h-4 mr-1.5" />
+                          {existingSummary ? 'View / Update' : 'Preview & Release'}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
 
@@ -1082,6 +1160,15 @@ export default function CaseAnalysisPage() {
           isOpen={showDictation}
           onClose={() => setShowDictation(false)}
           onTranscript={handleDictationTranscript}
+        />
+
+        <PatientSummaryPreview
+          isOpen={showSummaryPreview}
+          onClose={() => setShowSummaryPreview(false)}
+          onRelease={handleReleaseSummary}
+          summary={previewSummary}
+          isReleasing={isReleasingSummary}
+          hasDischargePlan={dischargePlanRef.current !== null}
         />
       </div>
     </div>

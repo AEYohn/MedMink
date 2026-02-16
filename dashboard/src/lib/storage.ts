@@ -244,6 +244,7 @@ export const STORAGE_KEYS = {
   THEME: 'theme',
   CASE_SESSIONS: 'case-sessions',
   CURRENT_CASE_SESSION: 'current-case-session',
+  RELEASED_SUMMARIES: 'released-summaries',
 } as const;
 
 // Conversation helpers
@@ -350,5 +351,43 @@ export function setCurrentCaseSessionId(id: string | null): void {
     removeItem(STORAGE_KEYS.CURRENT_CASE_SESSION);
   } else {
     setItem(STORAGE_KEYS.CURRENT_CASE_SESSION, id);
+  }
+}
+
+// Released visit summary helpers
+import type { ReleasedVisitSummary } from '@/types/visit-summary';
+
+export function getReleasedSummaries(): ReleasedVisitSummary[] {
+  return getItem<ReleasedVisitSummary[]>(STORAGE_KEYS.RELEASED_SUMMARIES, []);
+}
+
+export function saveReleasedSummary(summary: ReleasedVisitSummary): void {
+  const summaries = getReleasedSummaries();
+  const index = summaries.findIndex(s => s.id === summary.id);
+  if (index >= 0) {
+    summaries[index] = summary;
+  } else {
+    summaries.unshift(summary);
+  }
+  // Keep max 50 summaries
+  setItem(STORAGE_KEYS.RELEASED_SUMMARIES, summaries.slice(0, 50));
+}
+
+export function getReleasedSummariesForPatient(patientId: string): ReleasedVisitSummary[] {
+  return getReleasedSummaries().filter(
+    s => s.patientId === patientId && s.status === 'released'
+  );
+}
+
+export function getReleasedSummaryBySession(sessionId: string): ReleasedVisitSummary | undefined {
+  return getReleasedSummaries().find(s => s.caseSessionId === sessionId);
+}
+
+export function revokeReleasedSummary(id: string): void {
+  const summaries = getReleasedSummaries();
+  const index = summaries.findIndex(s => s.id === id);
+  if (index >= 0) {
+    summaries[index] = { ...summaries[index], status: 'revoked' };
+    setItem(STORAGE_KEYS.RELEASED_SUMMARIES, summaries);
   }
 }

@@ -38,6 +38,8 @@ backend_image = (
         # Utilities
         "python-dotenv==1.0.1",
         "python-dateutil==2.8.2",
+        # PDF parsing (labs route)
+        "pymupdf==1.24.2",
     )
     .add_local_dir("src", remote_path="/app/src")
 )
@@ -80,6 +82,13 @@ def serve():
     from src.api.routes.labs import router as labs_router
     from src.api.routes.charting import router as charting_router
     from src.api.routes.consensus_lite import router as consensus_router
+    _ems_import_error = None
+    try:
+        from src.api.routes.ems import router as ems_router
+    except Exception as exc:
+        import traceback
+        _ems_import_error = f"{exc}\n{traceback.format_exc()}"
+        ems_router = None
 
     api = FastAPI(
         title="Research Synthesizer API",
@@ -100,9 +109,11 @@ def serve():
     api.include_router(labs_router)
     api.include_router(charting_router)
     api.include_router(consensus_router)
+    if ems_router:
+        api.include_router(ems_router)
 
     @api.get("/health")
     async def health():
-        return {"status": "ok", "environment": "modal"}
+        return {"status": "ok", "environment": "modal", "version": "2.1", "ems_loaded": ems_router is not None, "ems_error": _ems_import_error}
 
     return api

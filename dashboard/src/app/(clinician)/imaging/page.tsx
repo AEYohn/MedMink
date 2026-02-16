@@ -6,6 +6,7 @@ import {
   Camera,
   ArrowLeft,
   Loader2,
+  AlertTriangle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ImageAnalysisCard } from '@/components/case/ImageAnalysisCard';
@@ -21,7 +22,10 @@ interface ImageAnalysisResult {
   confidence: number;
   recommendations: string[];
   model: string;
+  limitations?: string;
 }
+
+const SUPPORTED_MEDICAL_MODALITIES = ['xray', 'ct', 'mri', 'dermoscopy', 'pathology', 'fundus', 'oct'];
 
 export default function ImagingPage() {
   usePatientFromUrl();
@@ -99,6 +103,24 @@ export default function ImagingPage() {
         </header>
 
         <PatientBanner className="mb-4" />
+
+        {/* Non-medical modality warning */}
+        {imageResult && !SUPPORTED_MEDICAL_MODALITIES.includes(imageResult.modality) && (
+          <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-amber-600 dark:text-amber-400">
+                This appears to be a regular photograph, not a medical scan.
+              </p>
+              <p className="text-muted-foreground mt-1">
+                MedGemma is optimized for medical imaging (X-ray, CT, MRI, dermoscopy, pathology). Results on consumer photos may be unreliable.
+              </p>
+              {imageResult.limitations && (
+                <p className="text-muted-foreground mt-1 italic">{imageResult.limitations}</p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Image Analysis */}
         <ImageAnalysisCard

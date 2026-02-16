@@ -29,7 +29,8 @@ MODALITY_PATTERNS = {
     "mri": ["mri", "magnetic", "t1", "t2", "flair", "dwi"],
     "ultrasound": ["ultrasound", "us", "sonogram", "echo"],
     "pathology": ["pathology", "histology", "biopsy", "h&e", "ihc"],
-    "dermoscopy": ["dermoscopy", "dermatoscopy", "skin", "lesion", "mole"],
+    "dermoscopy": ["dermoscopy", "dermatoscopy", "lesion", "mole"],
+    "clinical_photo": ["photo", "photograph", "camera", "iphone", "wound", "rash", "bruise", "swelling"],
     "fundus": ["fundus", "retina", "optic", "macula"],
     "oct": ["oct", "optical coherence"],
 }
@@ -83,12 +84,20 @@ Clinical context: {context}""",
 
 Clinical context: {context}""",
 
-    "default": """Analyze this medical image. Report:
-1. Image modality and body region
-2. Technical quality
-3. Normal structures
-4. Abnormal findings
-5. Impression and recommendations
+    "clinical_photo": """This is a clinical photograph (not a dermoscopy or medical scan). Describe what you observe:
+1. Body region and visible structures
+2. Skin appearance — color, texture, any visible lesions or abnormalities
+3. Only report findings you can clearly identify. Do NOT over-interpret normal anatomy.
+
+Important: A consumer photograph has lower diagnostic reliability than dermoscopy or radiology. State this in your impression.
+
+Clinical context: {context}""",
+
+    "default": """Describe what you observe in this image.
+1. What type of image is this? (medical scan, clinical photo, consumer photo, etc.)
+2. Body region visible
+3. Notable observations — describe only what is clearly visible. Do NOT assume pathology.
+4. If this is a regular photograph (not a medical scan or dermoscopy), state that explicitly and note that analysis accuracy is limited.
 
 Clinical context: {context}""",
 }
@@ -199,6 +208,11 @@ class MedVisionClient:
 
         # Route through specialized foundation models for enhanced analysis
         result = await self._enhance_with_foundation_models(result, image_b64, modality)
+
+        # Cap confidence for non-medical modalities
+        if modality in ("default", "clinical_photo"):
+            result["confidence"] = min(result.get("confidence", 0.5), 0.5)
+            result["limitations"] = "This is a consumer photograph, not a medical scan. Findings have lower diagnostic reliability."
 
         return result
 

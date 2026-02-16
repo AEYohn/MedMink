@@ -12,6 +12,7 @@ import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { PatientBanner } from '@/components/shared/PatientBanner';
 import { usePatientFromUrl } from '@/hooks/usePatientFromUrl';
 import { useActivePatient } from '@/contexts/ActivePatientContext';
+import { getPatient, getPatientDisplayName, getPatientAge } from '@/lib/patient-storage';
 import { getApiUrl } from '@/lib/api-url';
 
 const API_URL = getApiUrl() || '';
@@ -99,7 +100,30 @@ export default function InterviewPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetchWithTimeout(`${API_URL}/api/interview/start`, { method: 'POST' }, 30000);
+      // Build patient context from active patient if available
+      let body: Record<string, unknown> = {};
+      if (patientId) {
+        const patient = getPatient(patientId);
+        if (patient) {
+          body = {
+            patient_context: {
+              id: patient.id,
+              name: getPatientDisplayName(patient),
+              age: getPatientAge(patient),
+              sex: patient.sex,
+              mrn: patient.mrn || null,
+              conditions: patient.conditions,
+              medications: patient.medications,
+              allergies: patient.allergies,
+            },
+          };
+        }
+      }
+      const res = await fetchWithTimeout(`${API_URL}/api/interview/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }, 30000);
       if (!res.ok) throw new Error(`Failed to start interview: ${res.status}`);
       const data = await res.json();
       setSessionId(data.session_id);
@@ -110,7 +134,7 @@ export default function InterviewPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [patientId]);
 
   const sendText = useCallback(async () => {
     if (!inputText.trim() || !sessionId || isLoading) return;

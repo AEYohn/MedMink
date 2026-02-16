@@ -96,6 +96,22 @@ Output ONLY this JSON:
     "red_flags": []
 }}"""
 
+
+GREETING_WITH_CONTEXT_PROMPT = """You are starting a new patient interview. You already have chart information for this patient:
+
+{patient_context}
+
+Greet the patient by name, briefly confirm their identity, and ask what brought them in today.
+Do NOT re-ask information you already have (e.g. medications, allergies, conditions) — it's already in the chart.
+
+Output ONLY this JSON:
+{{
+    "next_question": "your greeting referencing their name and opening question",
+    "phase_complete": true,
+    "extracted_data": {{}},
+    "red_flags": []
+}}"""
+
 TRIAGE_PROMPT = """Based on the complete patient interview, generate a triage assessment.
 
 COMPLETE INTERVIEW DATA:

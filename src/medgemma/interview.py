@@ -16,6 +16,7 @@ import structlog
 from src.medgemma.client import get_medgemma_client
 from src.medgemma.interview_prompts import (
     GREETING_PROMPT,
+    GREETING_WITH_CONTEXT_PROMPT,
     INTERVIEW_SYSTEM_PROMPT,
     INTERVIEW_TURN_PROMPT,
     PHASE_CRITERIA,
@@ -72,8 +73,25 @@ def get_session(session_id: str) -> InterviewSession | None:
     return _sessions.get(session_id)
 
 
-def create_session() -> InterviewSession:
+def create_session(
+    patient_context: dict[str, Any] | None = None,
+) -> InterviewSession:
     session = InterviewSession()
+    if patient_context:
+        session.patient_id = patient_context.get("id")
+        # Pre-populate extracted data from chart so phases can be skipped
+        if patient_context.get("medications"):
+            session.extracted_data["medications"] = {
+                "current_medications": patient_context["medications"],
+            }
+        if patient_context.get("allergies"):
+            session.extracted_data["allergies"] = {
+                "known_allergies": patient_context["allergies"],
+            }
+        if patient_context.get("conditions"):
+            session.extracted_data["pmh_psh_fh_sh"] = {
+                "past_medical_history": patient_context["conditions"],
+            }
     _sessions[session.session_id] = session
     return session
 
@@ -113,10 +131,35 @@ class PatientInterviewer:
     def __init__(self):
         self._client = get_medgemma_client()
 
-    async def start_interview(self, session: InterviewSession) -> dict[str, Any]:
+    async def start_interview(
+        self,
+        session: InterviewSession,
+        patient_context: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Start a new interview — generate the greeting/first question."""
+        if patient_context:
+            context_parts = []
+            if patient_context.get("name"):
+                context_parts.append(f"Name: {patient_context['name']}")
+            if patient_context.get("age") is not None:
+                sex = patient_context.get("sex", "")
+                context_parts.append(f"Age/Sex: {patient_context['age']}y {sex}")
+            if patient_context.get("mrn"):
+                context_parts.append(f"MRN: {patient_context['mrn']}")
+            if patient_context.get("conditions"):
+                context_parts.append(f"Known conditions: {', '.join(patient_context['conditions'])}")
+            if patient_context.get("medications"):
+                context_parts.append(f"Current medications: {', '.join(patient_context['medications'])}")
+            if patient_context.get("allergies"):
+                context_parts.append(f"Allergies: {', '.join(patient_context['allergies'])}")
+            greeting_prompt = GREETING_WITH_CONTEXT_PROMPT.format(
+                patient_context="\n".join(context_parts),
+            )
+        else:
+            greeting_prompt = GREETING_PROMPT
+
         response_text = await self._client.generate(
-            prompt=GREETING_PROMPT,
+            prompt=greeting_prompt,
             system_prompt=INTERVIEW_SYSTEM_PROMPT,
             temperature=0.4,
             max_tokens=512,

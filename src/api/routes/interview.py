@@ -19,6 +19,22 @@ logger = structlog.get_logger()
 router = APIRouter(prefix="/api/interview", tags=["interview"])
 
 
+class PatientContext(BaseModel):
+    """Patient demographics and chart data sent from the frontend."""
+    id: str | None = None
+    name: str | None = None
+    age: int | None = None
+    sex: str | None = None
+    mrn: str | None = None
+    conditions: list[str] = []
+    medications: list[str] = []
+    allergies: list[str] = []
+
+
+class StartInterviewRequest(BaseModel):
+    patient_context: PatientContext | None = None
+
+
 class StartInterviewResponse(BaseModel):
     session_id: str
     question: str
@@ -65,12 +81,13 @@ class TriageResponse(BaseModel):
 
 
 @router.post("/start", response_model=StartInterviewResponse)
-async def start_interview():
+async def start_interview(body: StartInterviewRequest | None = None):
     """Create a new interview session and return the first question."""
-    session = create_session()
+    patient_ctx = body.patient_context.model_dump() if body and body.patient_context else None
+    session = create_session(patient_context=patient_ctx)
     interviewer = get_interviewer()
 
-    result = await interviewer.start_interview(session)
+    result = await interviewer.start_interview(session, patient_context=patient_ctx)
 
     return StartInterviewResponse(
         session_id=result["session_id"],

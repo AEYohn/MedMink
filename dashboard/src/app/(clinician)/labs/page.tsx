@@ -2,14 +2,18 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Beaker,
   ArrowLeft,
+  Stethoscope,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { LabExtractorCard } from '@/components/case/LabExtractorCard';
 import { PatientBanner } from '@/components/shared/PatientBanner';
 import { usePatientFromUrl } from '@/hooks/usePatientFromUrl';
+import { useCaseSession } from '@/hooks/useCaseSession';
 import { getApiUrl } from '@/lib/api-url';
 
 interface LabValue {
@@ -30,11 +34,16 @@ interface LabExtractionResult {
 
 export default function LabsPage() {
   usePatientFromUrl();
+  const router = useRouter();
+  const caseSession = useCaseSession();
   const [labResult, setLabResult] = useState<LabExtractionResult | null>(null);
   const [labPreview, setLabPreview] = useState<string | null>(null);
   const [isLabLoading, setIsLabLoading] = useState(false);
 
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
   const handleLabUpload = useCallback(async (file: File) => {
+    setUploadedFile(file);
     // Show preview
     const reader = new FileReader();
     reader.onload = (e) => setLabPreview(e.target?.result as string);
@@ -74,7 +83,19 @@ export default function LabsPage() {
   const clearLab = useCallback(() => {
     setLabPreview(null);
     setLabResult(null);
+    setUploadedFile(null);
   }, []);
+
+  const handleStartCaseAnalysis = useCallback(() => {
+    if (!labResult || labResult.labs.length === 0) return;
+    const labText = labResult.labs
+      .map(l => `${l.test}: ${l.value} ${l.unit}${l.flag !== 'normal' ? ` (${l.flag.toUpperCase()})` : ''} [ref: ${l.reference_range}]`)
+      .join('\n');
+    const caseText = `Lab Results${labResult.collection_date ? ` (${labResult.collection_date})` : ''}:\n${labText}`;
+    const title = `Lab analysis — ${labResult.labs.length} values`;
+    caseSession.createSession(caseText, title);
+    router.push('/case');
+  }, [labResult, caseSession, router]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -111,6 +132,20 @@ export default function LabsPage() {
           onUpload={handleLabUpload}
           onClear={clearLab}
         />
+
+        {/* Start Case Analysis with extracted labs */}
+        {labResult && labResult.labs.length > 0 && !isLabLoading && (
+          <div className="mt-4">
+            <Button
+              onClick={handleStartCaseAnalysis}
+              className="w-full"
+              size="lg"
+            >
+              <Stethoscope className="w-4 h-4 mr-2" />
+              Start Case Analysis with These Labs
+            </Button>
+          </div>
+        )}
 
         {/* Info */}
         <div className="mt-8 text-center">

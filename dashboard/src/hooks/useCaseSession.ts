@@ -224,6 +224,14 @@ export function useCaseSession() {
     return sessionRef.current?.overrides || createEmptyOverrides();
   }, []);
 
+  const updateUIState = useCallback((uiState: { activeTab?: string; chatOpen?: boolean }) => {
+    const cur = sessionRef.current;
+    if (!cur) return;
+    const updated = { ...cur, ...uiState, updatedAt: new Date().toISOString() };
+    saveCaseSession(updated);
+    setSession(updated);
+  }, [setSession]);
+
   const updatePatientId = useCallback((patientId: string) => {
     const cur = sessionRef.current;
     if (!cur) return;
@@ -255,5 +263,6 @@ export function useCaseSession() {
     updateOverrides,
     getOverrides,
     updatePatientId,
+    updateUIState,
   };
 }

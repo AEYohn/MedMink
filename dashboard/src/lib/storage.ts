@@ -209,6 +209,8 @@ export interface CaseSession {
   events: CaseEvent[];
   followUpMessages: CaseFollowUpMessage[];
   overrides?: ClinicianOverrides;
+  activeTab?: string;
+  chatOpen?: boolean;
 }
 
 export interface CaseEvent {

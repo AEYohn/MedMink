@@ -45,8 +45,17 @@ export default function NewEncounterPage() {
     setCaseText(parts.join(' '));
   }, [params.id, router]);
 
+  // Check that the user has added actual clinical content beyond the template
+  const presentingComplaintFilled = (() => {
+    const idx = caseText.indexOf('Presenting complaint:');
+    if (idx === -1) return caseText.trim().length >= 50;
+    const afterComplaint = caseText.slice(idx + 'Presenting complaint:'.length).trim();
+    return afterComplaint.length >= 10;
+  })();
+  const canSubmit = caseText.trim().length >= 50 && presentingComplaintFilled;
+
   const handleStartAnalysis = () => {
-    if (!patient || caseText.trim().length < 20) return;
+    if (!patient || !canSubmit) return;
     const session = createSession(caseText, `Encounter: ${getPatientDisplayName(patient)}`);
     updatePatientId(patient.id);
     router.push(`/case?session=${session.id}`);
@@ -86,11 +95,18 @@ export default function NewEncounterPage() {
 
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">
-            {caseText.length} characters {caseText.length < 20 && '(minimum 20)'}
+            {caseText.length} characters
+            {!canSubmit && (
+              <span className="text-amber-500 ml-1">
+                {!presentingComplaintFilled
+                  ? '— add presenting complaint details'
+                  : '— need at least 50 characters'}
+              </span>
+            )}
           </p>
           <button
             onClick={handleStartAnalysis}
-            disabled={caseText.trim().length < 20}
+            disabled={!canSubmit}
             className="px-6 py-2.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors inline-flex items-center gap-2"
           >
             <Send className="w-4 h-4" />

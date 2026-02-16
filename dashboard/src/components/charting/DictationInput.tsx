@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Mic,
   MicOff,
   Square,
   Play,
+  Pause,
   Loader2,
   AlertCircle,
   Volume2,
@@ -51,6 +52,16 @@ export function DictationInput({
   } = useAudioRecorder();
 
   const [mode, setMode] = useState<'speech' | 'audio'>('speech');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
+
+  // Clean up audio URL on unmount or when blob changes
+  useEffect(() => {
+    return () => {
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+    };
+  }, []);
 
   // Auto-select mode based on browser support
   useEffect(() => {
@@ -94,7 +105,29 @@ export function DictationInput({
     } else {
       clearRecording();
     }
+    setIsPlaying(false);
+    if (audioRef.current) audioRef.current.pause();
     onTranscriptChange('', false);
+  };
+
+  const handlePlayback = () => {
+    if (!audioBlob) return;
+
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    // Create/reuse object URL
+    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+    audioUrlRef.current = URL.createObjectURL(audioBlob);
+
+    const audio = new Audio(audioUrlRef.current);
+    audioRef.current = audio;
+    audio.onended = () => setIsPlaying(false);
+    audio.play();
+    setIsPlaying(true);
   };
 
   const formatDuration = (seconds: number): string => {
@@ -238,9 +271,23 @@ export function DictationInput({
             </span>
           )}
           {!isActive && audioBlob && mode === 'audio' && (
-            <span className="text-sm text-muted-foreground">
-              Audio ready ({formatDuration(audioDuration)}) - Click "Enhance" to process
-            </span>
+            <div className="flex items-center gap-3">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handlePlayback}
+                className="gap-1.5"
+              >
+                {isPlaying ? (
+                  <><Pause className="w-3.5 h-3.5" /> Pause</>
+                ) : (
+                  <><Play className="w-3.5 h-3.5" /> Play Back</>
+                )}
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {formatDuration(audioDuration)} recorded
+              </span>
+            </div>
           )}
           {!isActive && !transcript && !audioBlob && (
             <span className="text-sm text-muted-foreground">

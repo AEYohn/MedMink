@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   ArrowRight,
+  FileText,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -77,7 +78,7 @@ export function LabExtractorCard({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
       onUpload(file);
     }
   };
@@ -136,7 +137,7 @@ export function LabExtractorCard({
           >
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,application/pdf"
               onChange={handleFileInput}
               className="hidden"
               id="lab-upload"
@@ -144,23 +145,30 @@ export function LabExtractorCard({
             <label htmlFor="lab-upload" className="cursor-pointer">
               <Upload className="w-10 h-10 mx-auto text-indigo-500/50 mb-3" />
               <p className="text-sm font-medium text-muted-foreground">
-                Drop a lab report photo or click to browse
+                Drop a lab report image or PDF
               </p>
               <p className="text-xs text-muted-foreground/70 mt-1">
-                Upload a photo of your lab results for auto-extraction
+                Upload a photo or PDF of your lab results for auto-extraction
               </p>
             </label>
           </div>
         )}
 
-        {/* Image Preview */}
+        {/* Image/PDF Preview */}
         {imagePreview && (
           <div className="relative">
-            <img
-              src={imagePreview}
-              alt="Lab report"
-              className="w-full max-h-48 object-contain rounded-lg border bg-white"
-            />
+            {imagePreview.startsWith('data:application/pdf') ? (
+              <div className="w-full h-48 rounded-lg border bg-muted/30 flex flex-col items-center justify-center gap-2">
+                <FileText className="w-12 h-12 text-indigo-500/60" />
+                <p className="text-sm text-muted-foreground font-medium">PDF Lab Report</p>
+              </div>
+            ) : (
+              <img
+                src={imagePreview}
+                alt="Lab report"
+                className="w-full max-h-48 object-contain rounded-lg border bg-white"
+              />
+            )}
             <button
               onClick={onClear}
               className="absolute top-2 right-2 w-7 h-7 bg-destructive/90 rounded-full flex items-center justify-center hover:bg-destructive transition-colors"

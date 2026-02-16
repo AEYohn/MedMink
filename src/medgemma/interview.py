@@ -18,7 +18,7 @@ from src.medgemma.interview_prompts import (
     GREETING_PROMPT,
     INTERVIEW_SYSTEM_PROMPT,
     INTERVIEW_TURN_PROMPT,
-    PHASE_GUIDANCE,
+    PHASE_CRITERIA,
     TRIAGE_PROMPT,
 )
 
@@ -38,6 +38,17 @@ PHASES = [
 ]
 
 
+MAX_TURNS_PER_PHASE: dict[str, int] = {
+    "chief_complaint": 2,
+    "hpi": 3,
+    "review_of_systems": 2,
+    "pmh_psh_fh_sh": 1,
+    "medications": 1,
+    "allergies": 1,
+    "review_and_triage": 1,
+}
+
+
 @dataclass
 class InterviewSession:
     """State for a single patient interview."""
@@ -50,6 +61,7 @@ class InterviewSession:
     red_flags: list[str] = field(default_factory=list)
     patient_id: str | None = None  # For cross-visit longitudinal linking
     respiratory_cough_prompt: bool = False  # Flag to prompt cough recording
+    phase_turn_counts: dict[str, int] = field(default_factory=dict)
 
 
 # In-memory session storage for v1
@@ -63,6 +75,35 @@ def get_session(session_id: str) -> InterviewSession | None:
 def create_session() -> InterviewSession:
     session = InterviewSession()
     _sessions[session.session_id] = session
+    return session
+
+
+def restore_session(
+    session_id: str,
+    conversation_history: list[dict[str, str]],
+    phase: str | None = None,
+    patient_id: str | None = None,
+) -> InterviewSession:
+    """Reconstruct a lost session from frontend state.
+
+    Used for self-healing when Modal scales/restarts and wipes in-memory sessions.
+    """
+    resolved_phase = phase or PHASES[min(len(conversation_history) // 2, len(PHASES) - 2)]
+
+    session = InterviewSession(
+        session_id=session_id,
+        phase=resolved_phase,
+        conversation_history=list(conversation_history),
+        patient_id=patient_id,
+    )
+    _sessions[session_id] = session
+
+    logger.info(
+        "Session restored from frontend state",
+        session_id=session_id,
+        phase=resolved_phase,
+        history_len=len(conversation_history),
+    )
     return session
 
 
@@ -109,20 +150,28 @@ class PatientInterviewer:
             "content": patient_input,
         })
 
+        # Track turns in current phase
+        turns_in_phase = session.phase_turn_counts.get(session.phase, 0) + 1
+        session.phase_turn_counts[session.phase] = turns_in_phase
+
+        # Get phase criteria for prompt
+        criteria = PHASE_CRITERIA.get(session.phase, {})
+        phase_goal = criteria.get("goal", "Continue the interview")
+        phase_complete_when = criteria.get("complete_when", "You have gathered enough information")
+
         # Format conversation history for prompt
         conv_text = self._format_conversation(session.conversation_history[-10:])
 
         # Build phase-aware prompt
-        phase_hint = PHASE_GUIDANCE.get(session.phase, "")
         prompt = INTERVIEW_TURN_PROMPT.format(
             phase=session.phase,
+            phase_goal=phase_goal,
+            phase_complete_when=phase_complete_when,
+            turns_in_phase=turns_in_phase,
             conversation_history=conv_text,
             extracted_data=json.dumps(session.extracted_data, indent=2),
             patient_input=patient_input,
         )
-
-        if phase_hint:
-            prompt += f"\n\nPhase guidance: {phase_hint}"
 
         response_text = await self._client.generate(
             prompt=prompt,
@@ -150,13 +199,32 @@ class PatientInterviewer:
         if red_flags:
             session.red_flags.extend(red_flags)
 
-        # Advance phase if complete
+        # Advance phase if model says complete OR max turns exceeded
         phase_complete = data.get("phase_complete", False)
-        if phase_complete:
-            session.phase = self._next_phase(session.phase)
+        max_turns = MAX_TURNS_PER_PHASE.get(session.phase, 3)
+        forced = False
+        if not phase_complete and turns_in_phase >= max_turns:
+            phase_complete = True
+            forced = True
+            logger.warning(
+                "Forcing phase advancement — max turns exceeded",
+                phase=session.phase,
+                turns=turns_in_phase,
+                max_turns=max_turns,
+                session_id=session.session_id,
+            )
 
-        # Generate question
+        if phase_complete:
+            session.phase = self._next_phase(session)
+
+        # On phase transition, use the deterministic opening question for the new phase
+        # instead of trusting the model (which generated the question while in the old phase)
         question = data.get("next_question", "Could you tell me more?")
+        if phase_complete:
+            new_criteria = PHASE_CRITERIA.get(session.phase, {})
+            opening = new_criteria.get("opening_question")
+            if opening:
+                question = opening
 
         session.conversation_history.append({
             "role": "assistant",
@@ -234,15 +302,20 @@ class PatientInterviewer:
             logger.warning("Management plan not available", error=str(e))
             return {"error": "Management agent not available"}
 
-    def _next_phase(self, current_phase: str) -> str:
-        """Get the next phase in the interview sequence."""
+    def _next_phase(self, session: InterviewSession) -> str:
+        """Get the next phase, skipping phases whose data was already collected."""
         try:
-            idx = PHASES.index(current_phase)
-            if idx + 1 < len(PHASES):
-                return PHASES[idx + 1]
+            idx = PHASES.index(session.phase)
+            for i in range(idx + 1, len(PHASES)):
+                candidate = PHASES[i]
+                # Skip phases that already have extracted data (patient volunteered info early)
+                if candidate in session.extracted_data and session.extracted_data[candidate]:
+                    logger.info("Skipping phase — data already collected", phase=candidate)
+                    continue
+                return candidate
         except ValueError:
             pass
-        return current_phase
+        return session.phase
 
     def _format_conversation(self, history: list[dict[str, str]]) -> str:
         """Format conversation history for prompt inclusion."""

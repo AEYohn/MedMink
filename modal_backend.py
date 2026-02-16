@@ -66,6 +66,7 @@ backend_image = (
         "PATH_FOUNDATION_MODAL_URL": "https://saeyohn122--path-foundation-serve.modal.run",
     })],
 )
+@modal.concurrent(max_inputs=50)
 @modal.asgi_app()
 def serve():
     """Create a minimal FastAPI app with only case analysis routes."""
@@ -77,6 +78,7 @@ def serve():
     from src.api.routes.case_analysis import router as case_router
     from src.api.routes.interview import router as interview_router
     from src.api.routes.labs import router as labs_router
+    from src.api.routes.charting import router as charting_router
     from src.api.routes.consensus_lite import router as consensus_router
 
     api = FastAPI(
@@ -96,6 +98,7 @@ def serve():
     api.include_router(case_router)
     api.include_router(interview_router)
     api.include_router(labs_router)
+    api.include_router(charting_router)
     api.include_router(consensus_router)
 
     @api.get("/health")

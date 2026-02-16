@@ -26,6 +26,12 @@ import { getApiUrl } from '@/lib/api-url';
 import type { MedicationReview } from '@/types/case';
 import type { ClinicianOverrides, SafetyAcknowledgment } from '@/lib/storage';
 
+interface TreatmentAlertSource {
+  name: string;
+  verdict: string;
+  cons?: string[];
+}
+
 interface SafetyAlertsPanelProps {
   medicationReview?: MedicationReview;
   currentMedications: string[];
@@ -37,6 +43,7 @@ interface SafetyAlertsPanelProps {
   sex: string;
   overrides: ClinicianOverrides;
   onOverridesChange: (overrides: ClinicianOverrides) => void;
+  treatmentOptions?: TreatmentAlertSource[];
 }
 
 interface SafetyResult {
@@ -94,6 +101,7 @@ export function SafetyAlertsPanel({
   sex,
   overrides,
   onOverridesChange,
+  treatmentOptions,
 }: SafetyAlertsPanelProps) {
   const [safetyResult, setSafetyResult] = useState<SafetyResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -215,6 +223,35 @@ export function SafetyAlertsPanel({
         recommendation: a.recommendation,
         type: 'Allergy',
       });
+    });
+  }
+
+  // From treatment options (not_recommended → warnings, recommended with serious cons → minor alerts)
+  const SERIOUS_KEYWORDS = /contraindicated|avoid|risk|caution|dangerous|toxic|fatal|severe/i;
+  if (treatmentOptions) {
+    treatmentOptions.forEach((t, i) => {
+      if (t.verdict === 'not_recommended' && t.cons?.length) {
+        alerts.push({
+          key: `tx-nr-${i}`,
+          severity: 'moderate',
+          title: t.name,
+          detail: t.cons.join('; '),
+          recommendation: `Not recommended — consider alternatives`,
+          type: 'Treatment Warning',
+        });
+      } else if (t.verdict === 'recommended' && t.cons?.length) {
+        const serious = t.cons.filter(c => SERIOUS_KEYWORDS.test(c));
+        serious.forEach((con, j) => {
+          alerts.push({
+            key: `tx-con-${i}-${j}`,
+            severity: 'minor',
+            title: t.name,
+            detail: con,
+            recommendation: 'Monitor closely',
+            type: 'Treatment Caution',
+          });
+        });
+      }
     });
   }
 
@@ -341,7 +378,7 @@ function AlertCard({
         </div>
         <p className="text-xs text-muted-foreground">{alert.detail}</p>
         {alert.recommendation && (
-          <p className="text-xs text-blue-700 font-medium">{alert.recommendation}</p>
+          <p className="text-xs text-blue-700 dark:text-blue-400 font-medium">{alert.recommendation}</p>
         )}
 
         <div className="flex items-center gap-2 pt-1">

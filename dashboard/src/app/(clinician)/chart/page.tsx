@@ -11,6 +11,7 @@ import {
   FileText,
   Clock,
   CheckCircle2,
+  Clipboard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -41,6 +42,8 @@ interface SSEEvent {
     raw_response?: string;
   };
 }
+
+const EXAMPLE_DICTATION = `Patient is a 65-year-old male presenting with chief complaint of chest pain that started about 2 hours ago. He describes it as pressure-like, radiating to left arm, rated 7 out of 10. History of hypertension and type 2 diabetes, currently on met form in 1000 milligrams twice daily and lice in oh pril 10 milligrams daily. Vital signs: blood pressure 158 over 95, heart rate 88, respiratory rate 18, oxygen sat 97 percent on room air. Physical exam shows regular rate and rhythm, no murmurs, lungs clear bilaterally. EKG shows ST elevations in leads V2 through V4. Assessment is likely STEMI, acute ST elevation myocardial infarction. Plan: Activate cath lab, give aspirin 325 milligrams, start heparin drip, cardiology consult stat, admit to CCU.`;
 
 export default function ChartingPage() {
   usePatientFromUrl();
@@ -194,6 +197,22 @@ export default function ChartingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Input */}
           <div className="space-y-6">
+            {/* Try an Example banner */}
+            {!transcript && !soapData && !isProcessing && (
+              <Card
+                className="border-dashed border-primary/30 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors"
+                onClick={() => { setTranscript(EXAMPLE_DICTATION); setProcessingMode('text'); }}
+              >
+                <CardContent className="flex items-center gap-3 py-4">
+                  <Clipboard className="w-5 h-5 text-primary" />
+                  <div>
+                    <p className="text-sm font-medium">Try an Example</p>
+                    <p className="text-xs text-muted-foreground">Load a sample clinical encounter to see how charting works</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Dictation Input */}
             <DictationInput
               onTranscriptChange={handleTranscriptChange}
@@ -210,25 +229,27 @@ export default function ChartingPage() {
               readOnly={isProcessing}
             />
 
-            {/* Enhance Button */}
-            <Button
-              size="lg"
-              onClick={handleEnhance}
-              disabled={!canEnhance}
-              className="w-full"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Enhance with MedGemma
-                </>
-              )}
-            </Button>
+            {/* Actions */}
+            <div className="flex gap-2">
+              <Button
+                size="lg"
+                onClick={handleEnhance}
+                disabled={!canEnhance}
+                className="flex-1"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Enhance with MedGemma
+                  </>
+                )}
+              </Button>
+            </div>
 
             {/* Processing Status */}
             {isProcessing && (

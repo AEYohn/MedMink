@@ -45,9 +45,9 @@ interface DifferentialDiagnosisTabProps {
 }
 
 const likelihoodColor = {
-  high: 'bg-green-100 text-green-800 border-green-300',
-  moderate: 'bg-amber-100 text-amber-800 border-amber-300',
-  low: 'bg-gray-100 text-gray-700 border-gray-300',
+  high: 'bg-green-100 text-green-800 border-green-300 dark:bg-green-950/50 dark:text-green-300 dark:border-green-700',
+  moderate: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700',
+  low: 'bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600',
 };
 
 const likelihoodRange: Record<string, string> = {
@@ -113,13 +113,13 @@ export function DifferentialDiagnosisTab({
     <div className="space-y-4">
       {/* Clinical Reasoning Summary */}
       {result.clinical_reasoning_summary && (
-        <Card className="bg-blue-50/50 border-blue-200">
+        <Card className="bg-blue-50/50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center gap-2 mb-1">
-              <Stethoscope className="w-4 h-4 text-blue-600" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-blue-600">Clinical Reasoning</span>
+              <Stethoscope className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Clinical Reasoning</span>
             </div>
-            <p className="text-sm text-blue-900">{result.clinical_reasoning_summary}</p>
+            <p className="text-sm text-blue-900 dark:text-blue-100">{result.clinical_reasoning_summary}</p>
           </CardContent>
         </Card>
       )}
@@ -186,7 +186,7 @@ export function DifferentialDiagnosisTab({
                 {/* Supporting Findings */}
                 {dx.supporting_findings?.length > 0 && (
                   <div>
-                    <h4 className="text-xs font-semibold text-green-700 uppercase tracking-wider mb-1">Supporting Findings</h4>
+                    <h4 className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wider mb-1">Supporting Findings</h4>
                     <ul className="space-y-1">
                       {dx.supporting_findings.map((f, j) => (
                         <li key={j} className="flex items-start gap-2 text-sm">
@@ -201,7 +201,7 @@ export function DifferentialDiagnosisTab({
                 {/* Refuting Findings */}
                 {dx.refuting_findings?.length > 0 && (
                   <div>
-                    <h4 className="text-xs font-semibold text-red-700 uppercase tracking-wider mb-1">Refuting Findings</h4>
+                    <h4 className="text-xs font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider mb-1">Refuting Findings</h4>
                     <ul className="space-y-1">
                       {dx.refuting_findings.map((f, j) => (
                         <li key={j} className="flex items-start gap-2 text-sm">
@@ -216,7 +216,7 @@ export function DifferentialDiagnosisTab({
                 {/* Diagnostic Pathway */}
                 {dx.diagnostic_pathway?.length > 0 && (
                   <div>
-                    <h4 className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-1">Diagnostic Pathway</h4>
+                    <h4 className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider mb-1">Diagnostic Pathway</h4>
                     <ol className="list-decimal list-inside space-y-1">
                       {dx.diagnostic_pathway.map((step, j) => (
                         <li key={j} className="text-sm text-muted-foreground">{step}</li>

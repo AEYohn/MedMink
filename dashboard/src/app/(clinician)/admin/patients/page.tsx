@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Users,
   Search,
@@ -27,67 +27,74 @@ interface Patient {
   insuranceProvider?: string;
 }
 
-const mockPatients: Patient[] = [
-  {
-    id: '1',
-    name: 'John Smith',
-    email: 'john.smith@email.com',
-    phone: '+1 (555) 123-4567',
-    dateOfBirth: '1985-03-15',
-    lastVisit: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    nextAppointment: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    status: 'active',
-    insuranceProvider: 'Blue Cross',
-  },
-  {
-    id: '2',
-    name: 'Maria Garcia',
-    email: 'maria.garcia@email.com',
-    phone: '+1 (555) 234-5678',
-    dateOfBirth: '1992-07-22',
-    lastVisit: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-    nextAppointment: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-    status: 'active',
-    insuranceProvider: 'Aetna',
-  },
-  {
-    id: '3',
-    name: 'Robert Chen',
-    email: 'robert.chen@email.com',
-    phone: '+1 (555) 345-6789',
-    dateOfBirth: '1978-11-08',
-    lastVisit: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
-    nextAppointment: null,
-    status: 'active',
-    insuranceProvider: 'United Healthcare',
-  },
-  {
-    id: '4',
-    name: 'Emily Brown',
-    email: 'emily.brown@email.com',
-    phone: '+1 (555) 456-7890',
-    dateOfBirth: '1990-05-30',
-    lastVisit: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
-    nextAppointment: null,
-    status: 'inactive',
-  },
-  {
-    id: '5',
-    name: 'Michael Johnson',
-    email: 'michael.j@email.com',
-    phone: '+1 (555) 567-8901',
-    dateOfBirth: '1965-09-12',
-    lastVisit: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    nextAppointment: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-    status: 'active',
-    insuranceProvider: 'Medicare',
-  },
-];
+function createMockPatients(): Patient[] {
+  const now = Date.now();
+  return [
+    {
+      id: '1',
+      name: 'John Smith',
+      email: 'john.smith@email.com',
+      phone: '+1 (555) 123-4567',
+      dateOfBirth: '1985-03-15',
+      lastVisit: new Date(now - 30 * 24 * 60 * 60 * 1000),
+      nextAppointment: new Date(now + 7 * 24 * 60 * 60 * 1000),
+      status: 'active',
+      insuranceProvider: 'Blue Cross',
+    },
+    {
+      id: '2',
+      name: 'Maria Garcia',
+      email: 'maria.garcia@email.com',
+      phone: '+1 (555) 234-5678',
+      dateOfBirth: '1992-07-22',
+      lastVisit: new Date(now - 14 * 24 * 60 * 60 * 1000),
+      nextAppointment: new Date(now + 2 * 24 * 60 * 60 * 1000),
+      status: 'active',
+      insuranceProvider: 'Aetna',
+    },
+    {
+      id: '3',
+      name: 'Robert Chen',
+      email: 'robert.chen@email.com',
+      phone: '+1 (555) 345-6789',
+      dateOfBirth: '1978-11-08',
+      lastVisit: new Date(now - 60 * 24 * 60 * 60 * 1000),
+      nextAppointment: null,
+      status: 'active',
+      insuranceProvider: 'United Healthcare',
+    },
+    {
+      id: '4',
+      name: 'Emily Brown',
+      email: 'emily.brown@email.com',
+      phone: '+1 (555) 456-7890',
+      dateOfBirth: '1990-05-30',
+      lastVisit: new Date(now - 90 * 24 * 60 * 60 * 1000),
+      nextAppointment: null,
+      status: 'inactive',
+    },
+    {
+      id: '5',
+      name: 'Michael Johnson',
+      email: 'michael.j@email.com',
+      phone: '+1 (555) 567-8901',
+      dateOfBirth: '1965-09-12',
+      lastVisit: new Date(now - 7 * 24 * 60 * 60 * 1000),
+      nextAppointment: new Date(now + 14 * 24 * 60 * 60 * 1000),
+      status: 'active',
+      insuranceProvider: 'Medicare',
+    },
+  ];
+}
 
 export default function PatientsPage() {
-  const [patients] = useState<Patient[]>(mockPatients);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
+  useEffect(() => {
+    setPatients(createMockPatients());
+  }, []);
 
   const filteredPatients = patients.filter((patient) => {
     const matchesSearch =

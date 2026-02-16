@@ -16,6 +16,17 @@ import { getApiUrl } from '@/lib/api-url';
 
 const API_URL = getApiUrl() || '';
 
+function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal })
+    .catch((err) => {
+      if (err.name === 'AbortError') throw new Error('Request timed out. Please try again.');
+      throw err;
+    })
+    .finally(() => clearTimeout(timeout));
+}
+
 interface Message {
   role: 'assistant' | 'user';
   content: string;
@@ -88,7 +99,7 @@ export default function InterviewPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/api/interview/start`, { method: 'POST' });
+      const res = await fetchWithTimeout(`${API_URL}/api/interview/start`, { method: 'POST' }, 30000);
       if (!res.ok) throw new Error(`Failed to start interview: ${res.status}`);
       const data = await res.json();
       setSessionId(data.session_id);
@@ -111,11 +122,17 @@ export default function InterviewPage() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_URL}/api/interview/respond`, {
+      const res = await fetchWithTimeout(`${API_URL}/api/interview/respond`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sessionId, text }),
-      });
+        body: JSON.stringify({
+          session_id: sessionId,
+          text,
+          conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
+          phase: currentPhase,
+          patient_id: patientId,
+        }),
+      }, 60000);
       if (!res.ok) throw new Error(`Response failed: ${res.status}`);
       const data = await res.json();
 
@@ -136,7 +153,7 @@ export default function InterviewPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [inputText, sessionId, isLoading]);
+  }, [inputText, sessionId, isLoading, messages, currentPhase, patientId]);
 
   const handleStopRecording = useCallback(async () => {
     stopRecording();
@@ -157,11 +174,14 @@ export default function InterviewPage() {
       const formData = new FormData();
       formData.append('session_id', sessionId);
       formData.append('audio', audioBlob, 'recording.webm');
+      formData.append('conversation_history', JSON.stringify(messages.map(m => ({ role: m.role, content: m.content }))));
+      formData.append('phase', currentPhase);
+      if (patientId) formData.append('patient_id', patientId);
 
-      const res = await fetch(`${API_URL}/api/interview/respond/audio`, {
+      const res = await fetchWithTimeout(`${API_URL}/api/interview/respond/audio`, {
         method: 'POST',
         body: formData,
-      });
+      }, 90000);
       if (!res.ok) throw new Error(`Audio response failed: ${res.status}`);
       const data = await res.json();
 
@@ -189,16 +209,22 @@ export default function InterviewPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, audioBlob, clearRecording]);
+  }, [sessionId, audioBlob, clearRecording, messages, currentPhase, patientId]);
 
   const completeInterview = useCallback(async () => {
     if (!sessionId) return;
 
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/interview/${sessionId}/complete`, {
+      const res = await fetchWithTimeout(`${API_URL}/api/interview/${sessionId}/complete`, {
         method: 'POST',
-      });
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
+          phase: currentPhase,
+          patient_id: patientId,
+        }),
+      }, 120000);
       if (!res.ok) throw new Error(`Triage failed: ${res.status}`);
       const data = await res.json();
       setTriage(data);
@@ -208,7 +234,7 @@ export default function InterviewPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId]);
+  }, [sessionId, messages, currentPhase, patientId]);
 
   // Phase progress calculation
   const currentPhaseIndex = PHASES.indexOf(currentPhase);

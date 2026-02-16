@@ -160,7 +160,7 @@ async def transcribe_and_structure_generator(audio_path: str):
         medasr = get_medasr_client()
         transcription = await medasr.transcribe(
             audio_path=audio_path,
-            apply_medical_corrections=True,
+            apply_corrections=True,
         )
 
         if transcription.get("error"):

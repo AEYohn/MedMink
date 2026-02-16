@@ -16,14 +16,17 @@ export function usePersistentState<T>(
   const [isLoaded, setIsLoaded] = useState(false);
   const [value, setValue] = useState<T>(defaultValue);
   const isInitialMount = useRef(true);
+  const defaultValueRef = useRef(defaultValue);
+  defaultValueRef.current = defaultValue;
 
   // Load from localStorage on mount
   useEffect(() => {
-    const stored = getItem<T>(key, defaultValue);
+    const stored = getItem<T>(key, defaultValueRef.current);
     setValue(stored);
     setIsLoaded(true);
     isInitialMount.current = false;
-  }, [key, defaultValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   // Persist to localStorage when value changes (after initial mount)
   useEffect(() => {

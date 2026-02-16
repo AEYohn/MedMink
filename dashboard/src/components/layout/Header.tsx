@@ -74,7 +74,6 @@ export function Header({ onOpenCommandPalette }: HeaderProps) {
             className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
           >
             <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-accent rounded-full" />
           </button>
 
           {notificationsOpen && (

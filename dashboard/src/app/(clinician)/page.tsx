@@ -31,8 +31,15 @@ export default function DashboardPage() {
   const [patientSearch, setPatientSearch] = useState('');
   const [patientResults, setPatientResults] = useState<Patient[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [greeting, setGreeting] = useState('');
+  const [dateStr, setDateStr] = useState('');
+  const [footerDate, setFooterDate] = useState('');
 
   useEffect(() => {
+    const today = new Date();
+    setGreeting(today.getHours() < 12 ? 'Good morning' : today.getHours() < 17 ? 'Good afternoon' : 'Good evening');
+    setDateStr(today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }));
+    setFooterDate(today.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' }));
     setRecentCases(getCaseSessions().slice(0, 6));
     setPatients(getPatients());
     setMounted(true);
@@ -53,10 +60,6 @@ export default function DashboardPage() {
     const safety = result?.safety_alerts as unknown[];
     return count + (Array.isArray(safety) ? safety.length : 0);
   }, 0);
-
-  const today = new Date();
-  const greeting = today.getHours() < 12 ? 'Good morning' : today.getHours() < 17 ? 'Good afternoon' : 'Good evening';
-  const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   return (
     <div className="p-5 lg:p-8 max-w-7xl mx-auto">
@@ -160,7 +163,7 @@ export default function DashboardPage() {
               Quick Actions
             </h2>
             <div className="grid grid-cols-2 gap-2">
-              <Link href="/case" className="group">
+              <Link href="/case?new=true" className="group">
                 <div className="relative rounded-xl border border-border bg-card p-4 hover:border-primary/30 hover:shadow-sm transition-all overflow-hidden">
                   <div className="flex items-start gap-3">
                     <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -242,7 +245,7 @@ export default function DashboardPage() {
                 <p className="text-sm font-medium text-muted-foreground">No cases yet</p>
                 <p className="text-xs text-muted-foreground/60 mt-1">Start your first analysis to see it here</p>
                 <Link
-                  href="/case"
+                  href="/case?new=true"
                   className="inline-flex items-center gap-1.5 mt-4 text-xs text-primary font-medium hover:underline underline-offset-2"
                 >
                   <Plus className="w-3 h-3" />
@@ -386,7 +389,7 @@ export default function DashboardPage() {
               <span className="text-[10px] font-mono text-muted-foreground/50 uppercase tracking-wider">MedLit Agent v1.0</span>
             </div>
             <span className="text-[10px] font-mono text-muted-foreground/30">
-              {today.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })}
+              {footerDate}
             </span>
           </div>
         </div>

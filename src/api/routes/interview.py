@@ -12,6 +12,7 @@ from src.medgemma.interview import (
     create_session,
     get_interviewer,
     get_session,
+    restore_session,
 )
 
 logger = structlog.get_logger()
@@ -28,6 +29,15 @@ class StartInterviewResponse(BaseModel):
 class TextRespondRequest(BaseModel):
     session_id: str
     text: str = Field(..., min_length=1, max_length=5000)
+    conversation_history: list[dict[str, str]] | None = None
+    phase: str | None = None
+    patient_id: str | None = None
+
+
+class CompleteRequest(BaseModel):
+    conversation_history: list[dict[str, str]] | None = None
+    phase: str | None = None
+    patient_id: str | None = None
 
 
 class InterviewRespondResponse(BaseModel):
@@ -74,6 +84,11 @@ async def start_interview():
 async def respond_text(request: TextRespondRequest):
     """Process a text response from the patient."""
     session = get_session(request.session_id)
+    if not session and request.conversation_history:
+        session = restore_session(
+            request.session_id, request.conversation_history,
+            request.phase, request.patient_id,
+        )
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
@@ -98,9 +113,15 @@ async def respond_text(request: TextRespondRequest):
 async def respond_audio(
     session_id: str = Form(...),
     audio: UploadFile = File(...),
+    conversation_history: str | None = Form(default=None),
+    phase: str | None = Form(default=None),
+    patient_id: str | None = Form(default=None),
 ):
     """Process an audio response — transcribe then feed to interview."""
     session = get_session(session_id)
+    if not session and conversation_history:
+        history = json.loads(conversation_history)
+        session = restore_session(session_id, history, phase, patient_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
@@ -132,9 +153,15 @@ async def respond_stream(
     session_id: str = Form(...),
     text: str = Form(default=""),
     audio: UploadFile | None = File(default=None),
+    conversation_history: str | None = Form(default=None),
+    phase: str | None = Form(default=None),
+    patient_id: str | None = Form(default=None),
 ):
     """SSE stream version: transcribing → thinking → responding."""
     session = get_session(session_id)
+    if not session and conversation_history:
+        history = json.loads(conversation_history)
+        session = restore_session(session_id, history, phase, patient_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
@@ -172,9 +199,14 @@ async def respond_stream(
 
 
 @router.post("/{session_id}/complete", response_model=TriageResponse)
-async def complete_interview(session_id: str):
+async def complete_interview(session_id: str, body: CompleteRequest | None = None):
     """Force-complete an interview and generate triage assessment."""
     session = get_session(session_id)
+    if not session and body and body.conversation_history:
+        session = restore_session(
+            session_id, body.conversation_history,
+            body.phase, body.patient_id,
+        )
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 

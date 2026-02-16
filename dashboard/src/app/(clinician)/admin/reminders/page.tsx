@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Bell,
   Phone,
@@ -43,83 +43,89 @@ interface RecentReminder {
   message: string;
 }
 
-const mockCampaigns: ReminderCampaign[] = [
-  {
-    id: '1',
-    name: 'Appointment Reminders',
-    type: 'appointment',
-    channel: 'sms',
-    status: 'active',
-    sent: 156,
-    delivered: 152,
-    responded: 89,
-    lastRun: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    nextRun: new Date(Date.now() + 22 * 60 * 60 * 1000),
-  },
-  {
-    id: '2',
-    name: 'Annual Checkup Recall',
-    type: 'recall',
-    channel: 'call',
-    status: 'active',
-    sent: 45,
-    delivered: 38,
-    responded: 22,
-    lastRun: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    nextRun: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: '3',
-    name: 'Lab Results Ready',
-    type: 'custom',
-    channel: 'email',
-    status: 'paused',
-    sent: 23,
-    delivered: 23,
-    responded: 15,
-    lastRun: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    nextRun: null,
-  },
-];
+function createMockCampaigns(): ReminderCampaign[] {
+  const now = Date.now();
+  return [
+    {
+      id: '1',
+      name: 'Appointment Reminders',
+      type: 'appointment',
+      channel: 'sms',
+      status: 'active',
+      sent: 156,
+      delivered: 152,
+      responded: 89,
+      lastRun: new Date(now - 2 * 60 * 60 * 1000),
+      nextRun: new Date(now + 22 * 60 * 60 * 1000),
+    },
+    {
+      id: '2',
+      name: 'Annual Checkup Recall',
+      type: 'recall',
+      channel: 'call',
+      status: 'active',
+      sent: 45,
+      delivered: 38,
+      responded: 22,
+      lastRun: new Date(now - 24 * 60 * 60 * 1000),
+      nextRun: new Date(now + 6 * 24 * 60 * 60 * 1000),
+    },
+    {
+      id: '3',
+      name: 'Lab Results Ready',
+      type: 'custom',
+      channel: 'email',
+      status: 'paused',
+      sent: 23,
+      delivered: 23,
+      responded: 15,
+      lastRun: new Date(now - 3 * 24 * 60 * 60 * 1000),
+      nextRun: null,
+    },
+  ];
+}
 
-const mockRecentReminders: RecentReminder[] = [
-  {
-    id: '1',
-    patientName: 'John Smith',
-    phone: '+1 (555) 123-4567',
-    channel: 'sms',
-    status: 'delivered',
-    sentAt: new Date(Date.now() - 30 * 60 * 1000),
-    message: 'Reminder: Your appointment with Dr. Johnson is tomorrow at 10:00 AM.',
-  },
-  {
-    id: '2',
-    patientName: 'Maria Garcia',
-    phone: '+1 (555) 234-5678',
-    channel: 'sms',
-    status: 'responded',
-    sentAt: new Date(Date.now() - 45 * 60 * 1000),
-    message: 'Reminder: Your appointment with Dr. Johnson is tomorrow at 2:30 PM.',
-  },
-  {
-    id: '3',
-    patientName: 'Robert Chen',
-    phone: '+1 (555) 345-6789',
-    channel: 'call',
-    status: 'failed',
-    sentAt: new Date(Date.now() - 60 * 60 * 1000),
-    message: 'Appointment reminder call',
-  },
-  {
-    id: '4',
-    patientName: 'Emily Brown',
-    phone: '+1 (555) 456-7890',
-    channel: 'email',
-    status: 'sent',
-    sentAt: new Date(Date.now() - 90 * 60 * 1000),
-    message: 'Your lab results are ready for review.',
-  },
-];
+function createMockReminders(): RecentReminder[] {
+  const now = Date.now();
+  return [
+    {
+      id: '1',
+      patientName: 'John Smith',
+      phone: '+1 (555) 123-4567',
+      channel: 'sms',
+      status: 'delivered',
+      sentAt: new Date(now - 30 * 60 * 1000),
+      message: 'Reminder: Your appointment with Dr. Johnson is tomorrow at 10:00 AM.',
+    },
+    {
+      id: '2',
+      patientName: 'Maria Garcia',
+      phone: '+1 (555) 234-5678',
+      channel: 'sms',
+      status: 'responded',
+      sentAt: new Date(now - 45 * 60 * 1000),
+      message: 'Reminder: Your appointment with Dr. Johnson is tomorrow at 2:30 PM.',
+    },
+    {
+      id: '3',
+      patientName: 'Robert Chen',
+      phone: '+1 (555) 345-6789',
+      channel: 'call',
+      status: 'failed',
+      sentAt: new Date(now - 60 * 60 * 1000),
+      message: 'Appointment reminder call',
+    },
+    {
+      id: '4',
+      patientName: 'Emily Brown',
+      phone: '+1 (555) 456-7890',
+      channel: 'email',
+      status: 'sent',
+      sentAt: new Date(now - 90 * 60 * 1000),
+      message: 'Your lab results are ready for review.',
+    },
+  ];
+}
 
 const channelConfig = {
   sms: { icon: MessageSquare, color: 'text-blue-500 bg-blue-100 dark:bg-blue-900/30' },
@@ -147,8 +153,13 @@ const statusConfig = {
 };
 
 export default function RemindersPage() {
-  const [campaigns] = useState<ReminderCampaign[]>(mockCampaigns);
-  const [recentReminders] = useState<RecentReminder[]>(mockRecentReminders);
+  const [campaigns, setCampaigns] = useState<ReminderCampaign[]>([]);
+  const [recentReminders, setRecentReminders] = useState<RecentReminder[]>([]);
+
+  useEffect(() => {
+    setCampaigns(createMockCampaigns());
+    setRecentReminders(createMockReminders());
+  }, []);
 
   const totalSent = campaigns.reduce((sum, c) => sum + c.sent, 0);
   const totalDelivered = campaigns.reduce((sum, c) => sum + c.delivered, 0);
@@ -201,7 +212,7 @@ export default function RemindersPage() {
               <p className="text-2xl font-bold text-surface-900 dark:text-white">
                 {totalDelivered}
                 <span className="text-sm font-normal text-surface-400 ml-1">
-                  ({((totalDelivered / totalSent) * 100).toFixed(0)}%)
+                  ({totalSent > 0 ? ((totalDelivered / totalSent) * 100).toFixed(0) : 0}%)
                 </span>
               </p>
             </div>
@@ -215,7 +226,7 @@ export default function RemindersPage() {
             <div>
               <p className="text-sm text-surface-500 dark:text-surface-400">Response Rate</p>
               <p className="text-2xl font-bold text-surface-900 dark:text-white">
-                {((totalResponded / totalDelivered) * 100).toFixed(0)}%
+                {totalDelivered > 0 ? ((totalResponded / totalDelivered) * 100).toFixed(0) : 0}%
               </p>
             </div>
           </div>

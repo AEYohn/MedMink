@@ -225,6 +225,19 @@ export default function CaseAnalysisPage() {
   // Case session state
   const session = useCaseSession();
 
+  const handleTabChange = useCallback((tab: string) => {
+    setActiveTab(tab);
+    session.updateUIState({ activeTab: tab });
+  }, [session]);
+
+  const handleChatToggle = useCallback(() => {
+    setChatOpen(prev => {
+      const next = !prev;
+      session.updateUIState({ chatOpen: next });
+      return next;
+    });
+  }, [session]);
+
   // Sync active patient context into local patientId
   useEffect(() => {
     if (activePatientId && !patientId) {
@@ -248,6 +261,17 @@ export default function CaseAnalysisPage() {
     if (!session.isLoaded) return;
 
     const params = new URLSearchParams(window.location.search);
+
+    // New case requested — clear session and start fresh
+    if (params.get('new') === 'true') {
+      session.clearCurrentSession();
+      setCaseText('');
+      setPatientId('');
+      resetAnalysisState();
+      window.history.replaceState({}, '', '/case');
+      return;
+    }
+
     const urlSessionId = params.get('session');
     if (urlSessionId) {
       handleLoadSession(urlSessionId);
@@ -267,6 +291,8 @@ export default function CaseAnalysisPage() {
         if (r.suggested_followups?.length) setSuggestedQuestions(r.suggested_followups);
       }
       if (s.followUpMessages?.length) setFollowUpMessages(s.followUpMessages);
+      if (s.activeTab) setActiveTab(s.activeTab);
+      if (s.chatOpen) setChatOpen(s.chatOpen);
     }
   }, [session.isLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -405,9 +431,11 @@ export default function CaseAnalysisPage() {
     setOverrides(createEmptyOverrides());
   };
 
+  const MIN_CASE_LENGTH = 50;
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!caseText.trim() || isLoading) return;
+    if (caseText.trim().length < MIN_CASE_LENGTH || isLoading) return;
     setIsLoading(true);
     resetAnalysisState();
     const title = caseText.trim().slice(0, 60).replace(/\n/g, ' ') + '...';
@@ -571,7 +599,15 @@ export default function CaseAnalysisPage() {
 
   const handleLabImportToCase = useCallback((labText: string) => {
     setCaseText(prev => prev + '\n\nLab results: ' + labText);
-  }, []);
+    // If we have an existing analysis, trigger reassessment with the new lab data
+    if (result) {
+      const findings: NewFindings = {
+        category: 'labs',
+        text: labText,
+      };
+      handleAddFindings(findings);
+    }
+  }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDictationTranscript = useCallback((text: string) => {
     setCaseText(prev => prev ? prev + '\n' + text : text);
@@ -584,11 +620,19 @@ export default function CaseAnalysisPage() {
   };
 
   // Count unacknowledged safety alerts for sidebar badge
-  const safetyAlertCount = result?.medication_review
+  const SERIOUS_KEYWORDS_RE = /contraindicated|avoid|risk|caution|dangerous|toxic|fatal|severe/i;
+  const medReviewAlertCount = result?.medication_review
     ? (result.medication_review.renal_flags?.length || 0) +
       (result.medication_review.interactions?.length || 0) +
       (result.medication_review.duplicate_therapy?.length || 0)
     : 0;
+  const treatmentAlertCount = result?.treatment_options
+    ? result.treatment_options.filter(t => t.verdict === 'not_recommended' && t.cons?.length).length +
+      result.treatment_options.filter(t => t.verdict === 'recommended').reduce(
+        (acc, t) => acc + (t.cons?.filter(c => SERIOUS_KEYWORDS_RE.test(c)).length || 0), 0
+      )
+    : 0;
+  const safetyAlertCount = medReviewAlertCount + treatmentAlertCount;
   const unackedAlerts = safetyAlertCount - Object.values(overrides.safetyAcknowledgments).filter(a => a.acknowledged).length;
 
   return (
@@ -664,10 +708,15 @@ export default function CaseAnalysisPage() {
               <Textarea
                 value={caseText}
                 onChange={(e) => setCaseText(e.target.value)}
-                placeholder="Paste your clinical case here..."
+                placeholder="Paste your clinical case here (at least 50 characters)..."
                 className="min-h-[140px] text-sm mb-3"
                 disabled={isLoading}
               />
+              {caseText.trim().length > 0 && caseText.trim().length < MIN_CASE_LENGTH && (
+                <p className="text-xs text-amber-500 mb-3 -mt-2">
+                  Add more clinical detail — {MIN_CASE_LENGTH - caseText.trim().length} more characters needed
+                </p>
+              )}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Button type="button" variant="outline" size="sm" onClick={loadExample} disabled={isLoading}>
@@ -687,7 +736,7 @@ export default function CaseAnalysisPage() {
                     className="h-9 w-40 rounded-md border border-input bg-background px-2 text-xs shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     disabled={isLoading}
                   />
-                  <Button type="submit" disabled={!caseText.trim() || isLoading}>
+                  <Button type="submit" disabled={caseText.trim().length < MIN_CASE_LENGTH || isLoading}>
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Sparkles className="w-4 h-4 mr-1" />}
                     {isLoading ? 'Analyzing...' : 'Analyze Case'}
                   </Button>
@@ -791,11 +840,11 @@ export default function CaseAnalysisPage() {
             {/* Safety Alert Banner */}
             <SafetyAlertBanner
               count={unackedAlerts}
-              onReview={() => setActiveTab('safety')}
+              onReview={() => handleTabChange('safety')}
             />
 
             {/* Tabbed Interface */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab} onValueChange={handleTabChange}>
               <TabsList className="w-full justify-start overflow-x-auto">
                 <TabsTrigger value="assessment" className="gap-1.5">
                   <Stethoscope className="w-3.5 h-3.5" />
@@ -904,6 +953,7 @@ export default function CaseAnalysisPage() {
                     <TreatmentComparisonChart
                       treatments={result.treatment_options.map(t => ({
                         name: t.name, verdict: t.verdict, confidence: t.confidence,
+                        evidence_grade: t.evidence_grade,
                       }))}
                     />
                     <EvidenceRadar />
@@ -928,6 +978,11 @@ export default function CaseAnalysisPage() {
                   sex={result.parsed_case?.patient?.sex || ''}
                   overrides={overrides}
                   onOverridesChange={handleOverridesChange}
+                  treatmentOptions={result.treatment_options.map(t => ({
+                    name: t.name,
+                    verdict: t.verdict,
+                    cons: t.cons,
+                  }))}
                 />
               </TabsContent>
 
@@ -1007,7 +1062,7 @@ export default function CaseAnalysisPage() {
             {/* Floating Follow-Up Chat Drawer */}
             <FollowUpChatDrawer
               isOpen={chatOpen}
-              onToggle={() => setChatOpen(prev => !prev)}
+              onToggle={handleChatToggle}
               followUpMessages={followUpMessages}
               followUpInput={followUpInput}
               setFollowUpInput={setFollowUpInput}

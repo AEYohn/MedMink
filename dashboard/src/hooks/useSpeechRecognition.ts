@@ -78,6 +78,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isManualStopRef = useRef(false);
+  const isListeningRef = useRef(false);
 
   // Check browser support on mount
   useEffect(() => {
@@ -130,7 +131,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
             setIsListening(false);
             break;
           case 'network':
-            setError('Network error occurred. Please check your connection.');
+            setError('Speech recognition unavailable — try "Record Audio" mode instead.');
             break;
           case 'aborted':
             // Ignore aborted - this happens on manual stop
@@ -142,7 +143,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
 
       recognition.onend = () => {
         // Auto-restart if not manually stopped and still supposed to be listening
-        if (!isManualStopRef.current && isListening) {
+        if (!isManualStopRef.current && isListeningRef.current) {
           restartTimeoutRef.current = setTimeout(() => {
             try {
               recognition.start();
@@ -152,6 +153,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
           }, 100);
         } else {
           setIsListening(false);
+          isListeningRef.current = false;
         }
       };
 
@@ -174,13 +176,6 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     };
   }, []);
 
-  // Update listening state in ref for onend callback
-  useEffect(() => {
-    if (!isListening) {
-      isManualStopRef.current = true;
-    }
-  }, [isListening]);
-
   const start = useCallback(() => {
     if (!recognitionRef.current) {
       setError('Speech recognition not supported in this browser');
@@ -190,6 +185,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
     try {
       setError(null);
       isManualStopRef.current = false;
+      isListeningRef.current = true;
       recognitionRef.current.start();
     } catch (e) {
       // Already started or other error
@@ -200,6 +196,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
   const stop = useCallback(() => {
     if (recognitionRef.current) {
       isManualStopRef.current = true;
+      isListeningRef.current = false;
       recognitionRef.current.stop();
       setIsListening(false);
       setInterimTranscript('');

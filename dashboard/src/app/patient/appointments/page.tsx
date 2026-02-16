@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Calendar,
   Clock,
@@ -29,30 +29,33 @@ interface Appointment {
   notes?: string;
 }
 
-const mockAppointments: Appointment[] = [
-  {
-    id: '1',
-    date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-    time: '10:00 AM',
-    provider: 'Dr. Sarah Johnson',
-    specialty: 'Primary Care',
-    type: 'in-person',
-    location: '123 Medical Center Dr',
-    status: 'confirmed',
-    notes: 'Annual physical exam',
-  },
-  {
-    id: '2',
-    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    time: '2:30 PM',
-    provider: 'Dr. Michael Chen',
-    specialty: 'Cardiology',
-    type: 'telehealth',
-    location: 'Video Call',
-    status: 'pending',
-    notes: 'Follow-up on test results',
-  },
-];
+function createMockAppointments(): Appointment[] {
+  const now = Date.now();
+  return [
+    {
+      id: '1',
+      date: new Date(now + 2 * 24 * 60 * 60 * 1000),
+      time: '10:00 AM',
+      provider: 'Dr. Sarah Johnson',
+      specialty: 'Primary Care',
+      type: 'in-person',
+      location: '123 Medical Center Dr',
+      status: 'confirmed',
+      notes: 'Annual physical exam',
+    },
+    {
+      id: '2',
+      date: new Date(now + 7 * 24 * 60 * 60 * 1000),
+      time: '2:30 PM',
+      provider: 'Dr. Michael Chen',
+      specialty: 'Cardiology',
+      type: 'telehealth',
+      location: 'Video Call',
+      status: 'pending',
+      notes: 'Follow-up on test results',
+    },
+  ];
+}
 
 const statusConfig = {
   confirmed: {
@@ -73,20 +76,28 @@ const statusConfig = {
 };
 
 export default function AppointmentsPage() {
-  const [appointments] = useState<Appointment[]>(mockAppointments);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [currentMonth, setCurrentMonth] = useState<Date | null>(null);
+  const [today, setToday] = useState<Date | null>(null);
 
-  const daysInMonth = new Date(
+  useEffect(() => {
+    const now = new Date();
+    setAppointments(createMockAppointments());
+    setCurrentMonth(now);
+    setToday(now);
+  }, []);
+
+  const daysInMonth = currentMonth ? new Date(
     currentMonth.getFullYear(),
     currentMonth.getMonth() + 1,
     0
-  ).getDate();
+  ).getDate() : 0;
 
-  const firstDayOfMonth = new Date(
+  const firstDayOfMonth = currentMonth ? new Date(
     currentMonth.getFullYear(),
     currentMonth.getMonth(),
     1
-  ).getDay();
+  ).getDay() : 0;
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -94,10 +105,14 @@ export default function AppointmentsPage() {
   ];
 
   const navigateMonth = (direction: number) => {
-    setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() + direction)));
+    if (!currentMonth) return;
+    const newMonth = new Date(currentMonth);
+    newMonth.setMonth(newMonth.getMonth() + direction);
+    setCurrentMonth(newMonth);
   };
 
   const getAppointmentsForDay = (day: number) => {
+    if (!currentMonth) return [];
     return appointments.filter((apt) => {
       const aptDate = new Date(apt.date);
       return (
@@ -108,9 +123,9 @@ export default function AppointmentsPage() {
     });
   };
 
-  const upcomingAppointments = appointments
-    .filter((apt) => apt.date >= new Date() && apt.status !== 'cancelled')
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
+  const upcomingAppointments = today ? appointments
+    .filter((apt) => apt.date >= today && apt.status !== 'cancelled')
+    .sort((a, b) => a.date.getTime() - b.date.getTime()) : [];
 
   return (
     <div className="space-y-6">
@@ -142,7 +157,7 @@ export default function AppointmentsPage() {
         <div className="lg:col-span-2 card p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-surface-900 dark:text-white">
-              {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+              {currentMonth ? `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}` : '\u00A0'}
             </h2>
             <div className="flex items-center gap-2">
               <button
@@ -177,10 +192,11 @@ export default function AppointmentsPage() {
             {Array.from({ length: daysInMonth }).map((_, idx) => {
               const day = idx + 1;
               const dayAppointments = getAppointmentsForDay(day);
-              const isToday =
-                new Date().getDate() === day &&
-                new Date().getMonth() === currentMonth.getMonth() &&
-                new Date().getFullYear() === currentMonth.getFullYear();
+              const isToday = today !== null &&
+                today.getDate() === day &&
+                currentMonth !== null &&
+                today.getMonth() === currentMonth.getMonth() &&
+                today.getFullYear() === currentMonth.getFullYear();
 
               return (
                 <div

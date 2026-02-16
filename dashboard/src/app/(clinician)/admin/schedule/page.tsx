@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Calendar,
   Clock,
@@ -36,74 +36,77 @@ interface Appointment {
   notes?: string;
 }
 
-const mockAppointments: Appointment[] = [
-  {
-    id: '1',
-    patientName: 'John Smith',
-    patientPhone: '+1 (555) 123-4567',
-    patientEmail: 'john.smith@email.com',
-    date: new Date(),
-    time: '09:00',
-    duration: 30,
-    provider: 'Dr. Sarah Johnson',
-    type: 'in-person',
-    status: 'checked-in',
-    reason: 'Annual physical',
-  },
-  {
-    id: '2',
-    patientName: 'Maria Garcia',
-    patientPhone: '+1 (555) 234-5678',
-    patientEmail: 'maria.garcia@email.com',
-    date: new Date(),
-    time: '09:30',
-    duration: 30,
-    provider: 'Dr. Sarah Johnson',
-    type: 'telehealth',
-    status: 'confirmed',
-    reason: 'Follow-up consultation',
-  },
-  {
-    id: '3',
-    patientName: 'Robert Chen',
-    patientPhone: '+1 (555) 345-6789',
-    patientEmail: 'robert.chen@email.com',
-    date: new Date(),
-    time: '10:00',
-    duration: 45,
-    provider: 'Dr. Sarah Johnson',
-    type: 'in-person',
-    status: 'pending',
-    reason: 'New patient intake',
-    notes: 'Referral from Dr. Williams',
-  },
-  {
-    id: '4',
-    patientName: 'Emily Brown',
-    patientPhone: '+1 (555) 456-7890',
-    patientEmail: 'emily.brown@email.com',
-    date: new Date(),
-    time: '11:00',
-    duration: 30,
-    provider: 'Dr. Sarah Johnson',
-    type: 'phone',
-    status: 'confirmed',
-    reason: 'Lab results review',
-  },
-  {
-    id: '5',
-    patientName: 'Michael Johnson',
-    patientPhone: '+1 (555) 567-8901',
-    patientEmail: 'michael.j@email.com',
-    date: new Date(),
-    time: '14:00',
-    duration: 30,
-    provider: 'Dr. Sarah Johnson',
-    type: 'in-person',
-    status: 'confirmed',
-    reason: 'Blood pressure check',
-  },
-];
+function createMockAppointments(): Appointment[] {
+  const today = new Date();
+  return [
+    {
+      id: '1',
+      patientName: 'John Smith',
+      patientPhone: '+1 (555) 123-4567',
+      patientEmail: 'john.smith@email.com',
+      date: today,
+      time: '09:00',
+      duration: 30,
+      provider: 'Dr. Sarah Johnson',
+      type: 'in-person',
+      status: 'checked-in',
+      reason: 'Annual physical',
+    },
+    {
+      id: '2',
+      patientName: 'Maria Garcia',
+      patientPhone: '+1 (555) 234-5678',
+      patientEmail: 'maria.garcia@email.com',
+      date: today,
+      time: '09:30',
+      duration: 30,
+      provider: 'Dr. Sarah Johnson',
+      type: 'telehealth',
+      status: 'confirmed',
+      reason: 'Follow-up consultation',
+    },
+    {
+      id: '3',
+      patientName: 'Robert Chen',
+      patientPhone: '+1 (555) 345-6789',
+      patientEmail: 'robert.chen@email.com',
+      date: today,
+      time: '10:00',
+      duration: 45,
+      provider: 'Dr. Sarah Johnson',
+      type: 'in-person',
+      status: 'pending',
+      reason: 'New patient intake',
+      notes: 'Referral from Dr. Williams',
+    },
+    {
+      id: '4',
+      patientName: 'Emily Brown',
+      patientPhone: '+1 (555) 456-7890',
+      patientEmail: 'emily.brown@email.com',
+      date: today,
+      time: '11:00',
+      duration: 30,
+      provider: 'Dr. Sarah Johnson',
+      type: 'phone',
+      status: 'confirmed',
+      reason: 'Lab results review',
+    },
+    {
+      id: '5',
+      patientName: 'Michael Johnson',
+      patientPhone: '+1 (555) 567-8901',
+      patientEmail: 'michael.j@email.com',
+      date: today,
+      time: '14:00',
+      duration: 30,
+      provider: 'Dr. Sarah Johnson',
+      type: 'in-person',
+      status: 'confirmed',
+      reason: 'Blood pressure check',
+    },
+  ];
+}
 
 const statusConfig = {
   confirmed: {
@@ -145,23 +148,31 @@ const timeSlots = [
 ];
 
 export default function SchedulePage() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [appointments] = useState<Appointment[]>(mockAppointments);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [view, setView] = useState<'day' | 'week'>('day');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setSelectedDate(new Date());
+    setAppointments(createMockAppointments());
+    setMounted(true);
+  }, []);
 
   const navigateDate = (days: number) => {
+    if (!selectedDate) return;
     const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() + days);
     setSelectedDate(newDate);
   };
 
-  const todayAppointments = appointments.filter(
+  const todayAppointments = selectedDate ? appointments.filter(
     (apt) =>
       apt.date.toDateString() === selectedDate.toDateString() &&
       apt.status !== 'cancelled' &&
       apt.patientName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ) : [];
 
   const getAppointmentForSlot = (time: string) => {
     return todayAppointments.find((apt) => apt.time === time);
@@ -184,12 +195,12 @@ export default function SchedulePage() {
             Schedule
           </h1>
           <p className="text-surface-500 dark:text-surface-400">
-            {selectedDate.toLocaleDateString('en-US', {
+            {selectedDate ? selectedDate.toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
               day: 'numeric',
-            })}
+            }) : '\u00A0'}
           </p>
         </div>
         <div className="flex items-center gap-3">

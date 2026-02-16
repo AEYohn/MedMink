@@ -4,7 +4,12 @@ Uses DSPy to classify queries and route to the optimal model.
 """
 
 from dataclasses import dataclass
-from enum import StrEnum
+try:
+    from enum import StrEnum
+except ImportError:
+    import enum
+    class StrEnum(str, enum.Enum):
+        pass
 from typing import Any
 
 import dspy

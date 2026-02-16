@@ -1,7 +1,12 @@
 """Pydantic models for the research synthesizer platform."""
 
 from datetime import date, datetime
-from enum import StrEnum
+try:
+    from enum import StrEnum
+except ImportError:
+    import enum
+    class StrEnum(str, enum.Enum):
+        pass
 from typing import Any
 from uuid import uuid4
 

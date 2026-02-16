@@ -6,7 +6,12 @@ against anchor papers with known scores to produce calibrated ratings.
 """
 
 from dataclasses import dataclass, field
-from enum import StrEnum
+try:
+    from enum import StrEnum
+except ImportError:
+    import enum
+    class StrEnum(str, enum.Enum):
+        pass
 
 import structlog
 

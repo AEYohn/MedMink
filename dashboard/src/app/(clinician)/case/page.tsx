@@ -286,6 +286,10 @@ export default function CaseAnalysisPage() {
     setIsReleasingSummary(false);
   }, [previewSummary, existingSummary]);
 
+  const handlePlanChange = useCallback((plan: DischargePlanData | null) => {
+    dischargePlanRef.current = plan;
+  }, []);
+
   const handleOverridesChange = useCallback((newOverrides: ClinicianOverrides) => {
     setOverrides(newOverrides);
     session.updateOverrides(newOverrides);
@@ -1037,15 +1041,17 @@ export default function CaseAnalysisPage() {
                     topRecommendation={result.top_recommendation}
                     overrides={overrides}
                     onOverridesChange={handleOverridesChange}
-                    onPlanChange={useCallback((plan: DischargePlanData | null) => {
-                      dischargePlanRef.current = plan;
-                    }, [])}
+                    onPlanChange={handlePlanChange}
                   />
                   <ReferralTab
                     parsedCase={result.parsed_case as unknown as Record<string, unknown>}
                     treatmentOptions={result.treatment_options as unknown as Array<Record<string, unknown>>}
                     acuteManagement={(result.acute_management || {}) as Record<string, unknown>}
                     suggestedConsults={result.acute_management?.consults || []}
+                    caseSessionId={session.currentSession?.id}
+                    clinicalPearls={result.clinical_pearls}
+                    differentialDiagnosis={result.differential_diagnosis as unknown as Record<string, unknown> | null}
+                    riskScores={result.clinical_risk_scores as unknown as Record<string, unknown> | null}
                   />
 
                   {/* Release to Patient */}

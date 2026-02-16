@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { createDocument } from '@/lib/document-storage';
 import {
@@ -13,6 +13,10 @@ import {
   FileText,
   ArrowRightLeft,
   Save,
+  Link as LinkIcon,
+  ExternalLink,
+  Clock,
+  Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,8 +27,17 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { getApiUrl } from '@/lib/api-url';
+import type { ReferralSummary, ReferralStatus } from '@/types/referral';
 
 interface ReferralNote {
   specialty: string;
@@ -63,19 +76,43 @@ interface ReferralTabProps {
   treatmentOptions: Array<Record<string, unknown>>;
   acuteManagement: Record<string, unknown>;
   suggestedConsults: string[];
+  caseSessionId?: string;
+  clinicalPearls?: string[];
+  differentialDiagnosis?: Record<string, unknown> | null;
+  riskScores?: Record<string, unknown> | null;
 }
 
-const urgencyColor = {
+const urgencyColor: Record<string, string> = {
   emergent: 'bg-red-100 text-red-800 border-red-300',
   urgent: 'bg-amber-100 text-amber-800 border-amber-300',
   routine: 'bg-green-100 text-green-800 border-green-300',
 };
+
+const statusColor: Record<ReferralStatus, string> = {
+  draft: 'bg-gray-100 text-gray-600',
+  sent: 'bg-blue-100 text-blue-700',
+  viewed: 'bg-purple-100 text-purple-700',
+  responded: 'bg-green-100 text-green-700',
+  completed: 'bg-gray-100 text-gray-500',
+};
+
+type ExpiryOption = { label: string; hours: number | null };
+const EXPIRY_OPTIONS: ExpiryOption[] = [
+  { label: 'No expiry', hours: null },
+  { label: '24 hours', hours: 24 },
+  { label: '7 days', hours: 168 },
+  { label: '30 days', hours: 720 },
+];
 
 export function ReferralTab({
   parsedCase,
   treatmentOptions,
   acuteManagement,
   suggestedConsults,
+  caseSessionId,
+  clinicalPearls,
+  differentialDiagnosis,
+  riskScores,
 }: ReferralTabProps) {
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
   const [customSpecialty, setCustomSpecialty] = useState('');
@@ -87,7 +124,39 @@ export function ReferralTab({
   const [copiedReferral, setCopiedReferral] = useState(false);
   const [copiedHandoff, setCopiedHandoff] = useState(false);
 
+  // Send flow state
+  const [showSendDialog, setShowSendDialog] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [selectedExpiry, setSelectedExpiry] = useState<ExpiryOption>(EXPIRY_OPTIONS[0]);
+  const [shareableLink, setShareableLink] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [sentReferrals, setSentReferrals] = useState<ReferralSummary[]>([]);
+  const [showSentList, setShowSentList] = useState(false);
+
   const specialty = customSpecialty || selectedSpecialty;
+
+  // Load sent referrals for this case
+  const loadSentReferrals = useCallback(async () => {
+    const apiUrl = getApiUrl();
+    if (!apiUrl) return;
+    try {
+      const response = await fetch(`${apiUrl}/api/case/referrals/sent`);
+      if (response.ok) {
+        const all: ReferralSummary[] = await response.json();
+        if (caseSessionId) {
+          setSentReferrals(all.filter(r => r.case_session_id === caseSessionId));
+        } else {
+          setSentReferrals(all);
+        }
+      }
+    } catch {
+      // Silently ignore
+    }
+  }, [caseSessionId]);
+
+  useEffect(() => {
+    loadSentReferrals();
+  }, [loadSentReferrals]);
 
   const handleGenerateReferral = async () => {
     if (!specialty) return;
@@ -108,12 +177,60 @@ export function ReferralTab({
       if (response.ok) {
         const data = await response.json();
         setReferral(data);
+        setShareableLink(null);
       }
     } catch (err) {
       console.error('Referral generation failed:', err);
     } finally {
       setIsLoadingReferral(false);
     }
+  };
+
+  const handleSendReferral = async () => {
+    if (!referral || !caseSessionId) return;
+    setIsSending(true);
+    try {
+      const apiUrl = getApiUrl();
+      if (!apiUrl) return;
+      const response = await fetch(`${apiUrl}/api/case/referral/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          case_session_id: caseSessionId,
+          patient_id: '',
+          referral_note: referral,
+          case_snapshot: {
+            parsed_case: parsedCase,
+            treatment_options: treatmentOptions,
+            acute_management: acuteManagement,
+            clinical_pearls: clinicalPearls || [],
+            differential_diagnosis: differentialDiagnosis || null,
+            risk_scores: riskScores || null,
+          },
+          expires_in_hours: selectedExpiry.hours,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const baseUrl = window.location.origin;
+        setShareableLink(`${baseUrl}/shared/referral/${data.token}`);
+        setShowSendDialog(false);
+        toast.success('Referral sent successfully');
+        loadSentReferrals();
+      }
+    } catch (err) {
+      console.error('Failed to send referral:', err);
+      toast.error('Failed to send referral');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const copyShareableLink = () => {
+    if (!shareableLink) return;
+    navigator.clipboard.writeText(shareableLink);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
   };
 
   const handleGenerateHandoff = async () => {
@@ -284,10 +401,127 @@ export function ReferralTab({
                   </ol>
                 </div>
               )}
+
+              {/* Send to Specialist Button + Shareable Link */}
+              <div className="pt-2 border-t space-y-2">
+                {!shareableLink ? (
+                  <Button
+                    onClick={() => setShowSendDialog(true)}
+                    disabled={!caseSessionId}
+                    size="sm"
+                    className="w-full"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                    Send to Specialist
+                  </Button>
+                ) : (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-2">
+                    <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Referral Sent
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-white border rounded px-2 py-1.5 text-xs text-muted-foreground truncate font-mono">
+                        {shareableLink}
+                      </div>
+                      <Button size="sm" variant="outline" onClick={copyShareableLink} className="shrink-0">
+                        {copiedLink ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> : <LinkIcon className="w-3.5 h-3.5" />}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         )}
+
+        {/* Sent Referrals for this case */}
+        {sentReferrals.length > 0 && (
+          <Collapsible open={showSentList} onOpenChange={setShowSentList}>
+            <CollapsibleTrigger className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground w-full">
+              <ChevronDown className={cn('w-3 h-3 transition-transform', showSentList && 'rotate-180')} />
+              Sent Referrals ({sentReferrals.length})
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="mt-2 space-y-1.5">
+                {sentReferrals.map((ref) => (
+                  <div
+                    key={ref.referral_id}
+                    className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Badge className={cn('text-[10px]', urgencyColor[ref.urgency])}>
+                        {ref.urgency}
+                      </Badge>
+                      <span className="text-xs font-medium">{ref.specialty}</span>
+                      <span className="text-[10px] text-muted-foreground truncate max-w-[200px]">
+                        {ref.clinical_question}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={cn('text-[10px]', statusColor[ref.status as ReferralStatus])}>
+                        {ref.status}
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(ref.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
       </div>
+
+      {/* Send Referral Dialog */}
+      <Dialog open={showSendDialog} onOpenChange={setShowSendDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Referral to Specialist</DialogTitle>
+            <DialogDescription>
+              Create a shareable link for this {referral?.specialty} referral. The specialist will see
+              the full case data and referral note.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground block mb-2">Link Expiry</label>
+              <div className="flex gap-2">
+                {EXPIRY_OPTIONS.map((opt) => (
+                  <Button
+                    key={opt.label}
+                    size="sm"
+                    variant={selectedExpiry.label === opt.label ? 'default' : 'outline'}
+                    onClick={() => setSelectedExpiry(opt)}
+                    className="text-xs"
+                  >
+                    {opt.hours ? <Clock className="w-3 h-3 mr-1" /> : null}
+                    {opt.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-3">
+              <p className="text-xs text-muted-foreground">
+                The specialist will be able to view:
+              </p>
+              <ul className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                <li className="flex items-center gap-1"><Eye className="w-3 h-3" /> Patient case summary</li>
+                <li className="flex items-center gap-1"><Eye className="w-3 h-3" /> Treatment plan &amp; acute management</li>
+                <li className="flex items-center gap-1"><Eye className="w-3 h-3" /> Referral note with clinical question</li>
+                <li className="flex items-center gap-1"><Eye className="w-3 h-3" /> Differential diagnosis &amp; risk scores</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSendDialog(false)}>Cancel</Button>
+            <Button onClick={handleSendReferral} disabled={isSending}>
+              {isSending ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1.5" />}
+              Send Referral
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Handoff Section */}
       <div className="space-y-3">

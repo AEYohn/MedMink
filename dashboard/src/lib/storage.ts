@@ -245,6 +245,8 @@ export const STORAGE_KEYS = {
   CASE_SESSIONS: 'case-sessions',
   CURRENT_CASE_SESSION: 'current-case-session',
   RELEASED_SUMMARIES: 'released-summaries',
+  REFERRAL_NOTIFICATIONS: 'referral-notifications',
+  LAST_REFERRAL_CHECK: 'last-referral-check',
 } as const;
 
 // Conversation helpers
@@ -390,4 +392,48 @@ export function revokeReleasedSummary(id: string): void {
     summaries[index] = { ...summaries[index], status: 'revoked' };
     setItem(STORAGE_KEYS.RELEASED_SUMMARIES, summaries);
   }
+}
+
+// Referral notification helpers
+import type { ReferralNotification } from '@/types/referral';
+
+export function getReferralNotifications(): ReferralNotification[] {
+  return getItem<ReferralNotification[]>(STORAGE_KEYS.REFERRAL_NOTIFICATIONS, []);
+}
+
+export function addReferralNotification(notification: Omit<ReferralNotification, 'id' | 'created_at'>): void {
+  const notifications = getReferralNotifications();
+  // Avoid duplicate notifications for same referral + type
+  if (notifications.some(n => n.referral_id === notification.referral_id && n.type === notification.type)) {
+    return;
+  }
+  const newNotification: ReferralNotification = {
+    ...notification,
+    id: `ref-notif-${Date.now()}`,
+    created_at: new Date().toISOString(),
+  };
+  notifications.unshift(newNotification);
+  // Keep max 50 notifications
+  setItem(STORAGE_KEYS.REFERRAL_NOTIFICATIONS, notifications.slice(0, 50));
+}
+
+export function markNotificationRead(id: string): void {
+  const notifications = getReferralNotifications();
+  const index = notifications.findIndex(n => n.id === id);
+  if (index >= 0) {
+    notifications[index] = { ...notifications[index], read: true };
+    setItem(STORAGE_KEYS.REFERRAL_NOTIFICATIONS, notifications);
+  }
+}
+
+export function getUnreadReferralCount(): number {
+  return getReferralNotifications().filter(n => !n.read).length;
+}
+
+export function getLastReferralCheck(): Record<string, string> {
+  return getItem<Record<string, string>>(STORAGE_KEYS.LAST_REFERRAL_CHECK, {});
+}
+
+export function setLastReferralCheck(statuses: Record<string, string>): void {
+  setItem(STORAGE_KEYS.LAST_REFERRAL_CHECK, statuses);
 }

@@ -23,6 +23,7 @@ import {
   ClipboardList,
   Users,
   FolderOpen,
+  Send,
 } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
 import { useChat } from '@/contexts/ChatContext';
@@ -30,6 +31,7 @@ import { useActivePatient } from '@/contexts/ActivePatientContext';
 import { usePersistentState } from '@/hooks/usePersistentState';
 import { getBookmarks, Bookmark as BookmarkType } from '@/lib/storage';
 import { PatientBanner } from '@/components/shared/PatientBanner';
+import { useReferralNotifications } from '@/hooks/useReferralNotifications';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -54,10 +56,13 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   const isExpanded = (section: string) => expandedSections.includes(section);
 
+  const { unreadCount: referralUnreadCount } = useReferralNotifications();
+
   const mainNav = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/patients', icon: Users, label: 'Patients' },
     { href: '/cases', icon: FolderOpen, label: 'Cases' },
+    { href: '/referrals', icon: Send, label: 'Referrals', badge: referralUnreadCount },
     { href: '/documents', icon: FileText, label: 'Documents' },
   ];
 
@@ -105,9 +110,11 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               title={item.label}
             >
               <item.icon className="w-4 h-4" />
-              {patientId && isToolLink(item.href) && (
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full" />
-              )}
+              {'badge' in item && (item as { badge?: number }).badge ? (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[8px] font-bold flex items-center justify-center">
+                  {(item as { badge?: number }).badge! > 9 ? '9+' : (item as { badge?: number }).badge}
+                </span>
+              ) : null}
             </Link>
           ))}
         </nav>
@@ -159,7 +166,12 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               }`}
             >
               <item.icon className={`w-4 h-4 ${pathname === item.href ? 'text-primary' : ''}`} />
-              <span>{item.label}</span>
+              <span className="flex-1">{item.label}</span>
+              {'badge' in item && (item as { badge?: number }).badge ? (
+                <span className="w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+                  {(item as { badge?: number }).badge! > 9 ? '9+' : (item as { badge?: number }).badge}
+                </span>
+              ) : null}
             </Link>
           ))}
         </nav>
@@ -181,9 +193,6 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               >
                 <item.icon className={`w-4 h-4 ${pathname === item.href ? 'text-primary' : ''}`} />
                 <span>{item.label}</span>
-                {patientId && (
-                  <span className="ml-auto w-1.5 h-1.5 bg-primary rounded-full" />
-                )}
               </Link>
             ))}
           </div>

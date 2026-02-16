@@ -849,3 +849,111 @@ async def drug_toxicity(request: DrugPropertyRequest):
     except Exception as e:
         logger.error("Drug toxicity prediction failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+# ─── Referral Tracking ───────────────────────────────────────────────────────
+
+from src.medgemma.referral_tracker import get_referral_tracker
+
+
+class SendReferralRequest(BaseModel):
+    """Request to create and send a specialist referral."""
+    case_session_id: str
+    patient_id: str = ""
+    referral_note: dict[str, Any]
+    case_snapshot: dict[str, Any] = Field(default_factory=dict)
+    expires_in_hours: int | None = None
+
+
+class ReferralResponseRequest(BaseModel):
+    """Specialist response to a referral."""
+    specialist_name: str = Field(..., min_length=1)
+    response: str = Field(..., min_length=1)
+    recommendations: list[str] = Field(default_factory=list)
+    follow_up_needed: bool = False
+
+
+@router.post("/referral/send")
+async def send_referral(request: SendReferralRequest):
+    """Create and send a specialist referral. Returns referral_id, token, shareable URL."""
+    tracker = get_referral_tracker()
+    try:
+        referral = tracker.create_referral(
+            case_session_id=request.case_session_id,
+            patient_id=request.patient_id,
+            referral_note=request.referral_note,
+            case_snapshot=request.case_snapshot,
+            expires_in_hours=request.expires_in_hours,
+        )
+        return {
+            "referral_id": referral.referral_id,
+            "token": referral.token,
+            "status": referral.status,
+            "created_at": referral.created_at,
+        }
+    except Exception as e:
+        logger.error("Failed to send referral", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.get("/referral/{referral_id}")
+async def get_referral(referral_id: str):
+    """Get full referral by ID (for referring clinician)."""
+    tracker = get_referral_tracker()
+    referral = tracker.get_referral(referral_id)
+    if not referral:
+        raise HTTPException(status_code=404, detail="Referral not found")
+    from dataclasses import asdict
+    return asdict(referral)
+
+
+@router.get("/referral/shared/{token}")
+async def get_shared_referral(token: str):
+    """Get referral via shareable token (for external specialist). Increments view count."""
+    tracker = get_referral_tracker()
+    referral = tracker.get_by_token(token)
+    if not referral:
+        raise HTTPException(status_code=404, detail="Referral not found or link expired")
+    from dataclasses import asdict
+    return asdict(referral)
+
+
+@router.get("/referrals/inbox")
+async def referrals_inbox(specialty: str | None = None, status: str | None = None):
+    """Specialist inbox — list referrals filtered by specialty and/or status."""
+    tracker = get_referral_tracker()
+    return tracker.list_inbox(specialty=specialty, status=status)
+
+
+@router.get("/referrals/sent")
+async def referrals_sent():
+    """List all sent referrals for the referring clinician."""
+    tracker = get_referral_tracker()
+    return tracker.list_sent()
+
+
+@router.post("/referral/{referral_id}/respond")
+async def respond_to_referral(referral_id: str, request: ReferralResponseRequest):
+    """Specialist submits a response to a referral."""
+    tracker = get_referral_tracker()
+    referral = tracker.add_response(
+        referral_id=referral_id,
+        specialist_name=request.specialist_name,
+        response=request.response,
+        recommendations=request.recommendations,
+        follow_up_needed=request.follow_up_needed,
+    )
+    if not referral:
+        raise HTTPException(status_code=404, detail="Referral not found")
+    from dataclasses import asdict
+    return asdict(referral)
+
+
+@router.post("/referral/{referral_id}/complete")
+async def complete_referral(referral_id: str):
+    """Clinician marks a referral as complete."""
+    tracker = get_referral_tracker()
+    referral = tracker.update_status(referral_id, "completed")
+    if not referral:
+        raise HTTPException(status_code=404, detail="Referral not found")
+    return {"status": "completed", "referral_id": referral_id}

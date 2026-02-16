@@ -70,3 +70,6 @@ models/
 *.bin
 *.safetensors
 .vercel
+
+# Worktrees
+.worktrees/

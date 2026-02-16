@@ -24,6 +24,7 @@ import {
   Users,
   FolderOpen,
   Send,
+  Siren,
 } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
 import { useChat } from '@/contexts/ChatContext';
@@ -72,6 +73,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     { href: '/imaging', icon: Camera, label: 'Imaging' },
     { href: '/labs', icon: Beaker, label: 'Labs' },
     { href: '/chart', icon: FileText, label: 'Charting' },
+    { href: '/ems', icon: Siren, label: 'EMS Report' },
   ];
 
   if (isCollapsed) {

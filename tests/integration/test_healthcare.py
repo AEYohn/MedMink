@@ -13,7 +13,6 @@ from unittest.mock import patch, AsyncMock, MagicMock
 
 from fastapi.testclient import TestClient
 
-
 # ============================================================================
 # Test Client Fixture
 # ============================================================================

@@ -21,9 +21,24 @@ from src.medgemma.interview_prompts import (
     INTERVIEW_TURN_PROMPT,
     PHASE_CRITERIA,
     TRIAGE_PROMPT,
+    get_opening_question,
+    get_system_prompt,
 )
 
 logger = structlog.get_logger()
+
+# Respiratory keywords by language for cough recording prompt detection
+RESPIRATORY_KEYWORDS_BY_LANG: dict[str, list[str]] = {
+    "en": ["cough", "breathing", "wheeze", "dyspnea", "shortness of breath",
+            "chest tightness", "sputum", "hemoptysis"],
+    "zh": ["咳嗽", "呼吸", "喘息", "胸闷", "痰", "咯血", "气短"],
+    "ms": ["batuk", "sesak nafas", "nafas", "semput", "kahak", "dada sesak"],
+    "ta": ["இருமல்", "மூச்சு", "மூச்சுத்திணறல்", "சளி", "நெஞ்சு இறுக்கம்"],
+    "es": ["tos", "respirar", "falta de aire", "sibilancia", "flema",
+            "opresión en el pecho", "dificultad para respirar"],
+    "vi": ["ho", "thở", "khó thở", "đờm", "khò khè", "tức ngực"],
+    "ar": ["سعال", "تنفس", "ضيق التنفس", "صفير", "بلغم", "ضيق الصدر"],
+}
 
 # Interview phase order
 PHASES = [
@@ -61,6 +76,7 @@ class InterviewSession:
     triage_result: dict[str, Any] | None = None
     red_flags: list[str] = field(default_factory=list)
     patient_id: str | None = None  # For cross-visit longitudinal linking
+    language: str = "en"  # Interview language code (e.g. "es", "zh", "ar")
     respiratory_cough_prompt: bool = False  # Flag to prompt cough recording
     phase_turn_counts: dict[str, int] = field(default_factory=dict)
 
@@ -75,8 +91,9 @@ def get_session(session_id: str) -> InterviewSession | None:
 
 def create_session(
     patient_context: dict[str, Any] | None = None,
+    language: str = "en",
 ) -> InterviewSession:
-    session = InterviewSession()
+    session = InterviewSession(language=language)
     if patient_context:
         session.patient_id = patient_context.get("id")
         # Pre-populate extracted data from chart so phases can be skipped
@@ -101,6 +118,7 @@ def restore_session(
     conversation_history: list[dict[str, str]],
     phase: str | None = None,
     patient_id: str | None = None,
+    language: str = "en",
 ) -> InterviewSession:
     """Reconstruct a lost session from frontend state.
 
@@ -113,6 +131,7 @@ def restore_session(
         phase=resolved_phase,
         conversation_history=list(conversation_history),
         patient_id=patient_id,
+        language=language,
     )
     _sessions[session_id] = session
 
@@ -160,13 +179,14 @@ class PatientInterviewer:
 
         response_text = await self._client.generate(
             prompt=greeting_prompt,
-            system_prompt=INTERVIEW_SYSTEM_PROMPT,
+            system_prompt=get_system_prompt(session.language),
             temperature=0.4,
             max_tokens=512,
         )
 
         data = self._parse_response(response_text)
-        question = data.get("next_question", "Hello! What brought you in today?")
+        fallback = "Hello! What brought you in today?"
+        question = data.get("next_question", fallback)
 
         session.conversation_history.append({
             "role": "assistant",
@@ -218,7 +238,7 @@ class PatientInterviewer:
 
         response_text = await self._client.generate(
             prompt=prompt,
-            system_prompt=INTERVIEW_SYSTEM_PROMPT,
+            system_prompt=get_system_prompt(session.language),
             temperature=0.4,
             max_tokens=768,
         )
@@ -264,8 +284,7 @@ class PatientInterviewer:
         # instead of trusting the model (which generated the question while in the old phase)
         question = data.get("next_question", "Could you tell me more?")
         if phase_complete:
-            new_criteria = PHASE_CRITERIA.get(session.phase, {})
-            opening = new_criteria.get("opening_question")
+            opening = get_opening_question(session.phase, session.language)
             if opening:
                 question = opening
 
@@ -289,8 +308,10 @@ class PatientInterviewer:
         # Detect respiratory symptoms during ROS to prompt cough recording
         prompt_cough = False
         if session.phase == "review_of_systems":
-            respiratory_keywords = ["cough", "breathing", "wheeze", "dyspnea", "shortness of breath",
-                                    "chest tightness", "sputum", "hemoptysis"]
+            respiratory_keywords = RESPIRATORY_KEYWORDS_BY_LANG.get(
+                session.language,
+                RESPIRATORY_KEYWORDS_BY_LANG["en"],
+            )
             input_lower = patient_input.lower()
             if any(kw in input_lower for kw in respiratory_keywords):
                 session.respiratory_cough_prompt = True
@@ -317,7 +338,7 @@ class PatientInterviewer:
 
         response_text = await self._client.generate(
             prompt=prompt,
-            system_prompt=INTERVIEW_SYSTEM_PROMPT,
+            system_prompt=get_system_prompt(session.language),
             temperature=0.2,
             max_tokens=2048,
         )

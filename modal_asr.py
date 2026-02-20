@@ -52,7 +52,7 @@ def transcribe():
     import soundfile as sf
     import structlog
     import torch
-    from fastapi import FastAPI, File, UploadFile
+    from fastapi import FastAPI, File, Form, UploadFile
     from fastapi.middleware.cors import CORSMiddleware
 
     logger = structlog.get_logger()
@@ -145,11 +145,11 @@ def transcribe():
             "model": "medasr-conformer",
         }
 
-    def transcribe_with_whisper(audio_path: str) -> dict:
+    def transcribe_with_whisper(audio_path: str, language: str = "en") -> dict:
         """Fallback transcription using Whisper."""
         segments_list, info = whisper_model.transcribe(
             audio_path,
-            language="en",
+            language=language,
             beam_size=5,
             word_timestamps=False,
             vad_filter=True,
@@ -188,11 +188,15 @@ def transcribe():
         }
 
     @api.post("/transcribe")
-    async def transcribe_audio(audio: UploadFile = File(...)):
+    async def transcribe_audio(
+        audio: UploadFile = File(...),
+        language: str = Form(default="en"),
+    ):
         """Transcribe uploaded audio file.
 
         Uses MedASR Conformer as primary model (5x better WER on medical audio).
         Falls back to Whisper for non-medical audio or if MedASR fails.
+        MedASR is English-only; non-English audio goes directly to Whisper.
 
         Returns:
             JSON with text, duration, model used, and processing time.
@@ -208,8 +212,8 @@ def transcribe():
 
         result = None
 
-        # Try MedASR first
-        if medasr_model is not None:
+        # Try MedASR first (English-only CTC model — skip for non-English)
+        if medasr_model is not None and language == "en":
             try:
                 result = transcribe_with_medasr(tmp_path)
                 logger.info(
@@ -220,13 +224,14 @@ def transcribe():
             except Exception as e:
                 logger.warning("MedASR failed, falling back to Whisper", error=str(e))
 
-        # Whisper fallback
+        # Whisper fallback (supports all languages)
         if result is None:
-            result = transcribe_with_whisper(tmp_path)
+            result = transcribe_with_whisper(tmp_path, language=language)
             logger.info(
                 "Whisper transcription complete",
                 text_len=len(result["text"]),
                 duration=result["duration"],
+                language=language,
             )
 
         # Clean up

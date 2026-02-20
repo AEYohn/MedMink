@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { ClipboardList, Phone, Loader2, ChevronRight } from 'lucide-react';
+import { ClipboardList, Phone, Loader2, ChevronRight, AlertTriangle } from 'lucide-react';
 import { InterviewChat } from '@/components/interview/InterviewChat';
 import { TriageResult } from '@/components/interview/TriageResult';
 import { ManagementPlanPanel } from '@/components/interview/ManagementPlanPanel';
@@ -71,6 +71,16 @@ const PHASES = [
   'complete',
 ];
 
+const LANGUAGES = [
+  { code: 'en', label: 'English', bcp47: 'en-US' },
+  { code: 'zh', label: '中文 (Mandarin)', bcp47: 'zh-CN' },
+  { code: 'ms', label: 'Bahasa Melayu', bcp47: 'ms-MY' },
+  { code: 'ta', label: 'தமிழ் (Tamil)', bcp47: 'ta-IN' },
+  { code: 'es', label: 'Español', bcp47: 'es-US' },
+  { code: 'vi', label: 'Tiếng Việt', bcp47: 'vi-VN' },
+  { code: 'ar', label: 'العربية (Arabic)', bcp47: 'ar-SA' },
+];
+
 export default function InterviewPage() {
   usePatientFromUrl();
   const { patientId: activePatientId } = useActivePatient();
@@ -81,6 +91,7 @@ export default function InterviewPage() {
   const [inputText, setInputText] = useState('');
   const [triage, setTriage] = useState<TriageData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [language, setLanguage] = useState('en');
 
   const [patientId, setPatientId] = useState<string | null>(null);
   const [showVisitHistory, setShowVisitHistory] = useState(false);
@@ -101,11 +112,12 @@ export default function InterviewPage() {
     setError(null);
     try {
       // Build patient context from active patient if available
-      let body: Record<string, unknown> = {};
+      let body: Record<string, unknown> = { language };
       if (patientId) {
         const patient = getPatient(patientId);
         if (patient) {
           body = {
+            language,
             patient_context: {
               id: patient.id,
               name: getPatientDisplayName(patient),
@@ -134,7 +146,7 @@ export default function InterviewPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [patientId]);
+  }, [patientId, language]);
 
   const sendText = useCallback(async () => {
     if (!inputText.trim() || !sessionId || isLoading) return;
@@ -155,6 +167,7 @@ export default function InterviewPage() {
           conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
           phase: currentPhase,
           patient_id: patientId,
+          language,
         }),
       }, 60000);
       if (!res.ok) throw new Error(`Response failed: ${res.status}`);
@@ -177,7 +190,7 @@ export default function InterviewPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [inputText, sessionId, isLoading, messages, currentPhase, patientId]);
+  }, [inputText, sessionId, isLoading, messages, currentPhase, patientId, language]);
 
   const handleStopRecording = useCallback(async () => {
     stopRecording();
@@ -200,6 +213,7 @@ export default function InterviewPage() {
       formData.append('audio', audioBlob, 'recording.webm');
       formData.append('conversation_history', JSON.stringify(messages.map(m => ({ role: m.role, content: m.content }))));
       formData.append('phase', currentPhase);
+      formData.append('language', language);
       if (patientId) formData.append('patient_id', patientId);
 
       const res = await fetchWithTimeout(`${API_URL}/api/interview/respond/audio`, {
@@ -233,7 +247,7 @@ export default function InterviewPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, audioBlob, clearRecording, messages, currentPhase, patientId]);
+  }, [sessionId, audioBlob, clearRecording, messages, currentPhase, patientId, language]);
 
   const completeInterview = useCallback(async () => {
     if (!sessionId) return;
@@ -341,6 +355,22 @@ export default function InterviewPage() {
               </p>
             </div>
 
+            {/* Emergency Warning */}
+            <div className="max-w-md p-3 rounded-xl border border-red-300 bg-red-50 dark:bg-red-950/30 dark:border-red-800">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="text-xs text-red-800 dark:text-red-300">
+                  <p className="font-semibold mb-1">Emergency Warning</p>
+                  <p>
+                    If you are experiencing a life-threatening emergency — such as chest pain,
+                    difficulty breathing, severe bleeding, or loss of consciousness —{' '}
+                    <strong>call 911 (or your local emergency number) immediately</strong> or
+                    alert nearby medical staff. Do not rely on this tool for emergency care.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-3 text-sm max-w-sm">
               <div className="p-3 rounded-xl bg-muted/50 text-center">
                 <p className="font-medium">Voice or Text</p>
@@ -358,6 +388,25 @@ export default function InterviewPage() {
                 <p className="font-medium">Care Setting</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Where to go next</p>
               </div>
+            </div>
+
+            {/* Language Selector */}
+            <div className="flex flex-col items-center gap-1.5">
+              <label htmlFor="interview-language" className="text-sm font-medium text-muted-foreground">
+                Interview Language
+              </label>
+              <select
+                id="interview-language"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="px-4 py-2 text-sm border border-border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+              >
+                {LANGUAGES.map((lang) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <button
@@ -398,7 +447,13 @@ export default function InterviewPage() {
           </div>
         ) : (
           /* Split-view: Chat + Management Plan */
-          <div className="flex h-full">
+          <div className="flex flex-col h-full">
+            {/* Persistent Emergency Banner */}
+            <div className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-950/30 border-b border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>If this is a medical emergency, <strong>call 911</strong> or alert nearby medical staff immediately.</span>
+            </div>
+            <div className="flex flex-1 min-h-0">
             {/* Left: Chat Interface */}
             <div className="flex-1 min-w-0">
               <InterviewChat
@@ -458,6 +513,7 @@ export default function InterviewPage() {
                 {showVisitHistory && <VisitHistory patientId={patientId} />}
               </div>
             </div>
+          </div>
           </div>
         )}
       </div>

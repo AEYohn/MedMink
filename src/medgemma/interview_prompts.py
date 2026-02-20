@@ -4,6 +4,17 @@ Defines the system prompt and phase-specific templates for the
 adaptive patient intake interview powered by MedGemma.
 """
 
+# Supported languages: code → (display name, BCP-47 tag)
+SUPPORTED_LANGUAGES: dict[str, tuple[str, str]] = {
+    "en": ("English", "en-US"),
+    "zh": ("Mandarin Chinese", "zh-CN"),
+    "ms": ("Malay", "ms-MY"),
+    "ta": ("Tamil", "ta-IN"),
+    "es": ("Spanish", "es-US"),
+    "vi": ("Vietnamese", "vi-VN"),
+    "ar": ("Arabic", "ar-SA"),
+}
+
 INTERVIEW_SYSTEM_PROMPT = """You are an experienced triage nurse conducting a fast patient intake.
 
 Rules:
@@ -111,6 +122,42 @@ Output ONLY this JSON:
     "extracted_data": {{}},
     "red_flags": []
 }}"""
+
+MULTILINGUAL_SYSTEM_PROMPT_SUFFIX = """
+
+LANGUAGE RULES — CRITICAL:
+- The patient speaks {language_name}. Conduct the ENTIRE interview in {language_name}.
+- "next_question" MUST be written in {language_name}.
+- "extracted_data" keys and values MUST be in English (medical terminology).
+- "red_flags" MUST be in English.
+- If the patient mixes languages, respond in {language_name} and extract data in English."""
+
+
+def get_system_prompt(language: str = "en") -> str:
+    """Return the interview system prompt, augmented for non-English sessions."""
+    if language == "en":
+        return INTERVIEW_SYSTEM_PROMPT
+    lang_name = SUPPORTED_LANGUAGES.get(language, (language, ""))[0]
+    return INTERVIEW_SYSTEM_PROMPT + MULTILINGUAL_SYSTEM_PROMPT_SUFFIX.format(
+        language_name=lang_name,
+    )
+
+
+def get_opening_question(phase: str, language: str = "en") -> str | None:
+    """Return the deterministic opening question for a phase.
+
+    For non-English sessions, prefixes with a language instruction so MedGemma
+    translates the question into the target language at generation time.
+    """
+    criteria = PHASE_CRITERIA.get(phase, {})
+    opening = criteria.get("opening_question")
+    if opening is None:
+        return None
+    if language == "en":
+        return opening
+    lang_name = SUPPORTED_LANGUAGES.get(language, (language, ""))[0]
+    return f"[Ask in {lang_name}]: {opening}"
+
 
 TRIAGE_PROMPT = """Based on the complete patient interview, generate a triage assessment.
 

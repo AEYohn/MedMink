@@ -163,7 +163,7 @@ class MedASRClient:
             Transcription result with text, confidence, and segments
         """
         if self._modal_url:
-            return await self._transcribe_via_modal(audio_path)
+            return await self._transcribe_via_modal(audio_path, language=language)
 
         result = await asyncio.to_thread(
             self._transcribe_sync,
@@ -173,7 +173,7 @@ class MedASRClient:
         )
         return result
 
-    async def _transcribe_via_modal(self, audio_path: str) -> dict[str, Any]:
+    async def _transcribe_via_modal(self, audio_path: str, language: str = "en") -> dict[str, Any]:
         """Transcribe via Modal-hosted MedASR endpoint."""
         import aiohttp
 
@@ -191,6 +191,7 @@ class MedASRClient:
                     filename=audio_file.name,
                     content_type="audio/wav",
                 )
+                form.add_field("language", language)
                 async with session.post(f"{self._modal_url}/transcribe", data=form) as resp:
                     if resp.status != 200:
                         body = await resp.text()

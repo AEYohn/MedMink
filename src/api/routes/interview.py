@@ -33,6 +33,7 @@ class PatientContext(BaseModel):
 
 class StartInterviewRequest(BaseModel):
     patient_context: PatientContext | None = None
+    language: str = "en"
 
 
 class StartInterviewResponse(BaseModel):
@@ -40,6 +41,7 @@ class StartInterviewResponse(BaseModel):
     question: str
     phase: str
     extracted_data: dict[str, Any] = {}
+    language: str = "en"
 
 
 class TextRespondRequest(BaseModel):
@@ -48,6 +50,7 @@ class TextRespondRequest(BaseModel):
     conversation_history: list[dict[str, str]] | None = None
     phase: str | None = None
     patient_id: str | None = None
+    language: str = "en"
 
 
 class CompleteRequest(BaseModel):
@@ -84,7 +87,8 @@ class TriageResponse(BaseModel):
 async def start_interview(body: StartInterviewRequest | None = None):
     """Create a new interview session and return the first question."""
     patient_ctx = body.patient_context.model_dump() if body and body.patient_context else None
-    session = create_session(patient_context=patient_ctx)
+    language = body.language if body else "en"
+    session = create_session(patient_context=patient_ctx, language=language)
     interviewer = get_interviewer()
 
     result = await interviewer.start_interview(session, patient_context=patient_ctx)
@@ -94,6 +98,7 @@ async def start_interview(body: StartInterviewRequest | None = None):
         question=result["question"],
         phase=result["phase"],
         extracted_data=result.get("extracted_data", {}),
+        language=session.language,
     )
 
 
@@ -104,7 +109,7 @@ async def respond_text(request: TextRespondRequest):
     if not session and request.conversation_history:
         session = restore_session(
             request.session_id, request.conversation_history,
-            request.phase, request.patient_id,
+            request.phase, request.patient_id, request.language,
         )
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -133,20 +138,21 @@ async def respond_audio(
     conversation_history: str | None = Form(default=None),
     phase: str | None = Form(default=None),
     patient_id: str | None = Form(default=None),
+    language: str = Form(default="en"),
 ):
     """Process an audio response — transcribe then feed to interview."""
     session = get_session(session_id)
     if not session and conversation_history:
         history = json.loads(conversation_history)
-        session = restore_session(session_id, history, phase, patient_id)
+        session = restore_session(session_id, history, phase, patient_id, language)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
     if session.phase == "complete":
         raise HTTPException(status_code=400, detail="Interview already complete")
 
-    # Transcribe audio via Modal Whisper
-    transcript = await _transcribe_audio(audio)
+    # Transcribe audio via Modal Whisper (pass language for non-English)
+    transcript = await _transcribe_audio(audio, language=session.language)
     if not transcript:
         raise HTTPException(status_code=422, detail="Could not transcribe audio")
 
@@ -173,12 +179,13 @@ async def respond_stream(
     conversation_history: str | None = Form(default=None),
     phase: str | None = Form(default=None),
     patient_id: str | None = Form(default=None),
+    language: str = Form(default="en"),
 ):
     """SSE stream version: transcribing → thinking → responding."""
     session = get_session(session_id)
     if not session and conversation_history:
         history = json.loads(conversation_history)
-        session = restore_session(session_id, history, phase, patient_id)
+        session = restore_session(session_id, history, phase, patient_id, language)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
@@ -188,7 +195,7 @@ async def respond_stream(
         # Transcribe if audio provided
         if audio and not text:
             yield f"data: {json.dumps({'type': 'status', 'status': 'transcribing'})}\n\n"
-            patient_input = await _transcribe_audio(audio)
+            patient_input = await _transcribe_audio(audio, language=session.language)
             yield f"data: {json.dumps({'type': 'transcript', 'text': patient_input or ''})}\n\n"
 
             if not patient_input:
@@ -378,10 +385,11 @@ async def link_visit(request: LinkVisitRequest):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-async def _transcribe_audio(audio: UploadFile) -> str | None:
+async def _transcribe_audio(audio: UploadFile, language: str = "en") -> str | None:
     """Transcribe audio via Modal MedASR/Whisper ASR endpoint.
 
     Prefers MedASR endpoint if configured, falls back to Whisper.
+    Passes language so non-English audio goes straight to Whisper.
     """
     from src.config import settings
 
@@ -405,6 +413,7 @@ async def _transcribe_audio(audio: UploadFile) -> str | None:
                 filename=audio.filename or "recording.webm",
                 content_type=audio.content_type or "audio/webm",
             )
+            form.add_field("language", language)
 
             async with http_session.post(
                 f"{asr_url}/transcribe",

@@ -63,7 +63,7 @@ export function InterviewChat({
                   : 'bg-muted rounded-bl-md'
               }`}
             >
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+              <p dir="auto" className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
               {msg.transcript && msg.role === 'user' && (
                 <p className="text-xs opacity-70 mt-1 italic">Transcribed from audio</p>
               )}
@@ -105,6 +105,7 @@ export function InterviewChat({
           {/* Text Input */}
           <div className="flex-1 relative">
             <textarea
+              dir="auto"
               value={inputText}
               onChange={(e) => onInputChange(e.target.value)}
               onKeyDown={handleKeyDown}

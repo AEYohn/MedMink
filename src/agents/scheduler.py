@@ -27,6 +27,7 @@ AppointmentType = Literal["in-person", "telehealth", "phone"]
 @dataclass
 class TimeSlot:
     """A time slot for scheduling."""
+
     start_time: datetime
     end_time: datetime
     available: bool
@@ -36,6 +37,7 @@ class TimeSlot:
 @dataclass
 class Appointment:
     """An appointment in the system."""
+
     id: str
     patient_id: str
     patient_name: str
@@ -69,6 +71,7 @@ class Appointment:
 @dataclass
 class ScheduleOptimization:
     """Result of schedule optimization."""
+
     suggested_slots: list[TimeSlot]
     utilization_score: float
     recommendations: list[str]
@@ -329,12 +332,14 @@ class SchedulerAgent(BaseAgent):
             # Check if slot is available
             is_available = self._is_slot_available(current, duration, provider)
 
-            slots.append(TimeSlot(
-                start_time=current,
-                end_time=current + timedelta(minutes=duration),
-                available=is_available,
-                provider=provider,
-            ))
+            slots.append(
+                TimeSlot(
+                    start_time=current,
+                    end_time=current + timedelta(minutes=duration),
+                    available=is_available,
+                    provider=provider,
+                )
+            )
 
             current += timedelta(minutes=hours["slot_duration"])
 
@@ -397,7 +402,8 @@ class SchedulerAgent(BaseAgent):
 
         # Get appointments for the day
         day_appointments = [
-            apt for apt in self._appointments.values()
+            apt
+            for apt in self._appointments.values()
             if apt.datetime.date() == date
             and apt.status not in ["cancelled", "no-show"]
             and (not provider or apt.provider == provider)
@@ -406,14 +412,13 @@ class SchedulerAgent(BaseAgent):
         # Calculate utilization
         hours = DEFAULT_WORKING_HOURS
         total_minutes = (
-            datetime.combine(date, hours["end"]) -
-            datetime.combine(date, hours["start"])
+            datetime.combine(date, hours["end"]) - datetime.combine(date, hours["start"])
         ).seconds // 60
 
         # Subtract lunch
         lunch_minutes = (
-            datetime.combine(date, hours["lunch_end"]) -
-            datetime.combine(date, hours["lunch_start"])
+            datetime.combine(date, hours["lunch_end"])
+            - datetime.combine(date, hours["lunch_start"])
         ).seconds // 60
         total_minutes -= lunch_minutes
 
@@ -424,9 +429,13 @@ class SchedulerAgent(BaseAgent):
         recommendations = []
 
         if utilization < 0.5:
-            recommendations.append("Schedule utilization is low. Consider marketing or outreach campaigns.")
+            recommendations.append(
+                "Schedule utilization is low. Consider marketing or outreach campaigns."
+            )
         elif utilization > 0.9:
-            recommendations.append("Schedule is nearly full. Consider adding availability or waitlist management.")
+            recommendations.append(
+                "Schedule is nearly full. Consider adding availability or waitlist management."
+            )
 
         # Find gaps
         gaps = self._find_schedule_gaps(day_appointments, date)
@@ -486,7 +495,10 @@ class SchedulerAgent(BaseAgent):
             next_start = sorted_apts[i + 1].datetime
 
             # Skip if gap is during lunch
-            if current_end.time() >= hours["lunch_start"] and next_start.time() <= hours["lunch_end"]:
+            if (
+                current_end.time() >= hours["lunch_start"]
+                and next_start.time() <= hours["lunch_end"]
+            ):
                 continue
 
             if next_start - current_end > timedelta(minutes=min_gap_minutes):
@@ -542,16 +554,18 @@ async def create_appointment(
 ) -> dict[str, Any]:
     """Create a new appointment."""
     agent = SchedulerAgent()
-    return await agent.create_appointment({
-        "patient_name": patient_name,
-        "patient_phone": patient_phone,
-        "patient_email": patient_email,
-        "provider": provider,
-        "datetime": datetime_str,
-        "reason": reason,
-        "duration": duration,
-        "type": appointment_type,
-    })
+    return await agent.create_appointment(
+        {
+            "patient_name": patient_name,
+            "patient_phone": patient_phone,
+            "patient_email": patient_email,
+            "provider": provider,
+            "datetime": datetime_str,
+            "reason": reason,
+            "duration": duration,
+            "type": appointment_type,
+        }
+    )
 
 
 async def find_available_slots(
@@ -561,8 +575,10 @@ async def find_available_slots(
 ) -> dict[str, Any]:
     """Find available appointment slots."""
     agent = SchedulerAgent()
-    return await agent.find_available_slots({
-        "date": date,
-        "provider": provider,
-        "duration": duration,
-    })
+    return await agent.find_available_slots(
+        {
+            "date": date,
+            "provider": provider,
+            "duration": duration,
+        }
+    )

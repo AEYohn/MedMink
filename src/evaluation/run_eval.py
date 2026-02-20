@@ -21,31 +21,53 @@ from src.evaluation.test_cases import TEST_CASES, get_all_test_case_ids, get_tes
 RESULTS_DIR = Path("results")
 
 
+_MULTI_MODEL_CHECKS = {"TxGemma safety alignment", "Compliance grade"}
+
+
 def print_scorecard(scores: list[CaseScore]) -> None:
     """Print a formatted scorecard table."""
     # Header
     max_name = max(len(s.case_name) for s in scores) if scores else 20
     col_w = max(max_name + 2, 22)
 
+    total_pass = 0
+    total_checks = 0
+
     print()
     print("=" * (col_w + 30))
     print(f"{'Case':<{col_w}} {'Pass':>6} {'Total':>6} {'Score':>8}")
     print("-" * (col_w + 30))
-
-    total_pass = 0
-    total_checks = 0
 
     for s in scores:
         total_pass += s.passed
         total_checks += s.total
         status = "PASS" if s.score_pct >= 70 else "FAIL"
         marker = "+" if s.score_pct >= 70 else "-"
-        print(f"  {marker} {s.case_name:<{col_w - 2}} {s.passed:>6} {s.total:>6} {s.score_pct:>7.0f}%  {status}")
+        print(
+            f"  {marker} {s.case_name:<{col_w - 2}} {s.passed:>6} {s.total:>6} {s.score_pct:>7.0f}%  {status}"
+        )
 
     print("-" * (col_w + 30))
     overall_pct = (total_pass / total_checks * 100) if total_checks else 0
     print(f"  {'TOTAL':<{col_w - 2}} {total_pass:>6} {total_checks:>6} {overall_pct:>7.0f}%")
     print("=" * (col_w + 30))
+
+    # Multi-model validation summary
+    mm_pass = 0
+    mm_total = 0
+    for s in scores:
+        for c in s.checks:
+            if c.name in _MULTI_MODEL_CHECKS:
+                mm_total += 1
+                if c.passed:
+                    mm_pass += 1
+    if mm_total > 0:
+        print(
+            f"\n  Multi-Model Validation: {mm_pass}/{mm_total} "
+            f"({mm_pass / mm_total * 100:.0f}%)"
+        )
+
+    print(f"  {len(scores)} cases, {total_checks} total check-slots")
     print()
 
 
@@ -114,9 +136,7 @@ def compare_results(current: list[CaseScore], prev_path: Path) -> None:
             print(f"  {s.case_name:<35}   NEW  -> {s.score_pct:>5.0f}%")
 
     prev_overall = prev_data.get("summary", {}).get("overall_pct", 0)
-    curr_overall = (
-        sum(s.passed for s in current) / max(sum(s.total for s in current), 1) * 100
-    )
+    curr_overall = sum(s.passed for s in current) / max(sum(s.total for s in current), 1) * 100
     delta = curr_overall - prev_overall
     print("-" * 60)
     print(f"  {'OVERALL':<35} {prev_overall:>5.0f}% -> {curr_overall:>5.0f}%  ({delta:+.0f})")
@@ -140,10 +160,12 @@ async def run_evaluation(case_ids: list[str]) -> list[CaseScore]:
             print(f"  -> {score.passed}/{score.total} ({score.score_pct:.0f}%)")
         except Exception as e:
             print(f"  -> ERROR: {e}")
-            scores.append(CaseScore(
-                case_id=case_id,
-                case_name=tc["name"],
-            ))
+            scores.append(
+                CaseScore(
+                    case_id=case_id,
+                    case_name=tc["name"],
+                )
+            )
 
     return scores
 

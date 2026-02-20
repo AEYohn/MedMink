@@ -77,7 +77,18 @@ PaperAnalysisSchema: dict[str, Any] = {
                     },
                     "type": {
                         "type": "string",
-                        "enum": ["algorithm", "architecture", "loss_function", "optimization", "regularization", "math_formula", "training_technique", "inference_technique", "data_augmentation", "other"],
+                        "enum": [
+                            "algorithm",
+                            "architecture",
+                            "loss_function",
+                            "optimization",
+                            "regularization",
+                            "math_formula",
+                            "training_technique",
+                            "inference_technique",
+                            "data_augmentation",
+                            "other",
+                        ],
                         "description": "Type of technique",
                     },
                     "description": {

@@ -74,9 +74,7 @@ class AnalysisCache:
 
         return None
 
-    async def get_similar(
-        self, title: str, abstract: str
-    ) -> tuple[dict[str, Any] | None, float]:
+    async def get_similar(self, title: str, abstract: str) -> tuple[dict[str, Any] | None, float]:
         """Get cached analysis for a similar paper.
 
         Returns (analysis, similarity_score) or (None, 0.0) if not found.
@@ -150,10 +148,7 @@ class AnalysisCache:
 
     async def _cleanup(self) -> None:
         """Remove expired entries from cache."""
-        expired = [
-            k for k, v in self._cache.items()
-            if self._is_expired(v["cached_at"])
-        ]
+        expired = [k for k, v in self._cache.items() if self._is_expired(v["cached_at"])]
         for k in expired:
             del self._cache[k]
 
@@ -161,10 +156,7 @@ class AnalysisCache:
 
     def get_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
-        valid_entries = sum(
-            1 for v in self._cache.values()
-            if not self._is_expired(v["cached_at"])
-        )
+        valid_entries = sum(1 for v in self._cache.values() if not self._is_expired(v["cached_at"]))
         return {
             "enabled": self._enabled,
             "total_entries": len(self._cache),

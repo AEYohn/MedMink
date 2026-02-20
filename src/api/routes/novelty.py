@@ -157,14 +157,16 @@ async def batch_check_techniques(
     """Check novelty for multiple techniques in batch."""
     checker = get_novelty_checker()
 
-    results = await checker.batch_check_techniques([
-        {
-            "name": t.name,
-            "description": t.description,
-            "formula": t.formula,
-        }
-        for t in techniques
-    ])
+    results = await checker.batch_check_techniques(
+        [
+            {
+                "name": t.name,
+                "description": t.description,
+                "formula": t.formula,
+            }
+            for t in techniques
+        ]
+    )
 
     return {
         "results": [
@@ -179,7 +181,9 @@ async def batch_check_techniques(
         "summary": {
             "total": len(results),
             "highly_novel": sum(1 for r in results if r.novelty_level == NoveltyLevel.HIGHLY_NOVEL),
-            "moderately_novel": sum(1 for r in results if r.novelty_level == NoveltyLevel.MODERATELY_NOVEL),
+            "moderately_novel": sum(
+                1 for r in results if r.novelty_level == NoveltyLevel.MODERATELY_NOVEL
+            ),
             "incremental": sum(1 for r in results if r.novelty_level == NoveltyLevel.INCREMENTAL),
             "derivative": sum(1 for r in results if r.novelty_level == NoveltyLevel.DERIVATIVE),
         },

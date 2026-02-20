@@ -49,12 +49,21 @@ class TaskType(StrEnum):
 # Mapping from task types to required capabilities
 TASK_CAPABILITY_MAP: dict[TaskType, list[ModelCapability]] = {
     TaskType.LITERATURE_SEARCH: [ModelCapability.LITERATURE_SYNTHESIS],
-    TaskType.EVIDENCE_SYNTHESIS: [ModelCapability.LITERATURE_SYNTHESIS, ModelCapability.EVIDENCE_GRADING],
+    TaskType.EVIDENCE_SYNTHESIS: [
+        ModelCapability.LITERATURE_SYNTHESIS,
+        ModelCapability.EVIDENCE_GRADING,
+    ],
     TaskType.EVIDENCE_GRADING: [ModelCapability.EVIDENCE_GRADING],
     TaskType.DRUG_INTERACTION: [ModelCapability.DRUG_INTERACTION],
     TaskType.DRUG_INFO: [ModelCapability.DRUG_INTERACTION, ModelCapability.QUESTION_ANSWERING],
-    TaskType.DIFFERENTIAL_DIAGNOSIS: [ModelCapability.DIFFERENTIAL_DIAGNOSIS, ModelCapability.CLINICAL_REASONING],
-    TaskType.TREATMENT_COMPARISON: [ModelCapability.CLINICAL_REASONING, ModelCapability.EVIDENCE_GRADING],
+    TaskType.DIFFERENTIAL_DIAGNOSIS: [
+        ModelCapability.DIFFERENTIAL_DIAGNOSIS,
+        ModelCapability.CLINICAL_REASONING,
+    ],
+    TaskType.TREATMENT_COMPARISON: [
+        ModelCapability.CLINICAL_REASONING,
+        ModelCapability.EVIDENCE_GRADING,
+    ],
     TaskType.CLINICAL_NOTE: [ModelCapability.CLINICAL_DOCUMENTATION],
     TaskType.DISCHARGE_SUMMARY: [ModelCapability.DISCHARGE_SUMMARY],
     TaskType.HANDOFF_SUMMARY: [ModelCapability.HANDOFF_SUMMARY],
@@ -106,9 +115,9 @@ class TaskClassification(dspy.Signature):
 
     task_type: str = dspy.OutputField(
         desc="One of: literature_search, evidence_synthesis, evidence_grading, "
-             "drug_interaction, drug_info, differential_diagnosis, treatment_comparison, "
-             "clinical_note, discharge_summary, handoff_summary, patient_education, "
-             "general_question, summarization, translation"
+        "drug_interaction, drug_info, differential_diagnosis, treatment_comparison, "
+        "clinical_note, discharge_summary, handoff_summary, patient_education, "
+        "general_question, summarization, translation"
     )
     confidence: float = dspy.OutputField(desc="Confidence score 0-1")
     reasoning: str = dspy.OutputField(desc="Brief explanation of classification")
@@ -128,42 +137,76 @@ class TaskRouter:
         # Keyword-based fallback classification
         self._keyword_patterns = {
             TaskType.LITERATURE_SEARCH: [
-                "evidence for", "studies on", "research on", "literature",
-                "pubmed", "papers about", "systematic review", "meta-analysis"
+                "evidence for",
+                "studies on",
+                "research on",
+                "literature",
+                "pubmed",
+                "papers about",
+                "systematic review",
+                "meta-analysis",
             ],
             TaskType.EVIDENCE_SYNTHESIS: [
-                "synthesize", "combine evidence", "what does the evidence say",
-                "summarize the research", "evidence-based"
+                "synthesize",
+                "combine evidence",
+                "what does the evidence say",
+                "summarize the research",
+                "evidence-based",
             ],
             TaskType.DRUG_INTERACTION: [
-                "drug interaction", "interact with", "can i take", "together with",
-                "contraindicated", "drug-drug"
+                "drug interaction",
+                "interact with",
+                "can i take",
+                "together with",
+                "contraindicated",
+                "drug-drug",
             ],
             TaskType.DRUG_INFO: [
-                "side effects", "dosage", "mechanism of action", "half-life",
-                "contraindications", "indications"
+                "side effects",
+                "dosage",
+                "mechanism of action",
+                "half-life",
+                "contraindications",
+                "indications",
             ],
             TaskType.DIFFERENTIAL_DIAGNOSIS: [
-                "differential", "diagnose", "diagnosis", "what could cause",
-                "symptoms suggest", "presenting with"
+                "differential",
+                "diagnose",
+                "diagnosis",
+                "what could cause",
+                "symptoms suggest",
+                "presenting with",
             ],
             TaskType.TREATMENT_COMPARISON: [
-                "compare", "versus", "vs", "better than", "first-line",
-                "treatment options", "which treatment"
+                "compare",
+                "versus",
+                "vs",
+                "better than",
+                "first-line",
+                "treatment options",
+                "which treatment",
             ],
             TaskType.CLINICAL_NOTE: [
-                "write a note", "document", "chart", "progress note",
-                "clinical note", "soap note"
+                "write a note",
+                "document",
+                "chart",
+                "progress note",
+                "clinical note",
+                "soap note",
             ],
             TaskType.DISCHARGE_SUMMARY: [
-                "discharge", "discharge summary", "going home", "discharge instructions"
+                "discharge",
+                "discharge summary",
+                "going home",
+                "discharge instructions",
             ],
-            TaskType.HANDOFF_SUMMARY: [
-                "handoff", "hand off", "shift change", "sign out", "sbar"
-            ],
+            TaskType.HANDOFF_SUMMARY: ["handoff", "hand off", "shift change", "sign out", "sbar"],
             TaskType.PATIENT_EDUCATION: [
-                "explain to patient", "patient education", "in simple terms",
-                "layman", "easy to understand"
+                "explain to patient",
+                "patient education",
+                "in simple terms",
+                "layman",
+                "easy to understand",
             ],
         }
 

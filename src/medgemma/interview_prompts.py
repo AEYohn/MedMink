@@ -87,10 +87,17 @@ The patient just said: "{patient_input}"
 Extract data, check if phase is complete, and ask the next question.
 Do NOT repeat any question already answered in the conversation.
 
+Also assess whether there is enough information for triage. Set "sufficient_for_triage" to true when ALL of:
+1. Chief complaint is identified
+2. At least 2 HPI elements known (onset, severity, quality, etc.)
+3. Medications asked about (or confirmed none)
+4. Allergies asked about (or confirmed none)
+
 Output ONLY this JSON:
 {{
     "next_question": "your next question",
     "phase_complete": true or false,
+    "sufficient_for_triage": true or false,
     "extracted_data": {{
         "key": "value pairs of clinical data extracted"
     }},

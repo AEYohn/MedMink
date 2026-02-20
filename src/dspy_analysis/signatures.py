@@ -19,27 +19,32 @@ class ExtractedTechnique(BaseModel):
 
     name: str = Field(description="Name of the technique (e.g., 'Scaled Dot-Product Attention')")
     technique_type: Literal[
-        "algorithm", "architecture", "loss_function", "optimization",
-        "regularization", "math_formula", "training_technique",
-        "inference_technique", "data_augmentation", "other"
+        "algorithm",
+        "architecture",
+        "loss_function",
+        "optimization",
+        "regularization",
+        "math_formula",
+        "training_technique",
+        "inference_technique",
+        "data_augmentation",
+        "other",
     ] = Field(description="Category of the technique")
     description: str = Field(description="How this technique works and is used in the paper")
     formula: str | None = Field(
         default=None,
-        description="Mathematical formula in LaTeX notation (e.g., '\\text{Attention}(Q,K,V) = \\text{softmax}(QK^T/\\sqrt{d_k})V')"
+        description="Mathematical formula in LaTeX notation (e.g., '\\text{Attention}(Q,K,V) = \\text{softmax}(QK^T/\\sqrt{d_k})V')",
     )
-    pseudocode: str | None = Field(
-        default=None,
-        description="Step-by-step algorithm pseudocode"
-    )
+    pseudocode: str | None = Field(default=None, description="Step-by-step algorithm pseudocode")
     implementation_notes: str | None = Field(
         default=None,
-        description="Practical implementation tips (hyperparameters, libraries, common pitfalls)"
+        description="Practical implementation tips (hyperparameters, libraries, common pitfalls)",
     )
-    is_novel: bool = Field(default=False, description="Whether this technique is novel to this paper")
+    is_novel: bool = Field(
+        default=False, description="Whether this technique is novel to this paper"
+    )
     improves_upon: str | None = Field(
-        default=None,
-        description="What existing technique this improves upon"
+        default=None, description="What existing technique this improves upon"
     )
 
 
@@ -47,8 +52,8 @@ class ExtractedClaim(BaseModel):
     """A claim extracted from a research paper."""
 
     statement: str = Field(description="The complete claim statement as a sentence")
-    category: Literal["performance", "methodology", "theoretical", "empirical", "limitation"] = Field(
-        description="Category of the claim"
+    category: Literal["performance", "methodology", "theoretical", "empirical", "limitation"] = (
+        Field(description="Category of the claim")
     )
     confidence: float = Field(ge=0, le=1, description="Confidence in this claim (0-1)")
     evidence: str | None = Field(default=None, description="Supporting evidence from the paper")
@@ -84,8 +89,7 @@ class DetectedContradiction(BaseModel):
     strength: float = Field(ge=0, le=1, description="Strength of the contradiction (0-1)")
     explanation: str = Field(description="Why these claims contradict")
     possible_reconciliation: str | None = Field(
-        default=None,
-        description="How the contradiction might be reconciled"
+        default=None, description="How the contradiction might be reconciled"
     )
 
 
@@ -131,9 +135,7 @@ class ClaimExtraction(dspy.Signature):
     paper_title: str = dspy.InputField(desc="Title of the research paper")
     paper_content: str = dspy.InputField(desc="Paper content (abstract and/or full text)")
 
-    claims: list[ExtractedClaim] = dspy.OutputField(
-        desc="List of extracted claims with evidence"
-    )
+    claims: list[ExtractedClaim] = dspy.OutputField(desc="List of extracted claims with evidence")
 
 
 class PaperAnalysis(dspy.Signature):
@@ -177,9 +179,7 @@ class ContradictionDetection(dspy.Signature):
     Provide strength scores and possible reconciliations.
     """
 
-    claims_text: str = dspy.InputField(
-        desc="Numbered list of claims to analyze for contradictions"
-    )
+    claims_text: str = dspy.InputField(desc="Numbered list of claims to analyze for contradictions")
 
     contradictions: list[DetectedContradiction] = dspy.OutputField(
         desc="List of detected contradictions between claims"
@@ -203,8 +203,12 @@ class TrendIdentification(dspy.Signature):
     papers_summary: str = dspy.InputField(desc="Summary of recent papers with claims and methods")
     historical_trends: str = dspy.InputField(desc="Previously identified trends for context")
 
-    trends: str = dspy.OutputField(desc="JSON array of identified trends with name, description, direction, velocity, and evidence")
-    meta_observations: str = dspy.OutputField(desc="Higher-level observations about the research landscape")
+    trends: str = dspy.OutputField(
+        desc="JSON array of identified trends with name, description, direction, velocity, and evidence"
+    )
+    meta_observations: str = dspy.OutputField(
+        desc="Higher-level observations about the research landscape"
+    )
 
 
 class FormulaExtraction(dspy.Signature):
@@ -233,7 +237,9 @@ class PseudocodeGeneration(dspy.Signature):
     - Mathematical operations in LaTeX within steps
     """
 
-    algorithm_description: str = dspy.InputField(desc="Natural language description of an algorithm")
+    algorithm_description: str = dspy.InputField(
+        desc="Natural language description of an algorithm"
+    )
     algorithm_name: str = dspy.InputField(desc="Name of the algorithm")
 
     pseudocode: str = dspy.OutputField(

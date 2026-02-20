@@ -41,12 +41,24 @@ class ExtractionResult(TypedDict):
 
 # Common section headers in ML papers (case-insensitive)
 SECTION_PATTERNS = [
-    (r"(?i)(?:^|\n)\s*(?:\d+\.?\s*)?(method|methodology|approach|our method|proposed method)\s*(?:\n|$)", "methods"),
+    (
+        r"(?i)(?:^|\n)\s*(?:\d+\.?\s*)?(method|methodology|approach|our method|proposed method)\s*(?:\n|$)",
+        "methods",
+    ),
     (r"(?i)(?:^|\n)\s*(?:\d+\.?\s*)?(algorithm|procedure|pseudocode)\s*(?:\n|$)", "algorithm"),
-    (r"(?i)(?:^|\n)\s*(?:\d+\.?\s*)?(model|architecture|network architecture|model architecture)\s*(?:\n|$)", "model"),
+    (
+        r"(?i)(?:^|\n)\s*(?:\d+\.?\s*)?(model|architecture|network architecture|model architecture)\s*(?:\n|$)",
+        "model",
+    ),
     (r"(?i)(?:^|\n)\s*(?:\d+\.?\s*)?(training|optimization|learning)\s*(?:\n|$)", "training"),
-    (r"(?i)(?:^|\n)\s*(?:\d+\.?\s*)?(implementation|experimental setup|setup|implementation details)\s*(?:\n|$)", "implementation"),
-    (r"(?i)(?:^|\n)\s*(?:\d+\.?\s*)?(experiments?|experimental results|evaluation)\s*(?:\n|$)", "experiments"),
+    (
+        r"(?i)(?:^|\n)\s*(?:\d+\.?\s*)?(implementation|experimental setup|setup|implementation details)\s*(?:\n|$)",
+        "implementation",
+    ),
+    (
+        r"(?i)(?:^|\n)\s*(?:\d+\.?\s*)?(experiments?|experimental results|evaluation)\s*(?:\n|$)",
+        "experiments",
+    ),
     (r"(?i)(?:^|\n)\s*(?:\d+\.?\s*)?(results?|main results)\s*(?:\n|$)", "results"),
 ]
 
@@ -71,12 +83,15 @@ def extract_sections(text: str, max_section_chars: int = 4000) -> ExtractedSecti
         if match:
             start = match.end()
             # Extract content until next section or max chars
-            section_content = text[start:start + max_section_chars]
+            section_content = text[start : start + max_section_chars]
 
             # Try to find a clean cutoff at next section header
-            next_section = re.search(r"(?i)(?:^|\n)\s*(?:\d+\.?\s*)?(?:introduction|related work|background|method|conclusion|references|acknowledgment|appendix)\s*(?:\n|$)", section_content[500:])
+            next_section = re.search(
+                r"(?i)(?:^|\n)\s*(?:\d+\.?\s*)?(?:introduction|related work|background|method|conclusion|references|acknowledgment|appendix)\s*(?:\n|$)",
+                section_content[500:],
+            )
             if next_section:
-                section_content = section_content[:500 + next_section.start()]
+                section_content = section_content[: 500 + next_section.start()]
 
             sections[name] = section_content.strip()
 

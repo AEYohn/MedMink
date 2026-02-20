@@ -30,6 +30,7 @@ logger = structlog.get_logger()
 # Dataclasses
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ScoreVariable:
     name: str
@@ -89,14 +90,19 @@ _VITAL_PATTERNS: dict[str, list[re.Pattern]] = {
         re.compile(r"(?:SpO2|O2\s*sat|oxygen\s*sat(?:uration)?)[:\s]*(\d{2,3})%?", re.IGNORECASE),
     ],
     "temp": [
-        re.compile(r"(?:temp(?:erature)?|T)[:\s]*(\d{2,3}(?:\.\d{1,2})?)\s*°?(?:F|C)?", re.IGNORECASE),
+        re.compile(
+            r"(?:temp(?:erature)?|T)[:\s]*(\d{2,3}(?:\.\d{1,2})?)\s*°?(?:F|C)?", re.IGNORECASE
+        ),
     ],
 }
 
 # Lab patterns  —  value followed by optional units
 _LAB_PATTERNS: dict[str, list[re.Pattern]] = {
     "troponin": [
-        re.compile(r"(?:troponin\s*[IT]?|TnI|TnT)[\s:=]*(?:is\s+|of\s+)?(\d+\.?\d*)\s*(?:ng/[mL]|μg/L)?", re.IGNORECASE),
+        re.compile(
+            r"(?:troponin\s*[IT]?|TnI|TnT)[\s:=]*(?:is\s+|of\s+)?(\d+\.?\d*)\s*(?:ng/[mL]|μg/L)?",
+            re.IGNORECASE,
+        ),
     ],
     "creatinine": [
         re.compile(r"(?:creatinine|Cr|SCr)[:\s]*(\d+\.?\d*)\s*(?:mg/dL)?", re.IGNORECASE),
@@ -105,22 +111,34 @@ _LAB_PATTERNS: dict[str, list[re.Pattern]] = {
         re.compile(r"(?:BUN|blood\s*urea\s*nitrogen)[:\s]*(\d+\.?\d*)\s*(?:mg/dL)?", re.IGNORECASE),
     ],
     "bilirubin": [
-        re.compile(r"(?:bilirubin|bili|total\s*bilirubin|T\.?\s*bili)[:\s]*(\d+\.?\d*)\s*(?:mg/dL)?", re.IGNORECASE),
+        re.compile(
+            r"(?:bilirubin|bili|total\s*bilirubin|T\.?\s*bili)[:\s]*(\d+\.?\d*)\s*(?:mg/dL)?",
+            re.IGNORECASE,
+        ),
     ],
     "inr": [
         re.compile(r"(?:INR)[:\s]*(\d+\.?\d*)", re.IGNORECASE),
     ],
     "wbc": [
-        re.compile(r"(?:WBC|white\s*(?:blood\s*)?(?:cell\s*)?count)[:\s]*(\d+\.?\d*)\s*(?:[×xX]\s*10[³3]|k|K|thousand)?(?:/[μu]?L)?", re.IGNORECASE),
+        re.compile(
+            r"(?:WBC|white\s*(?:blood\s*)?(?:cell\s*)?count)[:\s]*(\d+\.?\d*)\s*(?:[×xX]\s*10[³3]|k|K|thousand)?(?:/[μu]?L)?",
+            re.IGNORECASE,
+        ),
     ],
     "platelets": [
-        re.compile(r"(?:platelets?|PLT|plt)[:\s]*(\d+\.?\d*)\s*(?:[×xX]\s*10[³3]|k|K|thousand)?(?:/[μu]?L)?", re.IGNORECASE),
+        re.compile(
+            r"(?:platelets?|PLT|plt)[:\s]*(\d+\.?\d*)\s*(?:[×xX]\s*10[³3]|k|K|thousand)?(?:/[μu]?L)?",
+            re.IGNORECASE,
+        ),
     ],
     "hemoglobin": [
         re.compile(r"(?:hemoglobin|Hgb|Hb)[:\s]*(\d+\.?\d*)\s*(?:g/dL)?", re.IGNORECASE),
     ],
     "glucose": [
-        re.compile(r"(?:glucose|blood\s*sugar|fasting\s*glucose)[:\s]*(\d+\.?\d*)\s*(?:mg/dL)?", re.IGNORECASE),
+        re.compile(
+            r"(?:glucose|blood\s*sugar|fasting\s*glucose)[:\s]*(\d+\.?\d*)\s*(?:mg/dL)?",
+            re.IGNORECASE,
+        ),
     ],
     "ast": [
         re.compile(r"(?:AST|SGOT|aspartate)[:\s]*(\d+\.?\d*)\s*(?:IU/L|U/L)?", re.IGNORECASE),
@@ -129,10 +147,14 @@ _LAB_PATTERNS: dict[str, list[re.Pattern]] = {
         re.compile(r"(?:ALT|SGPT|alanine)[:\s]*(\d+\.?\d*)\s*(?:IU/L|U/L)?", re.IGNORECASE),
     ],
     "lactate": [
-        re.compile(r"(?:lactate|lactic\s*acid)[:\s]*(\d+\.?\d*)\s*(?:mmol/L|mg/dL)?", re.IGNORECASE),
+        re.compile(
+            r"(?:lactate|lactic\s*acid)[:\s]*(\d+\.?\d*)\s*(?:mmol/L|mg/dL)?", re.IGNORECASE
+        ),
     ],
     "ldh": [
-        re.compile(r"(?:LDH|lactate\s*dehydrogenase)[:\s]*(\d+\.?\d*)\s*(?:IU/L|U/L)?", re.IGNORECASE),
+        re.compile(
+            r"(?:LDH|lactate\s*dehydrogenase)[:\s]*(\d+\.?\d*)\s*(?:IU/L|U/L)?", re.IGNORECASE
+        ),
     ],
     "pao2_fio2": [
         re.compile(r"(?:P/F|PaO2/FiO2|PF\s*ratio)[:\s]*(\d+\.?\d*)", re.IGNORECASE),
@@ -230,15 +252,47 @@ def _extract_deterministic_variables(
         elif name in labs:
             result[name] = labs.get(name)
         elif name == "hypertension":
-            result["hypertension"] = 1 if _has_keyword(all_text, {"hypertension", "htn", "high blood pressure"}) else 0
+            result["hypertension"] = (
+                1 if _has_keyword(all_text, {"hypertension", "htn", "high blood pressure"}) else 0
+            )
         elif name == "diabetes" or name == "diabetes_abcd2":
-            result[name] = 1 if _has_keyword(all_text, {"diabetes", "dm", "dm2", "dm1", "diabetic", "type 2 diabetes", "type 1 diabetes"}) else 0
+            result[name] = (
+                1
+                if _has_keyword(
+                    all_text,
+                    {
+                        "diabetes",
+                        "dm",
+                        "dm2",
+                        "dm1",
+                        "diabetic",
+                        "type 2 diabetes",
+                        "type 1 diabetes",
+                    },
+                )
+                else 0
+            )
         elif name == "prior_dvt_pe":
-            result["prior_dvt_pe"] = 1 if _has_keyword(all_text, {"dvt", "deep vein thrombosis", "pulmonary embolism", "pe history"}) else 0
+            result["prior_dvt_pe"] = (
+                1
+                if _has_keyword(
+                    all_text, {"dvt", "deep vein thrombosis", "pulmonary embolism", "pe history"}
+                )
+                else 0
+            )
         elif name == "hemoptysis":
-            result["hemoptysis"] = 1 if _has_keyword(all_text + list(vitals.keys()), {"hemoptysis", "coughing blood", "blood-tinged sputum"}) else 0
+            result["hemoptysis"] = (
+                1
+                if _has_keyword(
+                    all_text + list(vitals.keys()),
+                    {"hemoptysis", "coughing blood", "blood-tinged sputum"},
+                )
+                else 0
+            )
         elif name == "asa_use":
-            result["asa_use"] = 1 if _has_keyword(medications, {"aspirin", "asa", "acetylsalicylic"}) else 0
+            result["asa_use"] = (
+                1 if _has_keyword(medications, {"aspirin", "asa", "acetylsalicylic"}) else 0
+            )
         elif name == "troponin_category":
             trop = labs.get("troponin")
             if trop is not None:
@@ -266,6 +320,7 @@ def _extract_deterministic_variables(
 # ---------------------------------------------------------------------------
 # MedGemma subjective extraction
 # ---------------------------------------------------------------------------
+
 
 def _build_subjective_prompt(
     applicable_scores: list[ScoreDefinition],
@@ -386,6 +441,7 @@ async def _extract_subjective_variables(
 # Score calculation
 # ---------------------------------------------------------------------------
 
+
 def _get_risk_stratum(score_def: ScoreDefinition, total: int | float) -> Threshold | None:
     """Find the matching threshold for a total score."""
     for t in score_def.thresholds:
@@ -421,6 +477,7 @@ def _determine_applicable_scores(
 # Main entry point
 # ---------------------------------------------------------------------------
 
+
 async def calculate_risk_scores(
     parsed_case: dict,
     case_text: str,
@@ -447,7 +504,11 @@ async def calculate_risk_scores(
     )
 
     if not applicable_scores:
-        return RiskScoreReport(scores=[], case_category=case_category, summary="No standard risk scores applicable for this case category.")
+        return RiskScoreReport(
+            scores=[],
+            case_category=case_category,
+            summary="No standard risk scores applicable for this case category.",
+        )
 
     # Extract deterministic variables
     # Combine physical exam + labs for vitals extraction
@@ -476,7 +537,13 @@ async def calculate_risk_scores(
     det_vars: dict[str, dict[str, Any]] = {}
     for score in applicable_scores:
         det_vars[score.id] = _extract_deterministic_variables(
-            score, vitals, labs, age, sex, history, medications,
+            score,
+            vitals,
+            labs,
+            age,
+            sex,
+            history,
+            medications,
         )
 
     # Extract subjective variables via MedGemma (single call)
@@ -485,7 +552,9 @@ async def calculate_risk_scores(
     if has_subjective:
         try:
             subj_vars = await _extract_subjective_variables(
-                applicable_scores, parsed_case, case_text,
+                applicable_scores,
+                parsed_case,
+                case_text,
             )
         except Exception as e:
             logger.warning("Subjective variable extraction failed", error=str(e))
@@ -507,22 +576,32 @@ async def calculate_risk_scores(
             val = merged.get(vdef.name)
             if val is None:
                 missing.append(vdef.label)
-                variables.append(ScoreVariable(
-                    name=vdef.name, value=None,
-                    source="missing", points=0,
-                    label=vdef.label, criteria=vdef.criteria,
-                ))
+                variables.append(
+                    ScoreVariable(
+                        name=vdef.name,
+                        value=None,
+                        source="missing",
+                        points=0,
+                        label=vdef.label,
+                        criteria=vdef.criteria,
+                    )
+                )
             else:
                 source = vdef.source
                 if source == "subjective" and vdef.name in subj_vars.get(score.id, {}):
                     source = "medgemma"
                 elif source == "deterministic":
                     source = "deterministic"
-                variables.append(ScoreVariable(
-                    name=vdef.name, value=val,
-                    source=source, points=0,  # updated below
-                    label=vdef.label, criteria=vdef.criteria,
-                ))
+                variables.append(
+                    ScoreVariable(
+                        name=vdef.name,
+                        value=val,
+                        source=source,
+                        points=0,  # updated below
+                        label=vdef.label,
+                        criteria=vdef.criteria,
+                    )
+                )
 
         # Check applicability — >50% missing means not applicable
         total_vars = len(all_var_defs)
@@ -532,23 +611,29 @@ async def calculate_risk_scores(
         total_score, _ = score.calculate(merged)
         stratum = _get_risk_stratum(score, total_score)
 
-        results.append(ScoreResult(
-            score_id=score.id,
-            score_name=score.name,
-            total_score=total_score,
-            max_score=score.max_score,
-            risk_level=stratum.risk_level if stratum else "unknown",
-            risk_interpretation=stratum.interpretation if stratum else "",
-            recommendation=stratum.recommendation if stratum else "",
-            variables=variables,
-            missing_variables=missing,
-            applicable=applicable,
-        ))
+        results.append(
+            ScoreResult(
+                score_id=score.id,
+                score_name=score.name,
+                total_score=total_score,
+                max_score=score.max_score,
+                risk_level=stratum.risk_level if stratum else "unknown",
+                risk_interpretation=stratum.interpretation if stratum else "",
+                recommendation=stratum.recommendation if stratum else "",
+                variables=variables,
+                missing_variables=missing,
+                applicable=applicable,
+            )
+        )
 
     # Summary
     applicable_results = [r for r in results if r.applicable]
     if applicable_results:
-        high_risk = [r for r in applicable_results if r.risk_level in ("high", "very_high", "severe", "moderate-severe")]
+        high_risk = [
+            r
+            for r in applicable_results
+            if r.risk_level in ("high", "very_high", "severe", "moderate-severe")
+        ]
         if high_risk:
             names = ", ".join(f"{r.score_name} ({r.risk_level})" for r in high_risk)
             summary = f"High-risk scores identified: {names}. Consider aggressive intervention."
@@ -567,6 +652,7 @@ async def calculate_risk_scores(
 # ---------------------------------------------------------------------------
 # Serialization
 # ---------------------------------------------------------------------------
+
 
 def risk_score_report_to_dict(report: RiskScoreReport) -> dict:
     """Convert RiskScoreReport to JSON-serializable dict."""

@@ -1,7 +1,6 @@
 """Cypher query builders for Neo4j operations."""
 
 
-
 class CypherQueries:
     """Collection of Cypher queries for the knowledge graph."""
 

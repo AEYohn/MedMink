@@ -65,6 +65,7 @@ RULES:
 @dataclass
 class DDxDiagnosis:
     """A single differential diagnosis entry."""
+
     diagnosis: str = ""
     likelihood: str = "low"  # high, moderate, low
     must_rule_out: bool = False
@@ -77,6 +78,7 @@ class DDxDiagnosis:
 @dataclass
 class DDxResult:
     """Complete differential diagnosis result."""
+
     clinical_reasoning_summary: str = ""
     key_distinguishing_tests: list[str] = field(default_factory=list)
     diagnoses: list[DDxDiagnosis] = field(default_factory=list)
@@ -129,15 +131,17 @@ async def generate_differential_diagnosis(
 
         diagnoses = []
         for dx in data.get("diagnoses", []):
-            diagnoses.append(DDxDiagnosis(
-                diagnosis=dx.get("diagnosis", ""),
-                likelihood=dx.get("likelihood", "low"),
-                must_rule_out=dx.get("must_rule_out", False),
-                supporting_findings=dx.get("supporting_findings", []),
-                refuting_findings=dx.get("refuting_findings", []),
-                diagnostic_pathway=dx.get("diagnostic_pathway", []),
-                distinguishing_feature=dx.get("distinguishing_feature", ""),
-            ))
+            diagnoses.append(
+                DDxDiagnosis(
+                    diagnosis=dx.get("diagnosis", ""),
+                    likelihood=dx.get("likelihood", "low"),
+                    must_rule_out=dx.get("must_rule_out", False),
+                    supporting_findings=dx.get("supporting_findings", []),
+                    refuting_findings=dx.get("refuting_findings", []),
+                    diagnostic_pathway=dx.get("diagnostic_pathway", []),
+                    distinguishing_feature=dx.get("distinguishing_feature", ""),
+                )
+            )
 
         return DDxResult(
             clinical_reasoning_summary=data.get("clinical_reasoning_summary", ""),

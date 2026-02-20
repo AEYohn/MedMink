@@ -91,15 +91,25 @@ class AnalyzeAgent(BaseAgent):
                             sections = extraction_result["sections"]
 
                             # Prioritize sections most likely to have formulas/algorithms
-                            for section_name in ["methods", "algorithm", "model", "training", "implementation"]:
+                            for section_name in [
+                                "methods",
+                                "algorithm",
+                                "model",
+                                "training",
+                                "implementation",
+                            ]:
                                 if section_name in sections and sections[section_name]:
-                                    paper_full_text += f"\n\n=== {section_name.upper()} SECTION ===\n"
+                                    paper_full_text += (
+                                        f"\n\n=== {section_name.upper()} SECTION ===\n"
+                                    )
                                     paper_full_text += sections[section_name]
 
                             # Add experiments/results if we have room
                             for section_name in ["experiments", "results"]:
                                 if section_name in sections and sections[section_name]:
-                                    paper_full_text += f"\n\n=== {section_name.upper()} SECTION ===\n"
+                                    paper_full_text += (
+                                        f"\n\n=== {section_name.upper()} SECTION ===\n"
+                                    )
                                     paper_full_text += sections[section_name][:2000]
 
                             # If no sections found, use truncated full text
@@ -126,9 +136,9 @@ class AnalyzeAgent(BaseAgent):
                             related_context = "\n\n=== RELATED RESEARCH CONTEXT ===\n"
                             for rp in related_papers:
                                 related_context += f"\n[Related Paper] {rp['title']}\n"
-                                if rp.get('claims'):
+                                if rp.get("claims"):
                                     related_context += "Key claims:\n"
-                                    for claim in rp['claims'][:3]:
+                                    for claim in rp["claims"][:3]:
                                         related_context += f"- {claim['statement'][:150]}\n"
                             self.logger.debug(
                                 "Using related context",
@@ -327,12 +337,14 @@ class AnalyzeAgent(BaseAgent):
 
                     total_claims += claims_added
                     total_methods += methods_added
-                    analyzed_papers.append({
-                        "paper_id": paper.id,
-                        "title": paper.title[:100],
-                        "claims": claims_added,
-                        "methods": methods_added,
-                    })
+                    analyzed_papers.append(
+                        {
+                            "paper_id": paper.id,
+                            "title": paper.title[:100],
+                            "claims": claims_added,
+                            "methods": methods_added,
+                        }
+                    )
 
                     self.logger.debug(
                         "Paper analyzed",
@@ -411,10 +423,7 @@ class AnalyzeAgent(BaseAgent):
             batch = papers[i : i + batch_size]
 
             # Prepare batch for API call
-            batch_input = [
-                {"title": p.title, "abstract": p.abstract or ""}
-                for p in batch
-            ]
+            batch_input = [{"title": p.title, "abstract": p.abstract or ""} for p in batch]
 
             self.logger.info(
                 "Processing batch",
@@ -426,7 +435,9 @@ class AnalyzeAgent(BaseAgent):
             try:
                 analyses = await gemini.analyze_papers_batch(batch_input, mode=mode)
             except Exception as e:
-                self.logger.warning("Batch analysis failed, falling back to individual", error=str(e))
+                self.logger.warning(
+                    "Batch analysis failed, falling back to individual", error=str(e)
+                )
                 # Fall back to individual analysis
                 analyses = []
                 for paper_input in batch_input:
@@ -519,13 +530,15 @@ class AnalyzeAgent(BaseAgent):
                     total_claims += claims_added
                     total_methods += methods_added
                     total_techniques += techniques_added
-                    analyzed_papers.append({
-                        "paper_id": paper.id,
-                        "title": paper.title[:100],
-                        "claims": claims_added,
-                        "methods": methods_added,
-                        "techniques": techniques_added,
-                    })
+                    analyzed_papers.append(
+                        {
+                            "paper_id": paper.id,
+                            "title": paper.title[:100],
+                            "claims": claims_added,
+                            "methods": methods_added,
+                            "techniques": techniques_added,
+                        }
+                    )
 
                 except Exception as e:
                     self.logger.warning(
@@ -594,14 +607,18 @@ class AnalyzeAgent(BaseAgent):
             # Prepare claims for analysis
             claims_list = []
             for claim1, claim2 in claim_pairs:
-                claims_list.append({
-                    "statement": claim1.statement,
-                    "category": claim1.category,
-                })
-                claims_list.append({
-                    "statement": claim2.statement,
-                    "category": claim2.category,
-                })
+                claims_list.append(
+                    {
+                        "statement": claim1.statement,
+                        "category": claim1.category,
+                    }
+                )
+                claims_list.append(
+                    {
+                        "statement": claim2.statement,
+                        "category": claim2.category,
+                    }
+                )
 
             # Detect contradictions using Gemini
             analysis = await gemini.detect_contradictions(claims_list)
@@ -764,15 +781,11 @@ class AnalyzeAgent(BaseAgent):
 
             # Get recent claims for context
             claims = await kg.get_all_claims(limit=50)
-            developments = "\n".join([
-                f"- {c.statement[:150]}"
-                for c in claims[:30]
-            ])
+            developments = "\n".join([f"- {c.statement[:150]}" for c in claims[:30]])
 
             # Generate predictions
             trend_data = [
-                {"name": t.name, "direction": t.direction, "velocity": t.velocity}
-                for t in trends
+                {"name": t.name, "direction": t.direction, "velocity": t.velocity} for t in trends
             ]
 
             analysis = await gemini.generate_predictions(
@@ -788,7 +801,9 @@ class AnalyzeAgent(BaseAgent):
             for pred_data in analysis.get("predictions", []):
                 # Calculate due date based on timeframe
                 timeframe = pred_data.get("timeframe", "3_months")
-                months = {"1_month": 1, "3_months": 3, "6_months": 6, "1_year": 12}.get(timeframe, 3)
+                months = {"1_month": 1, "3_months": 3, "6_months": 6, "1_year": 12}.get(
+                    timeframe, 3
+                )
                 due_date = datetime.utcnow() + timedelta(days=months * 30)
 
                 prediction = PredictionNode(

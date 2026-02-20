@@ -108,15 +108,11 @@ class HybridSearch:
         filtered = results
 
         if filters.categories:
-            filtered = [
-                r for r in filtered
-                if r.metadata.get("category") in filters.categories
-            ]
+            filtered = [r for r in filtered if r.metadata.get("category") in filters.categories]
 
         if filters.min_confidence is not None:
             filtered = [
-                r for r in filtered
-                if r.metadata.get("confidence", 1.0) >= filters.min_confidence
+                r for r in filtered if r.metadata.get("confidence", 1.0) >= filters.min_confidence
             ]
 
         if filters.keywords:
@@ -182,8 +178,7 @@ class HybridSearch:
 
             # Combined score using weights
             combined_score = (
-                self.semantic_weight * result.score
-                + self.keyword_weight * keyword_score
+                self.semantic_weight * result.score + self.keyword_weight * keyword_score
             )
 
             highlights = self._extract_highlights(query_terms, searchable_text)

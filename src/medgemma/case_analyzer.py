@@ -20,19 +20,49 @@ logger = structlog.get_logger()
 # --- PubMed Human-Study Filter ---
 # Deterministic filter to exclude non-human, non-clinical publications
 
-_NON_HUMAN_PUB_TYPES = frozenset({
-    "Letter", "Comment", "Editorial", "Retracted Publication",
-    "Published Erratum", "News",
-})
-_NON_HUMAN_MESH = frozenset({
-    "Animals", "Mice", "Rats", "Dogs", "Cats", "Rabbits",
-    "Drosophila", "Zebrafish", "Cell Line", "In Vitro Techniques",
-})
-_NON_HUMAN_TITLE_KEYWORDS = frozenset({
-    "mice", "mouse", "rat", "rats", "murine", "canine", "feline",
-    "porcine", "bovine", "ovine", "zebrafish", "drosophila",
-    "in vitro", "cell line", "cell culture",
-})
+_NON_HUMAN_PUB_TYPES = frozenset(
+    {
+        "Letter",
+        "Comment",
+        "Editorial",
+        "Retracted Publication",
+        "Published Erratum",
+        "News",
+    }
+)
+_NON_HUMAN_MESH = frozenset(
+    {
+        "Animals",
+        "Mice",
+        "Rats",
+        "Dogs",
+        "Cats",
+        "Rabbits",
+        "Drosophila",
+        "Zebrafish",
+        "Cell Line",
+        "In Vitro Techniques",
+    }
+)
+_NON_HUMAN_TITLE_KEYWORDS = frozenset(
+    {
+        "mice",
+        "mouse",
+        "rat",
+        "rats",
+        "murine",
+        "canine",
+        "feline",
+        "porcine",
+        "bovine",
+        "ovine",
+        "zebrafish",
+        "drosophila",
+        "in vitro",
+        "cell line",
+        "cell culture",
+    }
+)
 
 
 def _is_human_clinical_study(paper_dict: dict) -> bool:
@@ -67,17 +97,35 @@ def _is_human_clinical_study(paper_dict: dict) -> bool:
 
 MEDICAL_CATEGORIES = {
     "musculoskeletal": {
-        "treatment_classes": ["NSAIDs", "muscle relaxants", "physical therapy", "corticosteroid injections", "DMARDs", "surgical consultation"],
-        "workup": ["X-ray", "MRI", "inflammatory markers (ESR, CRP)", "joint aspiration", "bone density scan"],
+        "treatment_classes": [
+            "NSAIDs",
+            "muscle relaxants",
+            "physical therapy",
+            "corticosteroid injections",
+            "DMARDs",
+            "surgical consultation",
+        ],
+        "workup": [
+            "X-ray",
+            "MRI",
+            "inflammatory markers (ESR, CRP)",
+            "joint aspiration",
+            "bone density scan",
+        ],
         "acute_interventions": [
-            "IV ketorolac for acute pain", "joint reduction for dislocations",
-            "splinting/immobilization", "IV antibiotics for septic arthritis",
-            "surgical washout for open fractures", "compartment pressure measurement",
+            "IV ketorolac for acute pain",
+            "joint reduction for dislocations",
+            "splinting/immobilization",
+            "IV antibiotics for septic arthritis",
+            "surgical washout for open fractures",
+            "compartment pressure measurement",
             "emergent fasciotomy for compartment syndrome",
         ],
         "monitoring": [
-            "serial neurovascular checks", "compartment pressure monitoring",
-            "pain reassessment q2-4h", "post-reduction imaging",
+            "serial neurovascular checks",
+            "compartment pressure monitoring",
+            "pain reassessment q2-4h",
+            "post-reduction imaging",
             "wound checks for surgical patients",
         ],
         "consults_and_disposition": [
@@ -89,17 +137,33 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "infectious_disease": {
-        "treatment_classes": ["antibiotics", "antivirals", "antifungals", "supportive care", "isolation precautions"],
-        "workup": ["cultures (blood, urine, CSF)", "inflammatory markers", "PCR testing", "serology", "imaging"],
+        "treatment_classes": [
+            "antibiotics",
+            "antivirals",
+            "antifungals",
+            "supportive care",
+            "isolation precautions",
+        ],
+        "workup": [
+            "cultures (blood, urine, CSF)",
+            "inflammatory markers",
+            "PCR testing",
+            "serology",
+            "imaging",
+        ],
         "acute_interventions": [
             "IV broad-spectrum antibiotics within 1 hour for sepsis",
-            "IV fluid resuscitation (30 mL/kg crystalloid)", "blood cultures before antibiotics",
-            "source control (drainage of abscess)", "IV acyclovir for HSV encephalitis",
+            "IV fluid resuscitation (30 mL/kg crystalloid)",
+            "blood cultures before antibiotics",
+            "source control (drainage of abscess)",
+            "IV acyclovir for HSV encephalitis",
             "airborne/contact isolation as indicated",
         ],
         "monitoring": [
-            "serial lactate levels", "hourly urine output for sepsis",
-            "continuous vitals monitoring", "daily procalcitonin trending",
+            "serial lactate levels",
+            "hourly urine output for sepsis",
+            "continuous vitals monitoring",
+            "daily procalcitonin trending",
             "culture sensitivities for antibiotic de-escalation",
         ],
         "consults_and_disposition": [
@@ -111,18 +175,41 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "cardiology": {
-        "treatment_classes": ["antihypertensives", "anticoagulants", "antiplatelets", "statins", "diuretics", "beta-blockers", "cardiac catheterization"],
-        "workup": ["ECG/EKG", "echocardiogram", "cardiac enzymes (troponin)", "BNP", "stress test", "cardiac MRI"],
+        "treatment_classes": [
+            "antihypertensives",
+            "anticoagulants",
+            "antiplatelets",
+            "statins",
+            "diuretics",
+            "beta-blockers",
+            "cardiac catheterization",
+        ],
+        "workup": [
+            "ECG/EKG",
+            "echocardiogram",
+            "cardiac enzymes (troponin)",
+            "BNP",
+            "stress test",
+            "cardiac MRI",
+        ],
         "acute_interventions": [
-            "IV heparin", "dual antiplatelet loading", "IV nitroglycerin",
-            "IV beta-blocker (esmolol/labetalol)", "emergent PCI",
-            "code STEMI activation", "defibrillation/cardioversion",
-            "temporary pacing", "IV amiodarone",
+            "IV heparin",
+            "dual antiplatelet loading",
+            "IV nitroglycerin",
+            "IV beta-blocker (esmolol/labetalol)",
+            "emergent PCI",
+            "code STEMI activation",
+            "defibrillation/cardioversion",
+            "temporary pacing",
+            "IV amiodarone",
         ],
         "monitoring": [
-            "continuous telemetry", "serial troponins q3-6h",
-            "continuous pulse oximetry", "arterial line for hemodynamic instability",
-            "strict I&O", "daily weights for CHF",
+            "continuous telemetry",
+            "serial troponins q3-6h",
+            "continuous pulse oximetry",
+            "arterial line for hemodynamic instability",
+            "strict I&O",
+            "daily weights for CHF",
         ],
         "consults_and_disposition": [
             "interventional cardiology for ACS",
@@ -133,19 +220,35 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "neurology": {
-        "treatment_classes": ["anticonvulsants", "triptans", "muscle relaxants", "neuropathic pain agents", "thrombolytics", "surgical decompression"],
-        "workup": ["CT head", "MRI brain/spine", "lumbar puncture", "EEG", "nerve conduction studies", "neurology consult"],
+        "treatment_classes": [
+            "anticonvulsants",
+            "triptans",
+            "muscle relaxants",
+            "neuropathic pain agents",
+            "thrombolytics",
+            "surgical decompression",
+        ],
+        "workup": [
+            "CT head",
+            "MRI brain/spine",
+            "lumbar puncture",
+            "EEG",
+            "nerve conduction studies",
+            "neurology consult",
+        ],
         "acute_interventions": [
             "IV tPA for acute ischemic stroke (within window)",
             "IV levetiracetam/fosphenytoin for status epilepticus",
-            "IV lorazepam for active seizure", "emergent mechanical thrombectomy",
+            "IV lorazepam for active seizure",
+            "emergent mechanical thrombectomy",
             "external ventricular drain for hydrocephalus",
             "IV mannitol/hypertonic saline for elevated ICP",
             "IV nimodipine for SAH vasospasm",
         ],
         "monitoring": [
             "neuro checks q1-2h (GCS, pupil reactivity, motor exam)",
-            "continuous EEG for seizure monitoring", "ICP monitoring if indicated",
+            "continuous EEG for seizure monitoring",
+            "ICP monitoring if indicated",
             "serial CT head for hemorrhage expansion",
             "NIH Stroke Scale serial assessments",
         ],
@@ -158,18 +261,36 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "pulmonology": {
-        "treatment_classes": ["bronchodilators", "inhaled corticosteroids", "antibiotics", "oxygen therapy", "anticoagulation for PE"],
-        "workup": ["chest X-ray", "CT chest", "pulmonary function tests", "ABG", "D-dimer", "CT angiography"],
+        "treatment_classes": [
+            "bronchodilators",
+            "inhaled corticosteroids",
+            "antibiotics",
+            "oxygen therapy",
+            "anticoagulation for PE",
+        ],
+        "workup": [
+            "chest X-ray",
+            "CT chest",
+            "pulmonary function tests",
+            "ABG",
+            "D-dimer",
+            "CT angiography",
+        ],
         "acute_interventions": [
-            "high-flow oxygen/NIV (BiPAP/CPAP)", "emergent intubation if needed",
+            "high-flow oxygen/NIV (BiPAP/CPAP)",
+            "emergent intubation if needed",
             "IV systemic corticosteroids for severe exacerbation",
-            "continuous nebulized bronchodilators", "IV heparin for PE",
-            "systemic thrombolytics for massive PE", "needle decompression for tension pneumothorax",
+            "continuous nebulized bronchodilators",
+            "IV heparin for PE",
+            "systemic thrombolytics for massive PE",
+            "needle decompression for tension pneumothorax",
             "chest tube for pneumothorax/effusion",
         ],
         "monitoring": [
-            "continuous pulse oximetry", "serial ABGs",
-            "peak flow measurements for asthma", "ventilator parameters if intubated",
+            "continuous pulse oximetry",
+            "serial ABGs",
+            "peak flow measurements for asthma",
+            "ventilator parameters if intubated",
             "chest X-ray post-procedure",
         ],
         "consults_and_disposition": [
@@ -181,18 +302,38 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "gastroenterology": {
-        "treatment_classes": ["PPIs", "H2 blockers", "antiemetics", "laxatives", "antidiarrheals", "immunomodulators", "endoscopy"],
-        "workup": ["abdominal CT", "ultrasound", "endoscopy", "colonoscopy", "liver function tests", "stool studies"],
+        "treatment_classes": [
+            "PPIs",
+            "H2 blockers",
+            "antiemetics",
+            "laxatives",
+            "antidiarrheals",
+            "immunomodulators",
+            "endoscopy",
+        ],
+        "workup": [
+            "abdominal CT",
+            "ultrasound",
+            "endoscopy",
+            "colonoscopy",
+            "liver function tests",
+            "stool studies",
+        ],
         "acute_interventions": [
-            "IV PPI drip for GI bleed", "emergent endoscopy for active bleeding",
-            "IV octreotide for variceal bleed", "IV fluid resuscitation",
-            "packed RBC transfusion for hemorrhage", "NG tube placement",
+            "IV PPI drip for GI bleed",
+            "emergent endoscopy for active bleeding",
+            "IV octreotide for variceal bleed",
+            "IV fluid resuscitation",
+            "packed RBC transfusion for hemorrhage",
+            "NG tube placement",
             "NPO and IV antibiotics for acute pancreatitis with infection",
         ],
         "monitoring": [
             "serial hemoglobin/hematocrit q6-8h for GI bleed",
-            "strict I&O", "abdominal exam reassessment",
-            "serial lipase for pancreatitis", "stool output tracking",
+            "strict I&O",
+            "abdominal exam reassessment",
+            "serial lipase for pancreatitis",
+            "stool output tracking",
         ],
         "consults_and_disposition": [
             "GI for endoscopy/colonoscopy",
@@ -203,18 +344,36 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "endocrinology": {
-        "treatment_classes": ["insulin", "metformin", "GLP-1 agonists", "thyroid hormone", "antithyroid drugs", "bisphosphonates"],
-        "workup": ["HbA1c", "TSH/T4", "cortisol", "DEXA scan", "glucose tolerance test", "hormonal panels"],
+        "treatment_classes": [
+            "insulin",
+            "metformin",
+            "GLP-1 agonists",
+            "thyroid hormone",
+            "antithyroid drugs",
+            "bisphosphonates",
+        ],
+        "workup": [
+            "HbA1c",
+            "TSH/T4",
+            "cortisol",
+            "DEXA scan",
+            "glucose tolerance test",
+            "hormonal panels",
+        ],
         "acute_interventions": [
-            "IV insulin drip for DKA/HHS", "IV normal saline bolus for DKA",
-            "IV dextrose for severe hypoglycemia", "potassium replacement in DKA",
+            "IV insulin drip for DKA/HHS",
+            "IV normal saline bolus for DKA",
+            "IV dextrose for severe hypoglycemia",
+            "potassium replacement in DKA",
             "IV hydrocortisone for adrenal crisis",
             "IV propylthiouracil + beta-blocker for thyroid storm",
         ],
         "monitoring": [
-            "hourly blood glucose for DKA/HHS", "serial BMP q2-4h (potassium, bicarb, AG)",
+            "hourly blood glucose for DKA/HHS",
+            "serial BMP q2-4h (potassium, bicarb, AG)",
             "continuous telemetry for electrolyte abnormalities",
-            "strict I&O", "mental status checks for HHS",
+            "strict I&O",
+            "mental status checks for HHS",
         ],
         "consults_and_disposition": [
             "endocrinology for complex diabetes/thyroid",
@@ -225,8 +384,22 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "nephrology": {
-        "treatment_classes": ["ACE inhibitors", "ARBs", "diuretics", "phosphate binders", "ESAs", "dialysis"],
-        "workup": ["BMP/CMP", "urinalysis", "renal ultrasound", "GFR", "urine protein", "renal biopsy"],
+        "treatment_classes": [
+            "ACE inhibitors",
+            "ARBs",
+            "diuretics",
+            "phosphate binders",
+            "ESAs",
+            "dialysis",
+        ],
+        "workup": [
+            "BMP/CMP",
+            "urinalysis",
+            "renal ultrasound",
+            "GFR",
+            "urine protein",
+            "renal biopsy",
+        ],
         "acute_interventions": [
             "emergent hemodialysis for severe hyperkalemia/uremia/fluid overload",
             "IV calcium gluconate for hyperkalemia with ECG changes",
@@ -237,8 +410,10 @@ MEDICAL_CATEGORIES = {
         ],
         "monitoring": [
             "serial BMP q6-12h (creatinine, potassium, bicarb)",
-            "strict I&O with daily weights", "continuous telemetry for hyperkalemia",
-            "urine output monitoring q1h", "fluid balance assessment",
+            "strict I&O with daily weights",
+            "continuous telemetry for hyperkalemia",
+            "urine output monitoring q1h",
+            "fluid balance assessment",
         ],
         "consults_and_disposition": [
             "nephrology for AKI/dialysis needs",
@@ -249,18 +424,38 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "psychiatry": {
-        "treatment_classes": ["SSRIs", "SNRIs", "antipsychotics", "mood stabilizers", "benzodiazepines", "psychotherapy", "CBT"],
-        "workup": ["psychiatric evaluation", "PHQ-9", "GAD-7", "toxicology screen", "thyroid panel", "safety assessment"],
+        "treatment_classes": [
+            "SSRIs",
+            "SNRIs",
+            "antipsychotics",
+            "mood stabilizers",
+            "benzodiazepines",
+            "psychotherapy",
+            "CBT",
+        ],
+        "workup": [
+            "psychiatric evaluation",
+            "PHQ-9",
+            "GAD-7",
+            "toxicology screen",
+            "thyroid panel",
+            "safety assessment",
+        ],
         "acute_interventions": [
-            "1:1 sitter for active suicidal ideation", "IM haloperidol/lorazepam for acute agitation",
+            "1:1 sitter for active suicidal ideation",
+            "IM haloperidol/lorazepam for acute agitation",
             "IV benzodiazepines for alcohol withdrawal (CIWA protocol)",
-            "naloxone for opioid overdose", "activated charcoal for acute ingestion",
+            "naloxone for opioid overdose",
+            "activated charcoal for acute ingestion",
             "involuntary hold if danger to self/others",
         ],
         "monitoring": [
-            "suicide risk reassessment", "CIWA scoring q1-2h for alcohol withdrawal",
-            "COWS scoring for opioid withdrawal", "continuous observation for high-risk patients",
-            "vital signs q4h", "medication side effect monitoring",
+            "suicide risk reassessment",
+            "CIWA scoring q1-2h for alcohol withdrawal",
+            "COWS scoring for opioid withdrawal",
+            "continuous observation for high-risk patients",
+            "vital signs q4h",
+            "medication side effect monitoring",
         ],
         "consults_and_disposition": [
             "psychiatry for acute psychosis/suicidality",
@@ -271,8 +466,21 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "dermatology": {
-        "treatment_classes": ["topical corticosteroids", "retinoids", "antifungals", "antibiotics", "immunomodulators", "phototherapy"],
-        "workup": ["skin biopsy", "KOH preparation", "patch testing", "dermoscopy", "wound culture"],
+        "treatment_classes": [
+            "topical corticosteroids",
+            "retinoids",
+            "antifungals",
+            "antibiotics",
+            "immunomodulators",
+            "phototherapy",
+        ],
+        "workup": [
+            "skin biopsy",
+            "KOH preparation",
+            "patch testing",
+            "dermoscopy",
+            "wound culture",
+        ],
         "acute_interventions": [
             "IV epinephrine for anaphylaxis with skin involvement",
             "IV corticosteroids for Stevens-Johnson syndrome/TEN",
@@ -282,7 +490,8 @@ MEDICAL_CATEGORIES = {
         ],
         "monitoring": [
             "body surface area assessment for burns/TEN",
-            "wound measurements and photography", "serial temperature checks for cellulitis",
+            "wound measurements and photography",
+            "serial temperature checks for cellulitis",
             "fluid balance for extensive skin loss",
         ],
         "consults_and_disposition": [
@@ -294,19 +503,36 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "hematology_oncology": {
-        "treatment_classes": ["chemotherapy", "immunotherapy", "targeted therapy", "transfusions", "anticoagulants", "growth factors"],
-        "workup": ["CBC with differential", "peripheral smear", "bone marrow biopsy", "flow cytometry", "tumor markers", "PET/CT"],
+        "treatment_classes": [
+            "chemotherapy",
+            "immunotherapy",
+            "targeted therapy",
+            "transfusions",
+            "anticoagulants",
+            "growth factors",
+        ],
+        "workup": [
+            "CBC with differential",
+            "peripheral smear",
+            "bone marrow biopsy",
+            "flow cytometry",
+            "tumor markers",
+            "PET/CT",
+        ],
         "acute_interventions": [
             "emergent transfusion for severe anemia/hemorrhage",
-            "IV heparin for acute thromboembolism", "platelet transfusion for active bleeding",
+            "IV heparin for acute thromboembolism",
+            "platelet transfusion for active bleeding",
             "IV rasburicase for tumor lysis syndrome",
             "emergent leukapheresis for hyperleukocytosis",
             "IV dexamethasone for spinal cord compression",
         ],
         "monitoring": [
-            "serial CBC q6-12h for active bleeding", "coagulation panel trending",
+            "serial CBC q6-12h for active bleeding",
+            "coagulation panel trending",
             "tumor lysis labs (K, phos, uric acid, Ca, creatinine) q6h",
-            "transfusion reaction monitoring", "neutropenic fever surveillance",
+            "transfusion reaction monitoring",
+            "neutropenic fever surveillance",
         ],
         "consults_and_disposition": [
             "hematology/oncology for new diagnoses or complications",
@@ -317,18 +543,34 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "obstetrics_gynecology": {
-        "treatment_classes": ["hormonal therapy", "antibiotics", "analgesics", "tocolytics", "oxytocin", "surgical management"],
-        "workup": ["pelvic ultrasound", "Pap smear", "STI screening", "pregnancy test", "hormonal panels"],
+        "treatment_classes": [
+            "hormonal therapy",
+            "antibiotics",
+            "analgesics",
+            "tocolytics",
+            "oxytocin",
+            "surgical management",
+        ],
+        "workup": [
+            "pelvic ultrasound",
+            "Pap smear",
+            "STI screening",
+            "pregnancy test",
+            "hormonal panels",
+        ],
         "acute_interventions": [
             "IV magnesium sulfate for eclampsia/preterm labor",
-            "IV oxytocin for postpartum hemorrhage", "emergent cesarean section",
+            "IV oxytocin for postpartum hemorrhage",
+            "emergent cesarean section",
             "uterine tamponade for hemorrhage",
             "IV antibiotics for chorioamnionitis",
             "Rh immunoglobulin for Rh-negative mothers",
         ],
         "monitoring": [
-            "continuous fetal heart rate monitoring", "serial blood pressures for preeclampsia",
-            "uterine contraction monitoring", "strict I&O for magnesium therapy",
+            "continuous fetal heart rate monitoring",
+            "serial blood pressures for preeclampsia",
+            "uterine contraction monitoring",
+            "strict I&O for magnesium therapy",
             "serial hemoglobin for hemorrhage",
         ],
         "consults_and_disposition": [
@@ -340,8 +582,21 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "ophthalmology": {
-        "treatment_classes": ["topical antibiotics", "corticosteroid drops", "anti-VEGF injections", "glaucoma drops", "lubricants"],
-        "workup": ["visual acuity", "slit-lamp exam", "tonometry", "fundoscopy", "OCT", "fluorescein angiography"],
+        "treatment_classes": [
+            "topical antibiotics",
+            "corticosteroid drops",
+            "anti-VEGF injections",
+            "glaucoma drops",
+            "lubricants",
+        ],
+        "workup": [
+            "visual acuity",
+            "slit-lamp exam",
+            "tonometry",
+            "fundoscopy",
+            "OCT",
+            "fluorescein angiography",
+        ],
         "acute_interventions": [
             "emergent eye irrigation for chemical burns (30+ min)",
             "IV acetazolamide + topical timolol for acute angle-closure glaucoma",
@@ -350,8 +605,10 @@ MEDICAL_CATEGORIES = {
             "topical antibiotics for corneal ulcer",
         ],
         "monitoring": [
-            "serial visual acuity checks", "intraocular pressure monitoring",
-            "pupil reactivity assessment", "slit-lamp re-examination",
+            "serial visual acuity checks",
+            "intraocular pressure monitoring",
+            "pupil reactivity assessment",
+            "slit-lamp re-examination",
         ],
         "consults_and_disposition": [
             "ophthalmology emergent for acute vision loss/retinal detachment",
@@ -361,8 +618,21 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "urology": {
-        "treatment_classes": ["alpha-blockers", "5-alpha reductase inhibitors", "antibiotics", "anticholinergics", "surgical intervention"],
-        "workup": ["urinalysis", "PSA", "renal ultrasound", "cystoscopy", "urodynamics", "CT urogram"],
+        "treatment_classes": [
+            "alpha-blockers",
+            "5-alpha reductase inhibitors",
+            "antibiotics",
+            "anticholinergics",
+            "surgical intervention",
+        ],
+        "workup": [
+            "urinalysis",
+            "PSA",
+            "renal ultrasound",
+            "cystoscopy",
+            "urodynamics",
+            "CT urogram",
+        ],
         "acute_interventions": [
             "Foley catheter for acute urinary retention",
             "IV antibiotics for pyelonephritis/urosepsis",
@@ -371,8 +641,10 @@ MEDICAL_CATEGORIES = {
             "emergent surgical exploration for testicular torsion",
         ],
         "monitoring": [
-            "urine output monitoring q1h", "serial renal function (creatinine, BUN)",
-            "pain reassessment", "temperature trending for infection",
+            "urine output monitoring q1h",
+            "serial renal function (creatinine, BUN)",
+            "pain reassessment",
+            "temperature trending for infection",
             "post-void residual measurement",
         ],
         "consults_and_disposition": [
@@ -384,8 +656,23 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "rheumatology": {
-        "treatment_classes": ["NSAIDs", "DMARDs", "biologics", "corticosteroids", "colchicine", "urate-lowering therapy"],
-        "workup": ["ANA", "RF", "anti-CCP", "ESR/CRP", "uric acid", "joint X-rays", "synovial fluid analysis"],
+        "treatment_classes": [
+            "NSAIDs",
+            "DMARDs",
+            "biologics",
+            "corticosteroids",
+            "colchicine",
+            "urate-lowering therapy",
+        ],
+        "workup": [
+            "ANA",
+            "RF",
+            "anti-CCP",
+            "ESR/CRP",
+            "uric acid",
+            "joint X-rays",
+            "synovial fluid analysis",
+        ],
         "acute_interventions": [
             "IV methylprednisolone pulse for lupus flare/vasculitis",
             "joint aspiration to rule out septic arthritis",
@@ -394,8 +681,10 @@ MEDICAL_CATEGORIES = {
             "IV cyclophosphamide for severe lupus nephritis",
         ],
         "monitoring": [
-            "serial inflammatory markers (ESR, CRP)", "serial renal function for lupus nephritis",
-            "joint exam reassessment", "serial complement levels (C3, C4)",
+            "serial inflammatory markers (ESR, CRP)",
+            "serial renal function for lupus nephritis",
+            "joint exam reassessment",
+            "serial complement levels (C3, C4)",
             "CBC monitoring for immunosuppressive therapy",
         ],
         "consults_and_disposition": [
@@ -407,7 +696,13 @@ MEDICAL_CATEGORIES = {
         ],
     },
     "ent": {
-        "treatment_classes": ["antibiotics", "nasal corticosteroids", "antihistamines", "decongestants", "surgical intervention"],
+        "treatment_classes": [
+            "antibiotics",
+            "nasal corticosteroids",
+            "antihistamines",
+            "decongestants",
+            "surgical intervention",
+        ],
         "workup": ["audiometry", "tympanometry", "CT sinuses", "laryngoscopy", "allergy testing"],
         "acute_interventions": [
             "anterior nasal packing for epistaxis",
@@ -418,7 +713,8 @@ MEDICAL_CATEGORIES = {
             "foreign body removal",
         ],
         "monitoring": [
-            "airway reassessment", "oxygen saturation monitoring",
+            "airway reassessment",
+            "oxygen saturation monitoring",
             "serial nasal exam for recurrent epistaxis",
             "voice and swallowing assessment post-procedure",
         ],
@@ -457,7 +753,9 @@ def get_category_context(category: str) -> str:
         f"Treatment classes to consider (select only those relevant to the specific condition): {', '.join(cat_info['treatment_classes'])}",
     ]
     if "acute_interventions" in cat_info:
-        parts.append(f"Possible acute interventions (use only if indicated): {', '.join(cat_info['acute_interventions'][:4])}")
+        parts.append(
+            f"Possible acute interventions (use only if indicated): {', '.join(cat_info['acute_interventions'][:4])}"
+        )
     return "\n".join(parts)
 
 
@@ -549,22 +847,61 @@ def _validate_pearls_against_labs(pearls: list[str], labs: list[str]) -> list[st
 # --- Diagnostic Evaluation Boost ---
 # MedGemma 4B systematically downgrades diagnostics to not_recommended
 
-_DIAGNOSTIC_KEYWORDS = frozenset({
-    "ct", "mri", "x-ray", "xray", "ecg", "ekg", "electrocardiogram",
-    "labs", "lab work", "blood work", "cbc", "bmp", "cmp", "urinalysis",
-    "ultrasound", "echo", "echocardiogram", "chest x-ray", "cxr",
-    "troponin", "d-dimer", "bnp", "tsh", "a1c", "hba1c",
-    "lumbar puncture", "ct angiography", "cta", "mra",
-    "eeg", "emg", "pft", "spirometry", "abg", "blood gas",
-})
+_DIAGNOSTIC_KEYWORDS = frozenset(
+    {
+        "ct",
+        "mri",
+        "x-ray",
+        "xray",
+        "ecg",
+        "ekg",
+        "electrocardiogram",
+        "labs",
+        "lab work",
+        "blood work",
+        "cbc",
+        "bmp",
+        "cmp",
+        "urinalysis",
+        "ultrasound",
+        "echo",
+        "echocardiogram",
+        "chest x-ray",
+        "cxr",
+        "troponin",
+        "d-dimer",
+        "bnp",
+        "tsh",
+        "a1c",
+        "hba1c",
+        "lumbar puncture",
+        "ct angiography",
+        "cta",
+        "mra",
+        "eeg",
+        "emg",
+        "pft",
+        "spirometry",
+        "abg",
+        "blood gas",
+    }
+)
 
-_CONTRAINDICATION_KEYWORDS = frozenset({
-    "contraindicated", "harmful", "dangerous", "risk of", "adverse",
-    "allergic", "anaphylaxis", "avoid",
-})
+_CONTRAINDICATION_KEYWORDS = frozenset(
+    {
+        "contraindicated",
+        "harmful",
+        "dangerous",
+        "risk of",
+        "adverse",
+        "allergic",
+        "anaphylaxis",
+        "avoid",
+    }
+)
 
 
-def _maybe_boost_diagnostic(option: 'TreatmentOption') -> None:
+def _maybe_boost_diagnostic(option: "TreatmentOption") -> None:
     """Override not_recommended to consider for diagnostics without contraindication rationale."""
     if option.verdict != "not_recommended":
         return
@@ -606,12 +943,13 @@ def get_relevant_snippet(abstract: str, treatment_name: str, max_chars: int = 30
         return "Abstract not available"
 
     # Split into sentences (handle common abbreviations)
-    sentences = re.split(r'(?<=[.!?])\s+(?=[A-Z])', abstract)
+    sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z])", abstract)
 
     # Get treatment words for matching (first 2 significant words)
     treatment_words = [
-        w.lower() for w in treatment_name.split()
-        if len(w) > 3 and w.lower() not in {'with', 'dose', 'daily', 'weekly', 'monthly'}
+        w.lower()
+        for w in treatment_name.split()
+        if len(w) > 3 and w.lower() not in {"with", "dose", "daily", "weekly", "monthly"}
     ][:2]
 
     if not treatment_words:
@@ -627,14 +965,14 @@ def get_relevant_snippet(abstract: str, treatment_name: str, max_chars: int = 30
         # Return the first relevant sentence, truncated if needed
         result = relevant_sentences[0]
         if len(result) > max_chars:
-            return result[:max_chars].rsplit(' ', 1)[0] + "..."
+            return result[:max_chars].rsplit(" ", 1)[0] + "..."
         return result
 
     # Fallback: first 2 sentences (usually background + objective)
-    fallback = '. '.join(sentences[:2])
+    fallback = ". ".join(sentences[:2])
     if len(fallback) > max_chars:
-        return fallback[:max_chars].rsplit(' ', 1)[0] + "..."
-    return fallback if fallback.endswith('.') else fallback + "..."
+        return fallback[:max_chars].rsplit(" ", 1)[0] + "..."
+    return fallback if fallback.endswith(".") else fallback + "..."
 
 
 def sanitize_pmid(pmid_value: Any) -> str:
@@ -654,12 +992,12 @@ def sanitize_pmid(pmid_value: Any) -> str:
     pmid_str = str(pmid_value).strip()
 
     # Check for PMC ID (different format)
-    pmc_match = re.search(r'PMC(\d+)', pmid_str, re.IGNORECASE)
+    pmc_match = re.search(r"PMC(\d+)", pmid_str, re.IGNORECASE)
     if pmc_match:
         return f"PMC{pmc_match.group(1)}"
 
     # Extract numeric PMID
-    pmid_match = re.search(r'(\d{7,9})', pmid_str)
+    pmid_match = re.search(r"(\d{7,9})", pmid_str)
     if pmid_match:
         return pmid_match.group(1)
 
@@ -675,7 +1013,7 @@ def _word_matches(word: str, text: str) -> bool:
     Longer words use substring matching since false positives are rare.
     """
     if len(word) < 6:
-        return bool(re.search(r'\b' + re.escape(word) + r'\b', text, re.IGNORECASE))
+        return bool(re.search(r"\b" + re.escape(word) + r"\b", text, re.IGNORECASE))
     return word.lower() in text.lower()
 
 
@@ -684,40 +1022,84 @@ def _word_matches(word: str, text: str) -> bool:
 
 RENAL_DOSE_ADJUSTMENTS: dict[str, list[dict]] = {
     "metformin": [
-        {"parameter": "eGFR", "range": (30, 45), "severity": "warning",
-         "action": "Reduce to 500mg BID or 1000mg daily; monitor renal function q3 months"},
-        {"parameter": "eGFR", "range": (0, 30), "severity": "critical",
-         "action": "Contraindicated — discontinue metformin (risk of lactic acidosis)"},
+        {
+            "parameter": "eGFR",
+            "range": (30, 45),
+            "severity": "warning",
+            "action": "Reduce to 500mg BID or 1000mg daily; monitor renal function q3 months",
+        },
+        {
+            "parameter": "eGFR",
+            "range": (0, 30),
+            "severity": "critical",
+            "action": "Contraindicated — discontinue metformin (risk of lactic acidosis)",
+        },
     ],
     "apixaban": [
-        {"parameter": "creatinine", "range": (1.5, 999), "severity": "warning",
-         "action": "Check dose reduction criteria: reduce to 2.5mg BID if ≥2 of: age≥80, weight≤60kg, Cr≥1.5mg/dL"},
+        {
+            "parameter": "creatinine",
+            "range": (1.5, 999),
+            "severity": "warning",
+            "action": "Check dose reduction criteria: reduce to 2.5mg BID if ≥2 of: age≥80, weight≤60kg, Cr≥1.5mg/dL",
+        },
     ],
     "gabapentin": [
-        {"parameter": "eGFR", "range": (30, 60), "severity": "warning",
-         "action": "Reduce dose: max 300mg TID (eGFR 30-60)"},
-        {"parameter": "eGFR", "range": (15, 30), "severity": "warning",
-         "action": "Reduce dose: max 300mg BID (eGFR 15-30)"},
-        {"parameter": "eGFR", "range": (0, 15), "severity": "critical",
-         "action": "Reduce dose: max 300mg daily (eGFR <15)"},
+        {
+            "parameter": "eGFR",
+            "range": (30, 60),
+            "severity": "warning",
+            "action": "Reduce dose: max 300mg TID (eGFR 30-60)",
+        },
+        {
+            "parameter": "eGFR",
+            "range": (15, 30),
+            "severity": "warning",
+            "action": "Reduce dose: max 300mg BID (eGFR 15-30)",
+        },
+        {
+            "parameter": "eGFR",
+            "range": (0, 15),
+            "severity": "critical",
+            "action": "Reduce dose: max 300mg daily (eGFR <15)",
+        },
     ],
     "lisinopril": [
-        {"parameter": "eGFR", "range": (0, 30), "severity": "warning",
-         "action": "Start low dose (2.5-5mg); monitor K+ and Cr closely after initiation"},
+        {
+            "parameter": "eGFR",
+            "range": (0, 30),
+            "severity": "warning",
+            "action": "Start low dose (2.5-5mg); monitor K+ and Cr closely after initiation",
+        },
     ],
     "vancomycin": [
-        {"parameter": "eGFR", "range": (0, 50), "severity": "warning",
-         "action": "Extend interval; use AUC-guided dosing with therapeutic drug monitoring"},
+        {
+            "parameter": "eGFR",
+            "range": (0, 50),
+            "severity": "warning",
+            "action": "Extend interval; use AUC-guided dosing with therapeutic drug monitoring",
+        },
     ],
     "enoxaparin": [
-        {"parameter": "eGFR", "range": (0, 30), "severity": "critical",
-         "action": "Reduce to once daily dosing (1mg/kg q24h); consider unfractionated heparin instead"},
+        {
+            "parameter": "eGFR",
+            "range": (0, 30),
+            "severity": "critical",
+            "action": "Reduce to once daily dosing (1mg/kg q24h); consider unfractionated heparin instead",
+        },
     ],
     "rivaroxaban": [
-        {"parameter": "eGFR", "range": (15, 50), "severity": "warning",
-         "action": "Reduce dose per indication (e.g., 15mg daily for AF); monitor for bleeding"},
-        {"parameter": "eGFR", "range": (0, 15), "severity": "critical",
-         "action": "Avoid use — insufficient data for eGFR <15"},
+        {
+            "parameter": "eGFR",
+            "range": (15, 50),
+            "severity": "warning",
+            "action": "Reduce dose per indication (e.g., 15mg daily for AF); monitor for bleeding",
+        },
+        {
+            "parameter": "eGFR",
+            "range": (0, 15),
+            "severity": "critical",
+            "action": "Avoid use — insufficient data for eGFR <15",
+        },
     ],
 }
 
@@ -733,18 +1115,12 @@ def _extract_renal_function(labs: list[str]) -> dict[str, float | None]:
         lab_lower = lab.lower()
 
         # eGFR patterns: "eGFR 38", "GFR: 38 mL/min", "eGFR = 38"
-        egfr_match = re.search(
-            r'(?:e?gfr|glomerular\s+filtration)[:\s=]*(\d+\.?\d*)',
-            lab_lower
-        )
+        egfr_match = re.search(r"(?:e?gfr|glomerular\s+filtration)[:\s=]*(\d+\.?\d*)", lab_lower)
         if egfr_match:
             result["egfr"] = float(egfr_match.group(1))
 
         # Creatinine patterns: "Cr 1.8", "creatinine: 1.8 mg/dL", "SCr 1.8"
-        cr_match = re.search(
-            r'(?:s?cr(?:eatinine)?)[:\s=]*(\d+\.?\d*)',
-            lab_lower
-        )
+        cr_match = re.search(r"(?:s?cr(?:eatinine)?)[:\s=]*(\d+\.?\d*)", lab_lower)
         if cr_match:
             result["creatinine"] = float(cr_match.group(1))
 
@@ -774,19 +1150,22 @@ def _check_renal_dosing(
                 lo, hi = rule["range"]
                 value = renal.get("egfr") if param == "eGFR" else renal.get("creatinine")
                 if value is not None and lo <= value < hi:
-                    flags.append({
-                        "drug": drug,
-                        "severity": rule["severity"],
-                        "action": rule["action"],
-                        "parameter": param,
-                        "value": value,
-                    })
+                    flags.append(
+                        {
+                            "drug": drug,
+                            "severity": rule["severity"],
+                            "action": rule["action"],
+                            "parameter": param,
+                            "value": value,
+                        }
+                    )
     return flags
 
 
 @dataclass
 class PatientProfile:
     """Extracted patient demographics and history."""
+
     age: str = ""
     sex: str = ""
     relevant_history: list[str] = field(default_factory=list)
@@ -795,6 +1174,7 @@ class PatientProfile:
 @dataclass
 class ClinicalFindings:
     """Structured clinical findings from the case."""
+
     presentation: str = ""
     timeline: str = ""
     physical_exam: list[str] = field(default_factory=list)
@@ -809,6 +1189,7 @@ class ClinicalFindings:
 @dataclass
 class CurrentManagement:
     """Current treatments and recent changes."""
+
     medications: list[str] = field(default_factory=list)
     recent_changes: str = ""
     response_to_treatment: str = ""
@@ -817,6 +1198,7 @@ class CurrentManagement:
 @dataclass
 class ParsedCase:
     """Fully parsed clinical case."""
+
     patient: PatientProfile
     findings: ClinicalFindings
     management: CurrentManagement
@@ -827,6 +1209,7 @@ class ParsedCase:
 @dataclass
 class TreatmentOption:
     """A treatment option with evidence evaluation."""
+
     name: str
     mechanism: str = ""
     verdict: str = "consider"  # recommended, consider, not_recommended
@@ -838,13 +1221,16 @@ class TreatmentOption:
     cons: list[str] = field(default_factory=list)
     key_evidence: list[dict] = field(default_factory=list)  # [{finding, pmid, year}]
     rationale: str = ""
-    papers_used: list[dict] = field(default_factory=list)  # [{pmid, title, match_type, matched_words}]
+    papers_used: list[dict] = field(
+        default_factory=list
+    )  # [{pmid, title, match_type, matched_words}]
     reasoning: dict = field(default_factory=dict)  # structured reasoning for transparency
 
 
 @dataclass
 class CaseAnalysisResult:
     """Complete case analysis result."""
+
     parsed_case: ParsedCase
     treatment_options: list[TreatmentOption]
     top_recommendation: str = ""
@@ -922,18 +1308,20 @@ INSTRUCTIONS:
    d. SUPPORTIVE CARE (e.g., "Supplemental O2", "IV fluid resuscitation")
 4. Include modern guideline-recommended therapies (e.g., DOACs for VTE transition, tenecteplase for stroke).
 5. Do NOT include treatments for conditions the patient does NOT have (e.g., do not recommend chest tube unless pneumothorax is present).
-6. If the case includes ABNORMAL LAB VALUES (electrolytes, glucose, pH, lactate), include CORRECTIONS as treatment options:
+6. You MUST include corrections as BOTH treatment options AND in the metabolic_corrections array. Every abnormal lab requires a metabolic_corrections entry:
    - Hypocalcemia → IV calcium gluconate
    - Hyperkalemia/hypokalemia → appropriate K+ management
    - Hyperglycemia → insulin protocol
    - Metabolic acidosis (pH <7.3) → aggressive resuscitation, serial ABG monitoring
    - Hypertriglyceridemia (>1000 mg/dL) → insulin drip, consider plasmapheresis
-7. Address the UNDERLYING ETIOLOGY, not just the acute presentation:
+7. Include the SPECIFIC CAUSE in treatment names or rationales (e.g., "Insulin drip for hypertriglyceridemia-induced pancreatitis", NOT just "Insulin drip"):
    - If a trigger is identifiable (alcohol, gallstones, drug reaction, infection), include etiology-specific treatment
-   - If a metabolic derangement is likely CAUSING the condition (e.g., hypertriglyceridemia causing pancreatitis), treat the cause
-8. TEMPORAL SEQUENCING: note if treatments must be ordered (e.g., "BP <185/110 BEFORE tPA"), delayed (e.g., "aspirin 24h AFTER tPA"), or time-windowed (e.g., "tPA within 4.5h onset"). State constraints in the rationale.
+   - If a metabolic derangement is likely CAUSING the condition, treat the cause and NAME the cause
+8. TEMPORAL SEQUENCING: note if treatments must be ordered (e.g., "BP <185/110 BEFORE tPA"), delayed (e.g., "aspirin 24h AFTER tPA"), or time-windowed (e.g., "tPA within 4.5h onset"). State constraints in the rationale. For time-critical conditions, ALWAYS include specific time windows in rationales: stroke tPA within 4.5h, STEMI PCI door-to-balloon <90min, sepsis antibiotics within 1h.
 9. Do NOT list HOME MEDICATIONS the patient is already taking unless there is a dose change or the medication should be HELD/DISCONTINUED.
 10. Limit to 5-8 focused, non-redundant options. No duplicates.
+11. ALWAYS include at least 2 specialty consults in acute_management.consults with urgency (emergent/urgent/routine). Include the PRIMARY specialty plus secondary consults for comorbidities.
+12. ALWAYS include at least 3 entries in do_not_do. Include: medications contraindicated for this condition, premature oral intake if NPO-appropriate, and activity/procedure restrictions.
 
 Generate in JSON format:
 {{
@@ -1032,6 +1420,8 @@ Provide evaluation in JSON format:
     }}
 }}
 
+CRITICAL: If a treatment is STANDARD-OF-CARE (first-line guideline therapy) for the primary diagnosis, verdict MUST be "recommended" with confidence ≥0.8. Examples: tPA for acute ischemic stroke in window, PCI for STEMI, heparin for PE, insulin for DKA, magnesium for eclampsia. Do NOT downgrade standard-of-care to "consider".
+
 Output ONLY the JSON. No explanation. Start with {{ end with }}."""
 
 
@@ -1057,7 +1447,7 @@ class ClinicalCaseAnalyzer:
                 "step": "parsing",
                 "status": "started",
                 "message": "Parsing clinical vignette...",
-                "progress": 0.1
+                "progress": 0.1,
             }
 
             parsed_case = await self._parse_case(case_text)
@@ -1091,7 +1481,7 @@ class ClinicalCaseAnalyzer:
                     },
                     "clinical_question": parsed_case.clinical_question,
                     "case_category": parsed_case.case_category,
-                }
+                },
             }
 
             # Build parsed_case_dict once for parallel steps
@@ -1154,7 +1544,11 @@ class ClinicalCaseAnalyzer:
                     return risk_score_report_to_dict(report)
                 except Exception as e:
                     logger.warning("Risk score calculation failed", error=str(e))
-                    return {"scores": [], "case_category": parsed_case.case_category, "summary": "Risk score calculation failed."}
+                    return {
+                        "scores": [],
+                        "case_category": parsed_case.case_category,
+                        "summary": "Risk score calculation failed.",
+                    }
 
             async def _run_treatment_gen():
                 return await self._generate_treatment_options(parsed_case)
@@ -1198,7 +1592,7 @@ class ClinicalCaseAnalyzer:
                     "options": [o.name for o in options],
                     "search_terms": search_terms,
                     "acute_management": acute_management,
-                }
+                },
             }
 
             yield {
@@ -1216,7 +1610,7 @@ class ClinicalCaseAnalyzer:
                     "step": "evidence_search",
                     "status": "started",
                     "message": "Searching medical literature...",
-                    "progress": 0.45
+                    "progress": 0.45,
                 }
 
                 # Import here to avoid circular imports
@@ -1232,7 +1626,10 @@ class ClinicalCaseAnalyzer:
                             "PubMed search results",
                             search_term=term,
                             pmids_found=[p.id for p in found],
-                            titles=[p.title[:60] + "..." if len(p.title) > 60 else p.title for p in found]
+                            titles=[
+                                p.title[:60] + "..." if len(p.title) > 60 else p.title
+                                for p in found
+                            ],
                         )
 
                         term_words = [w.lower() for w in term.split() if len(w) > 3]
@@ -1241,15 +1638,21 @@ class ClinicalCaseAnalyzer:
                             abstract_text = p.abstract or ""
 
                             is_relevant = any(
-                                _word_matches(word, title_text) or _word_matches(word, abstract_text)
+                                _word_matches(word, title_text)
+                                or _word_matches(word, abstract_text)
                                 for word in term_words
                             )
 
                             if not is_relevant:
-                                logger.warning("Filtered irrelevant paper", pmid=p.id, title=p.title[:50], search_term=term)
+                                logger.warning(
+                                    "Filtered irrelevant paper",
+                                    pmid=p.id,
+                                    title=p.title[:50],
+                                    search_term=term,
+                                )
                                 continue
 
-                            meta = p.metadata if hasattr(p, 'metadata') and p.metadata else {}
+                            meta = p.metadata if hasattr(p, "metadata") and p.metadata else {}
                             paper_dict = {
                                 "pmid": p.id,
                                 "title": p.title,
@@ -1263,7 +1666,8 @@ class ClinicalCaseAnalyzer:
                             if not _is_human_clinical_study(paper_dict):
                                 logger.warning(
                                     "Filtered non-human study",
-                                    pmid=p.id, title=p.title[:50],
+                                    pmid=p.id,
+                                    title=p.title[:50],
                                     pub_types=paper_dict["publication_types"],
                                     mesh_terms=paper_dict["mesh_terms"][:5],
                                 )
@@ -1286,7 +1690,7 @@ class ClinicalCaseAnalyzer:
                     "status": "completed",
                     "message": f"Found {len(papers)} relevant papers",
                     "progress": 0.55,
-                    "data": {"count": len(papers)}
+                    "data": {"count": len(papers)},
                 }
 
             # Step 4: Evaluate each treatment option
@@ -1295,13 +1699,15 @@ class ClinicalCaseAnalyzer:
                 "step": "evaluating",
                 "status": "started",
                 "message": "Evaluating treatment options against evidence...",
-                "progress": 0.6
+                "progress": 0.6,
             }
 
             # Evaluate all treatments in parallel
-            evaluated_options = list(await asyncio.gather(
-                *(self._evaluate_treatment(opt, parsed_case, papers) for opt in options)
-            ))
+            evaluated_options = list(
+                await asyncio.gather(
+                    *(self._evaluate_treatment(opt, parsed_case, papers) for opt in options)
+                )
+            )
 
             for evaluated in evaluated_options:
                 yield {
@@ -1309,14 +1715,19 @@ class ClinicalCaseAnalyzer:
                     "step": "evaluating",
                     "status": "in_progress",
                     "message": f"Evaluated {evaluated.name}: {evaluated.verdict}",
-                    "progress": 0.6 + (0.25 * (evaluated_options.index(evaluated) + 1) / max(len(evaluated_options), 1)),
+                    "progress": 0.6
+                    + (
+                        0.25
+                        * (evaluated_options.index(evaluated) + 1)
+                        / max(len(evaluated_options), 1)
+                    ),
                     "data": {
                         "name": evaluated.name,
                         "verdict": evaluated.verdict,
                         "confidence": evaluated.confidence,
                         "papers_used": evaluated.papers_used,
                         "rationale": evaluated.rationale[:120] if evaluated.rationale else "",
-                    }
+                    },
                 }
 
             yield {
@@ -1324,7 +1735,7 @@ class ClinicalCaseAnalyzer:
                 "step": "evaluating",
                 "status": "completed",
                 "message": "All options evaluated",
-                "progress": 0.85
+                "progress": 0.85,
             }
 
             # Cross-validate treatments against do_not_do contraindications
@@ -1339,7 +1750,7 @@ class ClinicalCaseAnalyzer:
                 "step": "medication_review",
                 "status": "started",
                 "message": "Checking drug interactions and renal dosing...",
-                "progress": 0.88
+                "progress": 0.88,
             }
 
             medication_review = await self._perform_medication_reconciliation(
@@ -1351,26 +1762,28 @@ class ClinicalCaseAnalyzer:
                 "step": "medication_review",
                 "status": "completed",
                 "message": f"Found {len(medication_review.get('renal_flags', []))} renal flags, {len(medication_review.get('interactions', []))} interactions",
-                "progress": 0.90
+                "progress": 0.90,
             }
 
             # Step 6: Determine top recommendation
             evaluated_options.sort(
                 key=lambda x: (
                     0 if x.verdict == "recommended" else 1 if x.verdict == "consider" else 2,
-                    -x.confidence
+                    -x.confidence,
                 )
             )
 
             viable_options = [
-                o for o in evaluated_options
+                o
+                for o in evaluated_options
                 if o.verdict in ("recommended", "consider") and o.confidence > 0.3
             ]
             top = viable_options[0] if viable_options else None
 
             # Generate clinical pearls (with full context)
             pearls = await self._generate_clinical_pearls(
-                parsed_case, evaluated_options,
+                parsed_case,
+                evaluated_options,
                 acute_management=acute_management,
                 medication_review=medication_review,
             )
@@ -1410,20 +1823,22 @@ class ClinicalCaseAnalyzer:
                 "step": "complete",
                 "status": "completed",
                 "message": f"Analysis complete. Top recommendation: {result.top_recommendation}",
-                "progress": 1.0
+                "progress": 1.0,
             }
 
-            yield {
-                "type": "result",
-                "data": self._result_to_dict(result)
-            }
+            result_dict = self._result_to_dict(result)
+
+            # Post-processing: validate and repair output deterministically
+            from src.evaluation.output_validator import validate_and_repair
+
+            category = result_dict.get("parsed_case", {}).get("case_category", "")
+            result_dict = validate_and_repair(result_dict, category)
+
+            yield {"type": "result", "data": result_dict}
 
         except Exception as e:
             logger.error("Case analysis failed", error=str(e))
-            yield {
-                "type": "error",
-                "message": str(e)
-            }
+            yield {"type": "error", "message": str(e)}
 
     async def _parse_case(self, case_text: str) -> ParsedCase:
         """Parse clinical vignette into structured components."""
@@ -1469,9 +1884,13 @@ class ClinicalCaseAnalyzer:
                     labs=ensure_str_list(findings_data.get("labs", [])),
                     imaging=ensure_str_list(findings_data.get("imaging", [])),
                     vitals=ensure_str_list(findings_data.get("vitals", [])),
-                    precipitating_factors=ensure_str(findings_data.get("precipitating_factors", "")),
+                    precipitating_factors=ensure_str(
+                        findings_data.get("precipitating_factors", "")
+                    ),
                     context_of_onset=ensure_str(findings_data.get("context_of_onset", "")),
-                    associated_symptoms=ensure_str_list(findings_data.get("associated_symptoms", [])),
+                    associated_symptoms=ensure_str_list(
+                        findings_data.get("associated_symptoms", [])
+                    ),
                 ),
                 management=CurrentManagement(
                     medications=ensure_str_list(mgmt_data.get("medications", [])),
@@ -1491,8 +1910,7 @@ class ClinicalCaseAnalyzer:
             )
 
     async def _generate_treatment_options(
-        self,
-        parsed_case: ParsedCase
+        self, parsed_case: ParsedCase
     ) -> tuple[list[TreatmentOption], list[str], dict]:
         """Generate potential treatment options for the case."""
         prompt = TREATMENT_GENERATION_PROMPT.format(
@@ -1505,10 +1923,7 @@ class ClinicalCaseAnalyzer:
             timeline=parsed_case.findings.timeline or "Not specified",
             physical_exam=", ".join(parsed_case.findings.physical_exam[:6]) or "Not documented",
             vitals=", ".join(parsed_case.findings.vitals[:5]) or "Not documented",
-            findings=", ".join(
-                parsed_case.findings.labs[:8] +
-                parsed_case.findings.imaging[:5]
-            ),
+            findings=", ".join(parsed_case.findings.labs[:8] + parsed_case.findings.imaging[:5]),
             management=", ".join(parsed_case.management.medications),
             recent_changes=parsed_case.management.recent_changes or "None",
             response_to_treatment=parsed_case.management.response_to_treatment or "Not documented",
@@ -1542,7 +1957,9 @@ class ClinicalCaseAnalyzer:
             # Combine category with presentation for a specific search term
             # Bare category (e.g. "cardiology") retrieves irrelevant generic papers
             if parsed_case.case_category and parsed_case.findings.presentation:
-                specific_term = f"{parsed_case.findings.presentation} {parsed_case.case_category} treatment"
+                specific_term = (
+                    f"{parsed_case.findings.presentation} {parsed_case.case_category} treatment"
+                )
                 search_terms.insert(0, specific_term)
             elif parsed_case.findings.presentation:
                 search_terms.insert(0, parsed_case.findings.presentation)
@@ -1551,11 +1968,17 @@ class ClinicalCaseAnalyzer:
 
         except Exception as e:
             logger.error("Treatment generation failed", error=str(e))
-            return [], [
-                f"{parsed_case.findings.presentation} treatment"
-                if parsed_case.findings.presentation
-                else "treatment"
-            ], {}
+            return (
+                [],
+                [
+                    (
+                        f"{parsed_case.findings.presentation} treatment"
+                        if parsed_case.findings.presentation
+                        else "treatment"
+                    )
+                ],
+                {},
+            )
 
     async def _evaluate_treatment(
         self,
@@ -1569,8 +1992,10 @@ class ClinicalCaseAnalyzer:
         keyword_matched = []
         for p in papers:
             matched_words = [
-                word for word in treatment_words
-                if _word_matches(word, p.get("title", "")) or _word_matches(word, p.get("abstract", ""))
+                word
+                for word in treatment_words
+                if _word_matches(word, p.get("title", ""))
+                or _word_matches(word, p.get("abstract", ""))
             ]
             if matched_words:
                 keyword_matched.append((p, matched_words))
@@ -1602,22 +2027,26 @@ class ClinicalCaseAnalyzer:
         # Build evidence summary with FULL abstracts and clear PMID labels
         evidence_parts = []
         for p in relevant_papers:
-            pmid = p.get('pmid', 'N/A')
-            title = p.get('title', 'Unknown')
-            year = p.get('year', 'N/A')
-            abstract = p.get('abstract', 'No abstract available')
+            pmid = p.get("pmid", "N/A")
+            title = p.get("title", "Unknown")
+            year = p.get("year", "N/A")
+            abstract = p.get("abstract", "No abstract available")
 
             evidence_parts.append(
-                f"[PMID: {pmid}] ({year})\n"
-                f"Title: {title}\n"
-                f"Abstract: {abstract}\n"
+                f"[PMID: {pmid}] ({year})\n" f"Title: {title}\n" f"Abstract: {abstract}\n"
             )
 
-        evidence_summary = "\n---\n".join(evidence_parts) if evidence_parts else "No direct evidence found."
+        evidence_summary = (
+            "\n---\n".join(evidence_parts) if evidence_parts else "No direct evidence found."
+        )
 
         patient_summary = f"{parsed_case.patient.age} {parsed_case.patient.sex} with {', '.join(parsed_case.patient.relevant_history[:5])}"
 
-        current_meds = ", ".join(parsed_case.management.medications) if parsed_case.management.medications else "None listed"
+        current_meds = (
+            ", ".join(parsed_case.management.medications)
+            if parsed_case.management.medications
+            else "None listed"
+        )
 
         prompt = TREATMENT_EVALUATION_PROMPT.format(
             patient_summary=patient_summary,
@@ -1669,18 +2098,17 @@ class ClinicalCaseAnalyzer:
                 # Extract a relevant snippet from the ACTUAL abstract
                 abstract_snippet = get_relevant_snippet(abstract, option.name)
 
-                option.key_evidence.append({
-                    "finding": abstract_snippet,  # REAL text from REAL paper
-                    "pmid": pmid,
-                    "year": year,
-                    "title": title,  # Include title for context
-                })
+                option.key_evidence.append(
+                    {
+                        "finding": abstract_snippet,  # REAL text from REAL paper
+                        "pmid": pmid,
+                        "year": year,
+                        "title": title,  # Include title for context
+                    }
+                )
 
                 logger.info(
-                    "Using real abstract text",
-                    pmid=pmid,
-                    title=title[:50],
-                    treatment=option.name
+                    "Using real abstract text", pmid=pmid, title=title[:50], treatment=option.name
                 )
 
             # Post-processing: boost diagnostics that were incorrectly downgraded
@@ -1711,7 +2139,9 @@ class ClinicalCaseAnalyzer:
         # Do-not-do list
         do_not_do_text = ""
         if acute_management and acute_management.get("do_not_do"):
-            do_not_do_text = "\nDO NOT DO:\n" + "\n".join(f"- {d}" for d in acute_management["do_not_do"])
+            do_not_do_text = "\nDO NOT DO:\n" + "\n".join(
+                f"- {d}" for d in acute_management["do_not_do"]
+            )
 
         # Medication concerns
         med_concerns_text = ""
@@ -1720,11 +2150,17 @@ class ClinicalCaseAnalyzer:
             for flag in medication_review.get("renal_flags", []):
                 concerns.append(f"- RENAL: {flag['drug']} — {flag['action']}")
             for ix in medication_review.get("interactions", []):
-                concerns.append(f"- INTERACTION: {ix.get('drug_a', '?')} + {ix.get('drug_b', '?')} — {ix.get('effect', '?')}")
+                concerns.append(
+                    f"- INTERACTION: {ix.get('drug_a', '?')} + {ix.get('drug_b', '?')} — {ix.get('effect', '?')}"
+                )
             if concerns:
                 med_concerns_text = "\nMEDICATION CONCERNS:\n" + "\n".join(concerns)
 
-        current_meds = ", ".join(parsed_case.management.medications) if parsed_case.management.medications else "None"
+        current_meds = (
+            ", ".join(parsed_case.management.medications)
+            if parsed_case.management.medications
+            else "None"
+        )
 
         prompt = f"""Based on this clinical case about {parsed_case.case_category}, provide 2-3 key clinical pearls or teaching points.
 
@@ -1786,12 +2222,16 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                     pass
 
             # Last resort: extract bullet points from text
-            lines = response.split('\n')
+            lines = response.split("\n")
             pearls = []
             for line in lines:
                 line = line.strip()
-                if line.startswith('- ') or line.startswith('* ') or (line[:3].replace('.','').isdigit()):
-                    pearl_text = re.sub(r'^[\-\*\d.)\s]+', '', line).strip()
+                if (
+                    line.startswith("- ")
+                    or line.startswith("* ")
+                    or (line[:3].replace(".", "").isdigit())
+                ):
+                    pearl_text = re.sub(r"^[\-\*\d.)\s]+", "", line).strip()
                     if len(pearl_text) > 20 and pearl_text[0].isupper():
                         pearls.append(pearl_text)
             if pearls:
@@ -1836,7 +2276,11 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
             if not renal_str:
                 renal_str = "Not available"
 
-            conditions = ", ".join(parsed_case.patient.relevant_history[:5]) if parsed_case.patient.relevant_history else "See case"
+            conditions = (
+                ", ".join(parsed_case.patient.relevant_history[:5])
+                if parsed_case.patient.relevant_history
+                else "See case"
+            )
 
             prompt = MEDICATION_RECONCILIATION_PROMPT.format(
                 patient_summary=patient_summary,
@@ -1930,20 +2374,64 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
         "hydrocortisone": "corticosteroid",
     }
 
-    _FILLER_WORDS = frozenset({
-        "the", "and", "for", "with", "this", "that", "from", "have", "been",
-        "will", "can", "may", "should", "would", "could", "not", "are", "was",
-        "were", "has", "had", "does", "did", "but", "any", "all", "each",
-        "use", "due", "risk", "avoid", "give", "take", "used", "such",
-    })
+    _FILLER_WORDS = frozenset(
+        {
+            "the",
+            "and",
+            "for",
+            "with",
+            "this",
+            "that",
+            "from",
+            "have",
+            "been",
+            "will",
+            "can",
+            "may",
+            "should",
+            "would",
+            "could",
+            "not",
+            "are",
+            "was",
+            "were",
+            "has",
+            "had",
+            "does",
+            "did",
+            "but",
+            "any",
+            "all",
+            "each",
+            "use",
+            "due",
+            "risk",
+            "avoid",
+            "give",
+            "take",
+            "used",
+            "such",
+        }
+    )
 
     # Verbs whose negation is prescriptive ("do not delay X" = DO X immediately).
     # Entries containing these should be SKIPPED during cross-validation.
-    _PRESCRIPTIVE_VERBS = frozenset({
-        "delay", "withhold", "defer", "postpone", "wait",
-        "hold", "stop", "discontinue", "omit", "skip",
-        "forget", "neglect",
-    })
+    _PRESCRIPTIVE_VERBS = frozenset(
+        {
+            "delay",
+            "withhold",
+            "defer",
+            "postpone",
+            "wait",
+            "hold",
+            "stop",
+            "discontinue",
+            "omit",
+            "skip",
+            "forget",
+            "neglect",
+        }
+    )
 
     def _cross_validate_against_do_not_do(
         self,
@@ -1962,7 +2450,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
         # Extract significant keywords from each do_not_do entry
         dnd_keywords: list[tuple[str, str]] = []  # (keyword, original entry)
         for entry in do_not_do:
-            words = re.findall(r'[a-zA-Z]+', entry.lower())
+            words = re.findall(r"[a-zA-Z]+", entry.lower())
             # Skip prescriptive entries — "do not delay X" means X is MANDATORY
             if any(w in self._PRESCRIPTIVE_VERBS for w in words):
                 continue
@@ -1978,7 +2466,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                 continue  # Already flagged
 
             # Get words from option name
-            option_words = [w.lower() for w in re.findall(r'[a-zA-Z]+', option.name)]
+            option_words = [w.lower() for w in re.findall(r"[a-zA-Z]+", option.name)]
 
             # Check 1: Direct word match — require 2+ distinct keyword matches
             # to avoid false positives from coincidental single-word overlap
@@ -2006,7 +2494,9 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                                 matched_entry = entry
                                 break
                             # Also match plurals: "antibiotics" → "antibiotic"
-                            if dnd_keyword.rstrip('s') in drug_class or drug_class in dnd_keyword.rstrip('s'):
+                            if dnd_keyword.rstrip(
+                                "s"
+                            ) in drug_class or drug_class in dnd_keyword.rstrip("s"):
                                 matched_entry = entry
                                 break
                     if matched_entry:
@@ -2022,7 +2512,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                 )
                 option.verdict = "not_recommended"
                 option.confidence = min(option.confidence, 0.2)
-                option.rationale = f"SAFETY: Contradicts do_not_do guideline — \"{matched_entry}\". {option.rationale}"
+                option.rationale = f'SAFETY: Contradicts do_not_do guideline — "{matched_entry}". {option.rationale}'
                 if f"Contradicts: {matched_entry}" not in option.cons:
                     option.cons.insert(0, f"Contradicts: {matched_entry}")
 
@@ -2113,7 +2603,6 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
             "clinical_risk_scores": result.clinical_risk_scores,
         }
 
-
     def _merge_findings(
         self,
         parsed_case_dict: dict,
@@ -2202,7 +2691,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                 "step": "parsing",
                 "status": "started",
                 "message": "Merging new findings into case...",
-                "progress": 0.1
+                "progress": 0.1,
             }
 
             merged_case = self._merge_findings(previous_parsed_case, new_findings)
@@ -2236,7 +2725,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                     },
                     "clinical_question": merged_case.clinical_question,
                     "case_category": merged_case.case_category,
-                }
+                },
             }
 
             # Step 2: Generate updated treatment options
@@ -2245,10 +2734,12 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                 "step": "generating_options",
                 "status": "started",
                 "message": "Re-generating treatment options with new findings...",
-                "progress": 0.3
+                "progress": 0.3,
             }
 
-            options, search_terms, acute_management = await self._generate_treatment_options(merged_case)
+            options, search_terms, acute_management = await self._generate_treatment_options(
+                merged_case
+            )
 
             yield {
                 "type": "step",
@@ -2260,7 +2751,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                     "options": [o.name for o in options],
                     "search_terms": search_terms,
                     "acute_management": acute_management,
-                }
+                },
             }
 
             # Step 3: Search for evidence — reuse papers where search terms overlap
@@ -2269,7 +2760,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                 "step": "evidence_search",
                 "status": "started",
                 "message": "Searching for additional evidence...",
-                "progress": 0.45
+                "progress": 0.45,
             }
 
             papers = list(previous_papers or [])
@@ -2289,7 +2780,8 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                             title_text = p.title or ""
                             abstract_text = p.abstract or ""
                             is_relevant = any(
-                                _word_matches(word, title_text) or _word_matches(word, abstract_text)
+                                _word_matches(word, title_text)
+                                or _word_matches(word, abstract_text)
                                 for word in term_words
                             )
                             if not is_relevant:
@@ -2298,7 +2790,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                             existing_pmids = {str(ep.get("pmid", "")) for ep in papers}
                             if str(p.id) in existing_pmids:
                                 continue
-                            meta = p.metadata if hasattr(p, 'metadata') and p.metadata else {}
+                            meta = p.metadata if hasattr(p, "metadata") and p.metadata else {}
                             paper_dict = {
                                 "pmid": p.id,
                                 "title": p.title,
@@ -2325,7 +2817,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                 "status": "completed",
                 "message": f"Using {len(papers)} papers ({len(new_terms)} new searches)",
                 "progress": 0.55,
-                "data": {"count": len(papers)}
+                "data": {"count": len(papers)},
             }
 
             # Step 4: Evaluate each treatment option
@@ -2334,7 +2826,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                 "step": "evaluating",
                 "status": "started",
                 "message": "Evaluating treatment options against evidence...",
-                "progress": 0.6
+                "progress": 0.6,
             }
 
             evaluated_options = []
@@ -2345,7 +2837,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                     "step": "evaluating",
                     "status": "in_progress",
                     "message": f"Evaluating {option.name}...",
-                    "progress": progress
+                    "progress": progress,
                 }
                 evaluated = await self._evaluate_treatment(option, merged_case, papers)
                 evaluated_options.append(evaluated)
@@ -2355,7 +2847,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                 "step": "evaluating",
                 "status": "completed",
                 "message": "All options evaluated",
-                "progress": 0.85
+                "progress": 0.85,
             }
 
             # Cross-validate treatments against do_not_do contraindications
@@ -2370,7 +2862,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                 "step": "medication_review",
                 "status": "started",
                 "message": "Checking drug interactions and renal dosing...",
-                "progress": 0.88
+                "progress": 0.88,
             }
 
             medication_review = await self._perform_medication_reconciliation(
@@ -2382,25 +2874,27 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                 "step": "medication_review",
                 "status": "completed",
                 "message": f"Found {len(medication_review.get('renal_flags', []))} renal flags, {len(medication_review.get('interactions', []))} interactions",
-                "progress": 0.90
+                "progress": 0.90,
             }
 
             # Step 6: Determine top recommendation
             evaluated_options.sort(
                 key=lambda x: (
                     0 if x.verdict == "recommended" else 1 if x.verdict == "consider" else 2,
-                    -x.confidence
+                    -x.confidence,
                 )
             )
 
             viable_options = [
-                o for o in evaluated_options
+                o
+                for o in evaluated_options
                 if o.verdict in ("recommended", "consider") and o.confidence > 0.3
             ]
             top = viable_options[0] if viable_options else None
 
             pearls = await self._generate_clinical_pearls(
-                merged_case, evaluated_options,
+                merged_case,
+                evaluated_options,
                 acute_management=acute_management,
                 medication_review=medication_review,
             )
@@ -2431,20 +2925,14 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                 "step": "complete",
                 "status": "completed",
                 "message": f"Reassessment complete. Top recommendation: {result.top_recommendation}",
-                "progress": 1.0
+                "progress": 1.0,
             }
 
-            yield {
-                "type": "result",
-                "data": self._result_to_dict(result)
-            }
+            yield {"type": "result", "data": self._result_to_dict(result)}
 
         except Exception as e:
             logger.error("Case reassessment failed", error=str(e))
-            yield {
-                "type": "error",
-                "message": str(e)
-            }
+            yield {"type": "error", "message": str(e)}
 
 
 # Singleton instance

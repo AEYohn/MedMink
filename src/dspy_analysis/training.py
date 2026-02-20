@@ -46,20 +46,20 @@ SEED_EXAMPLES = [
                     "statement": "The Transformer achieves 28.4 BLEU on English-to-German translation, surpassing existing models including ensembles",
                     "category": "performance",
                     "confidence": 0.95,
-                    "evidence": "BLEU scores reported in Table 2"
+                    "evidence": "BLEU scores reported in Table 2",
                 },
                 {
                     "statement": "The Transformer requires significantly less time to train than architectures based on recurrent or convolutional layers",
                     "category": "performance",
                     "confidence": 0.9,
-                    "evidence": "Training time comparison in Section 6"
-                }
+                    "evidence": "Training time comparison in Section 6",
+                },
             ],
             "methods": [
                 {
                     "name": "Transformer",
                     "description": "Neural network architecture based entirely on attention mechanisms without recurrence",
-                    "is_novel": True
+                    "is_novel": True,
                 }
             ],
             "techniques": [
@@ -71,7 +71,7 @@ SEED_EXAMPLES = [
                     "pseudocode": "Algorithm: Scaled Dot-Product Attention\nInput: Q (queries), K (keys), V (values), d_k (key dimension)\n1. Compute attention scores: scores = Q @ K.T\n2. Scale by sqrt(d_k): scores = scores / sqrt(d_k)\n3. Apply softmax: weights = softmax(scores, dim=-1)\n4. Apply attention: output = weights @ V\n5. return output",
                     "implementation_notes": "Use torch.nn.functional.scaled_dot_product_attention for FlashAttention optimization. d_k is typically 64 when using 512 hidden dim with 8 heads.",
                     "is_novel": True,
-                    "improves_upon": "Additive attention (Bahdanau)"
+                    "improves_upon": "Additive attention (Bahdanau)",
                 },
                 {
                     "name": "Multi-Head Attention",
@@ -81,12 +81,17 @@ SEED_EXAMPLES = [
                     "pseudocode": "Algorithm: Multi-Head Attention\nInput: Q, K, V, num_heads h, model dim d_model\n1. d_k = d_model / h\n2. For i in 1..h:\n   a. Q_i = Q @ W_i^Q  # Project queries\n   b. K_i = K @ W_i^K  # Project keys\n   c. V_i = V @ W_i^V  # Project values\n   d. head_i = Attention(Q_i, K_i, V_i)\n3. Concat all heads: multi = Concat(head_1, ..., head_h)\n4. Final projection: output = multi @ W^O\n5. return output",
                     "implementation_notes": "Use 8 heads with d_model=512. Initialize projection weights with Xavier uniform. Apply dropout=0.1 after attention weights.",
                     "is_novel": True,
-                    "improves_upon": "Single-head attention"
-                }
+                    "improves_upon": "Single-head attention",
+                },
             ],
-            "keywords": ["transformer", "attention", "self-attention", "neural machine translation"],
-            "confidence_overall": 0.95
-        }
+            "keywords": [
+                "transformer",
+                "attention",
+                "self-attention",
+                "neural machine translation",
+            ],
+            "confidence_overall": 0.95,
+        },
     },
     {
         "paper_title": "BERT: Pre-training of Deep Bidirectional Transformers",
@@ -111,14 +116,14 @@ SEED_EXAMPLES = [
                     "statement": "BERT obtains 80.5% accuracy on GLUE benchmark, a 7.7% absolute improvement over previous state-of-the-art",
                     "category": "performance",
                     "confidence": 0.95,
-                    "evidence": "Results in Table 1"
+                    "evidence": "Results in Table 1",
                 }
             ],
             "methods": [
                 {
                     "name": "BERT",
                     "description": "Bidirectional transformer encoder pre-trained on masked language modeling and next sentence prediction",
-                    "is_novel": True
+                    "is_novel": True,
                 }
             ],
             "techniques": [
@@ -130,13 +135,13 @@ SEED_EXAMPLES = [
                     "pseudocode": "Algorithm: Masked Language Modeling\nInput: sequence x, mask_ratio=0.15\n1. Select 15% of tokens randomly as mask_positions\n2. For each position in mask_positions:\n   a. 80% chance: replace with [MASK]\n   b. 10% chance: replace with random token\n   c. 10% chance: keep original\n3. Forward pass through BERT encoder\n4. Compute cross-entropy loss only at masked positions\n5. return loss",
                     "implementation_notes": "Mask 15% of tokens. Of masked tokens: 80% [MASK], 10% random, 10% unchanged. Use WordPiece tokenization.",
                     "is_novel": True,
-                    "improves_upon": "Left-to-right language modeling"
+                    "improves_upon": "Left-to-right language modeling",
                 }
             ],
             "keywords": ["BERT", "pre-training", "masked language model", "NLP"],
-            "confidence_overall": 0.9
-        }
-    }
+            "confidence_overall": 0.9,
+        },
+    },
 ]
 
 
@@ -259,12 +264,18 @@ def save_training_data(examples: list[dspy.Example], path: str):
     """
     data = []
     for ex in examples:
-        data.append({
-            "paper_title": ex.paper_title,
-            "paper_abstract": ex.paper_abstract,
-            "paper_full_text": ex.paper_full_text,
-            "analysis": ex.analysis.model_dump() if hasattr(ex.analysis, 'model_dump') else dict(ex.analysis),
-        })
+        data.append(
+            {
+                "paper_title": ex.paper_title,
+                "paper_abstract": ex.paper_abstract,
+                "paper_full_text": ex.paper_full_text,
+                "analysis": (
+                    ex.analysis.model_dump()
+                    if hasattr(ex.analysis, "model_dump")
+                    else dict(ex.analysis)
+                ),
+            }
+        )
 
     Path(path).write_text(json.dumps(data, indent=2))
     logger.info("Saved training data", path=path, count=len(data))
@@ -285,15 +296,9 @@ def load_training_data(path: str) -> list[dspy.Example]:
     for item in data:
         expected = item["analysis"]
 
-        techniques = [
-            ExtractedTechnique(**t) for t in expected.get("techniques", [])
-        ]
-        claims = [
-            ExtractedClaim(**c) for c in expected.get("claims", [])
-        ]
-        methods = [
-            ExtractedMethod(**m) for m in expected.get("methods", [])
-        ]
+        techniques = [ExtractedTechnique(**t) for t in expected.get("techniques", [])]
+        claims = [ExtractedClaim(**c) for c in expected.get("claims", [])]
+        methods = [ExtractedMethod(**m) for m in expected.get("methods", [])]
 
         analysis = PaperAnalysisResult(
             summary=expected["summary"],

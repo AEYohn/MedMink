@@ -80,7 +80,7 @@ class MedGemmaClient:
             load_in_4bit: Use 4-bit quantization to reduce memory
             max_memory: Max memory per device for model sharding
         """
-        self.model_name = model_name or getattr(settings, 'medgemma_model', DEFAULT_MODEL)
+        self.model_name = model_name or getattr(settings, "medgemma_model", DEFAULT_MODEL)
         self.device = device
         self.load_in_4bit = load_in_4bit
         self.max_memory = max_memory
@@ -90,8 +90,8 @@ class MedGemmaClient:
         self._initialized = False
 
         # Modal remote inference (MedGemma 27B on GPU)
-        self._modal_url = getattr(settings, 'medgemma_modal_url', '') or ''
-        self._modal_model = getattr(settings, 'medgemma_modal_model', 'google/medgemma-27b-it')
+        self._modal_url = getattr(settings, "medgemma_modal_url", "") or ""
+        self._modal_model = getattr(settings, "medgemma_modal_model", "google/medgemma-27b-it")
 
         if self._modal_url:
             logger.info(
@@ -335,6 +335,7 @@ class MedGemmaClient:
 
             # Generate
             import torch
+
             with torch.no_grad():
                 outputs = self._model.generate(
                     **inputs,
@@ -346,7 +347,7 @@ class MedGemmaClient:
 
             # Decode response (skip input tokens)
             response = self._tokenizer.decode(
-                outputs[0][inputs["input_ids"].shape[1]:],
+                outputs[0][inputs["input_ids"].shape[1] :],
                 skip_special_tokens=True,
             )
 
@@ -369,11 +370,11 @@ class MedGemmaClient:
 
         # PRIORITY: If response contains a JSON code block, extract it directly
         # regardless of thinking tokens. This is the most reliable approach.
-        json_block_match = re.search(r'```json\s*([\{\[].*)', response, re.DOTALL)
+        json_block_match = re.search(r"```json\s*([\{\[].*)", response, re.DOTALL)
         if json_block_match:
             json_content = json_block_match.group(1)
             # Find the closing ``` if present
-            closing = json_content.find('```')
+            closing = json_content.find("```")
             if closing > 0:
                 json_content = json_content[:closing]
             response = json_content.strip()
@@ -383,7 +384,7 @@ class MedGemmaClient:
 
         # If no code block but response has JSON array, try to extract it
         if "<unused" in response and "[" in response:
-            arr_match = re.search(r'\[.*\]', response, re.DOTALL)
+            arr_match = re.search(r"\[.*\]", response, re.DOTALL)
             if arr_match:
                 candidate = arr_match.group()
                 # Only use if it looks like a real JSON array (has quotes)
@@ -395,7 +396,7 @@ class MedGemmaClient:
         # Look for the LAST { ... } block which is more likely the answer
         if "<unused" in response and "{" in response:
             # Find the last JSON-like block in the response
-            last_brace = response.rfind('{')
+            last_brace = response.rfind("{")
             if last_brace > 0:
                 # Check if there's a substantial JSON block (not just a small nested obj)
                 candidate = response[last_brace:]
@@ -408,18 +409,18 @@ class MedGemmaClient:
         if "<unused" in response and "thought" in response.lower():
             # Find where the actual response starts (after thinking)
             patterns = [
-                r"<unused\d+>thought.*?(?=\n\n```)",     # Code block after thinking
-                r"<unused\d+>thought.*?(?=\n\n\{)",      # JSON object after thinking
-                r"<unused\d+>thought.*?(?=\n\n\[)",      # JSON array after thinking
-                r"<unused\d+>thought.*?(?=\n\n[A-Z])",   # Double newline + capital
-                r"<unused\d+>thought.*?(?=\*\*[A-Z])",   # Markdown bold
+                r"<unused\d+>thought.*?(?=\n\n```)",  # Code block after thinking
+                r"<unused\d+>thought.*?(?=\n\n\{)",  # JSON object after thinking
+                r"<unused\d+>thought.*?(?=\n\n\[)",  # JSON array after thinking
+                r"<unused\d+>thought.*?(?=\n\n[A-Z])",  # Double newline + capital
+                r"<unused\d+>thought.*?(?=\*\*[A-Z])",  # Markdown bold
                 r"<unused\d+>.*?(?=\n[A-Z][a-z]+\s+is\s)",  # "X is" pattern
             ]
 
             for pattern in patterns:
                 match = re.search(pattern, response, re.DOTALL | re.IGNORECASE)
                 if match:
-                    response = response[match.end():]
+                    response = response[match.end() :]
                     break
             else:
                 # Fallback: just remove the thinking tag
@@ -432,11 +433,13 @@ class MedGemmaClient:
 
     def _fallback_response(self, prompt: str) -> str:
         """Fallback response when model is unavailable."""
-        return json.dumps({
-            "error": "MedGemma model not available",
-            "message": "Please ensure MedGemma is downloaded. Run: huggingface-cli download google/medgemma-1.5-4b-it",
-            "fallback": True,
-        })
+        return json.dumps(
+            {
+                "error": "MedGemma model not available",
+                "message": "Please ensure MedGemma is downloaded. Run: huggingface-cli download google/medgemma-1.5-4b-it",
+                "fallback": True,
+            }
+        )
 
     async def extract_pico(self, question: str) -> dict[str, Any]:
         """Extract PICO elements from a clinical question.
@@ -584,11 +587,9 @@ class MedGemmaClient:
             year = paper.get("year", "")
 
             formatted.append(
-                f"[{pmid}] {title} ({year})\n"
-                f"Abstract: {abstract[:1500]}..."
-                if len(abstract) > 1500 else
-                f"[{pmid}] {title} ({year})\n"
-                f"Abstract: {abstract}"
+                f"[{pmid}] {title} ({year})\n" f"Abstract: {abstract[:1500]}..."
+                if len(abstract) > 1500
+                else f"[{pmid}] {title} ({year})\n" f"Abstract: {abstract}"
             )
 
         return "\n\n".join(formatted)
@@ -657,17 +658,19 @@ class MedGemmaClient:
 
         # Fix common JSON issues
         # Remove trailing commas before } or ]
-        response = re.sub(r',\s*}', '}', response)
-        response = re.sub(r',\s*]', ']', response)
+        response = re.sub(r",\s*}", "}", response)
+        response = re.sub(r",\s*]", "]", response)
 
         # Fix unescaped newlines in strings (replace with \n)
         # This is a best-effort fix
-        response = re.sub(r'(?<!\\)\n(?=[^"]*"[^"]*(?:"[^"]*"[^"]*)*$)', '\\n', response)
+        response = re.sub(r'(?<!\\)\n(?=[^"]*"[^"]*(?:"[^"]*"[^"]*)*$)', "\\n", response)
 
         try:
             return json.loads(response)
         except json.JSONDecodeError as e:
-            logger.warning("JSON parse failed, attempting repair", error=str(e), response_len=len(response))
+            logger.warning(
+                "JSON parse failed, attempting repair", error=str(e), response_len=len(response)
+            )
 
             # Try to repair truncated JSON by closing open brackets/braces
             try:
@@ -682,25 +685,28 @@ class MedGemmaClient:
                 in_str = False
                 last_clean = 0
                 for i, c in enumerate(repaired):
-                    if c == '\\' and in_str:
+                    if c == "\\" and in_str:
                         continue  # skip next char
                     if c == '"':
                         in_str = not in_str
-                    if not in_str and c in ('}', ']'):
+                    if not in_str and c in ("}", "]"):
                         last_clean = i
 
                 if last_clean > 0:
-                    repaired = repaired[:last_clean + 1]
-                    repaired = repaired.rstrip().rstrip(',')
+                    repaired = repaired[: last_clean + 1]
+                    repaired = repaired.rstrip().rstrip(",")
 
                 # Recount and close
-                open_braces = repaired.count('{') - repaired.count('}')
-                open_brackets = repaired.count('[') - repaired.count(']')
-                repaired += ']' * max(0, open_brackets)
-                repaired += '}' * max(0, open_braces)
+                open_braces = repaired.count("{") - repaired.count("}")
+                open_brackets = repaired.count("[") - repaired.count("]")
+                repaired += "]" * max(0, open_brackets)
+                repaired += "}" * max(0, open_braces)
 
                 result = json.loads(repaired)
-                logger.info("Repaired truncated JSON successfully", keys=list(result.keys()) if isinstance(result, dict) else "array")
+                logger.info(
+                    "Repaired truncated JSON successfully",
+                    keys=list(result.keys()) if isinstance(result, dict) else "array",
+                )
                 return result
             except (json.JSONDecodeError, Exception) as repair_err:
                 logger.warning("JSON repair also failed", error=str(repair_err))
@@ -745,8 +751,10 @@ class MedGemmaClient:
         Returns:
             Generated text response
         """
-        multimodal_url = getattr(settings, 'medgemma_multimodal_modal_url', '') or ''
-        multimodal_model = getattr(settings, 'medgemma_multimodal_modal_model', 'google/medgemma-27b-multimodal')
+        multimodal_url = getattr(settings, "medgemma_multimodal_modal_url", "") or ""
+        multimodal_model = getattr(
+            settings, "medgemma_multimodal_modal_model", "google/medgemma-27b-multimodal"
+        )
 
         # Fall back to text modal if no multimodal URL
         if not multimodal_url:
@@ -790,7 +798,9 @@ class MedGemmaClient:
                 ) as resp:
                     if resp.status != 200:
                         body = await resp.text()
-                        logger.error("Multimodal request failed", status=resp.status, body=body[:500])
+                        logger.error(
+                            "Multimodal request failed", status=resp.status, body=body[:500]
+                        )
                         return json.dumps({"error": f"Multimodal request failed: {resp.status}"})
 
                     data = await resp.json()

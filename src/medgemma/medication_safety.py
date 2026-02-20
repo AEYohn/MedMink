@@ -40,14 +40,58 @@ KNOWN_MAJOR_INTERACTIONS = {
 }
 
 DRUG_CLASSES = {
-    "ssri": ["sertraline", "fluoxetine", "paroxetine", "citalopram", "escitalopram", "prozac", "zoloft", "paxil", "lexapro"],
+    "ssri": [
+        "sertraline",
+        "fluoxetine",
+        "paroxetine",
+        "citalopram",
+        "escitalopram",
+        "prozac",
+        "zoloft",
+        "paxil",
+        "lexapro",
+    ],
     "maoi": ["phenelzine", "tranylcypromine", "selegiline", "isocarboxazid", "nardil", "parnate"],
-    "statin": ["atorvastatin", "simvastatin", "rosuvastatin", "pravastatin", "lovastatin", "lipitor", "crestor", "zocor"],
-    "ace inhibitor": ["lisinopril", "enalapril", "ramipril", "benazepril", "captopril", "prinivil", "vasotec"],
+    "statin": [
+        "atorvastatin",
+        "simvastatin",
+        "rosuvastatin",
+        "pravastatin",
+        "lovastatin",
+        "lipitor",
+        "crestor",
+        "zocor",
+    ],
+    "ace inhibitor": [
+        "lisinopril",
+        "enalapril",
+        "ramipril",
+        "benazepril",
+        "captopril",
+        "prinivil",
+        "vasotec",
+    ],
     "blood thinner": ["warfarin", "coumadin", "eliquis", "xarelto", "apixaban", "rivaroxaban"],
     "nsaid": ["ibuprofen", "naproxen", "aspirin", "advil", "motrin", "aleve"],
-    "opioid": ["hydrocodone", "oxycodone", "morphine", "codeine", "tramadol", "vicodin", "percocet"],
-    "benzodiazepine": ["alprazolam", "lorazepam", "diazepam", "clonazepam", "xanax", "ativan", "valium", "klonopin"],
+    "opioid": [
+        "hydrocodone",
+        "oxycodone",
+        "morphine",
+        "codeine",
+        "tramadol",
+        "vicodin",
+        "percocet",
+    ],
+    "benzodiazepine": [
+        "alprazolam",
+        "lorazepam",
+        "diazepam",
+        "clonazepam",
+        "xanax",
+        "ativan",
+        "valium",
+        "klonopin",
+    ],
 }
 
 
@@ -95,16 +139,18 @@ def _check_deterministic_interactions(
                 known_interactions, _ = _get_medication_data()
                 match = known_interactions.get(pair) or known_interactions.get((pair[1], pair[0]))
                 if match:
-                    interactions.append({
-                        "drug_a": med_a,
-                        "drug_b": med_b,
-                        "severity": "major",
-                        "mechanism": match["description"],
-                        "clinical_effect": match["description"],
-                        "recommendation": match["recommendation"],
-                        "alternatives": [],
-                        "source": "deterministic",
-                    })
+                    interactions.append(
+                        {
+                            "drug_a": med_a,
+                            "drug_b": med_b,
+                            "severity": "major",
+                            "mechanism": match["description"],
+                            "clinical_effect": match["description"],
+                            "recommendation": match["recommendation"],
+                            "alternatives": [],
+                            "source": "deterministic",
+                        }
+                    )
                     break  # Only report once per pair
 
     return interactions
@@ -179,6 +225,7 @@ Output ONLY the JSON object. No preamble, no explanation. Start with {{ and end 
 @dataclass
 class MedicationSafetyResult:
     """Complete medication safety check result."""
+
     interactions: list[dict[str, Any]] = field(default_factory=list)
     drug_disease_conflicts: list[dict[str, Any]] = field(default_factory=list)
     dosing_concerns: list[dict[str, Any]] = field(default_factory=list)
@@ -243,17 +290,19 @@ async def check_medication_safety(
             n_interactions = len(interaction_tasks)
             for result in all_results[:n_interactions]:
                 if isinstance(result, dict) and result.get("interaction_exists"):
-                    txgemma_interactions.append({
-                        "drug_a": result.get("drug_a", ""),
-                        "drug_b": result.get("drug_b", ""),
-                        "severity": result.get("severity", "moderate"),
-                        "mechanism": result.get("mechanism", ""),
-                        "clinical_effect": result.get("clinical_effect", ""),
-                        "recommendation": result.get("recommendation", ""),
-                        "alternatives": [],
-                        "source": "txgemma",
-                        "confidence": result.get("confidence", 0.5),
-                    })
+                    txgemma_interactions.append(
+                        {
+                            "drug_a": result.get("drug_a", ""),
+                            "drug_b": result.get("drug_b", ""),
+                            "severity": result.get("severity", "moderate"),
+                            "mechanism": result.get("mechanism", ""),
+                            "clinical_effect": result.get("clinical_effect", ""),
+                            "recommendation": result.get("recommendation", ""),
+                            "alternatives": [],
+                            "source": "txgemma",
+                            "confidence": result.get("confidence", 0.5),
+                        }
+                    )
 
             # Parse toxicity results
             for i, result in enumerate(all_results[n_interactions:]):
@@ -274,10 +323,16 @@ async def check_medication_safety(
     # Step 2: MedGemma clinical reasoning for deeper analysis
     medgemma = get_medgemma_client()
 
-    known_str = "None identified" if not deterministic_interactions else json.dumps(
-        [{"drugs": f"{i['drug_a']} + {i['drug_b']}", "effect": i['clinical_effect']}
-         for i in deterministic_interactions],
-        indent=2,
+    known_str = (
+        "None identified"
+        if not deterministic_interactions
+        else json.dumps(
+            [
+                {"drugs": f"{i['drug_a']} + {i['drug_b']}", "effect": i["clinical_effect"]}
+                for i in deterministic_interactions
+            ],
+            indent=2,
+        )
     )
 
     prompt = SAFETY_CHECK_PROMPT.format(

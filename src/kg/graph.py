@@ -76,7 +76,9 @@ class KnowledgeGraph:
                 try:
                     await session.run(query)
                 except Exception as e:
-                    logger.debug("Schema setup query (may already exist)", query=query[:50], error=str(e))
+                    logger.debug(
+                        "Schema setup query (may already exist)", query=query[:50], error=str(e)
+                    )
 
             logger.info("Knowledge graph schema setup complete")
 
@@ -260,7 +262,9 @@ class KnowledgeGraph:
                 for r in records
             ]
 
-    async def get_potential_contradictions(self, limit: int = 50) -> list[tuple[ClaimNode, ClaimNode]]:
+    async def get_potential_contradictions(
+        self, limit: int = 50
+    ) -> list[tuple[ClaimNode, ClaimNode]]:
         """Get pairs of claims that might contradict each other."""
         driver = await self._get_driver()
         async with driver.session() as session:
@@ -270,13 +274,14 @@ class KnowledgeGraph:
             )
             records = await result.data()
             return [
-                (self._record_to_claim(r["c1"]), self._record_to_claim(r["c2"]))
-                for r in records
+                (self._record_to_claim(r["c1"]), self._record_to_claim(r["c2"])) for r in records
             ]
 
     # Method operations
 
-    async def add_method(self, method: MethodNode, paper_id: str | None = None, is_novel: bool = False) -> MethodNode:
+    async def add_method(
+        self, method: MethodNode, paper_id: str | None = None, is_novel: bool = False
+    ) -> MethodNode:
         """Add or update a method."""
         driver = await self._get_driver()
         async with driver.session() as session:
@@ -322,7 +327,9 @@ class KnowledgeGraph:
 
     # Technique operations
 
-    async def add_technique(self, technique: "TechniqueNode", paper_id: str | None = None) -> "TechniqueNode":
+    async def add_technique(
+        self, technique: "TechniqueNode", paper_id: str | None = None
+    ) -> "TechniqueNode":
         """Add or update a technique."""
         driver = await self._get_driver()
         async with driver.session() as session:
@@ -352,12 +359,15 @@ class KnowledgeGraph:
                     technique_name=technique.name,
                 )
 
-            logger.debug("Technique added/updated", name=technique.name, type=technique.technique_type)
+            logger.debug(
+                "Technique added/updated", name=technique.name, type=technique.technique_type
+            )
             return technique
 
     async def get_techniques(self, limit: int = 100) -> list["TechniqueNode"]:
         """Get all techniques."""
         from src.kg.models import TechniqueNode
+
         driver = await self._get_driver()
         async with driver.session() as session:
             result = await session.run(
@@ -511,10 +521,12 @@ class KnowledgeGraph:
         driver = await self._get_driver()
         async with driver.session() as session:
             # Get counts before deletion
-            stats_result = await session.run("""
+            stats_result = await session.run(
+                """
                 MATCH (n)
                 RETURN labels(n)[0] as label, count(n) as count
-            """)
+            """
+            )
             counts_before = {r["label"]: r["count"] for r in await stats_result.data()}
 
             # Delete all relationships first
@@ -560,7 +572,9 @@ class KnowledgeGraph:
             records = await result.data()
             return [self._record_to_trend(r["t"]) for r in records]
 
-    async def link_trend_to_claim(self, trend_id: str, claim_id: str, contribution: float = 0.5) -> None:
+    async def link_trend_to_claim(
+        self, trend_id: str, claim_id: str, contribution: float = 0.5
+    ) -> None:
         """Link a trend to a claim."""
         driver = await self._get_driver()
         async with driver.session() as session:
@@ -573,7 +587,9 @@ class KnowledgeGraph:
 
     # Prediction operations
 
-    async def add_prediction(self, prediction: PredictionNode, trend_ids: list[str] | None = None) -> PredictionNode:
+    async def add_prediction(
+        self, prediction: PredictionNode, trend_ids: list[str] | None = None
+    ) -> PredictionNode:
         """Add a prediction."""
         driver = await self._get_driver()
         async with driver.session() as session:
@@ -816,7 +832,9 @@ class KnowledgeGraph:
             records = await result.data()
             return [self._record_to_project(r["n"] if "n" in r else r["p"]) for r in records]
 
-    async def update_project_status(self, project_id: str, status: str, error_message: str | None = None) -> None:
+    async def update_project_status(
+        self, project_id: str, status: str, error_message: str | None = None
+    ) -> None:
         """Update a project's status."""
         driver = await self._get_driver()
         async with driver.session() as session:
@@ -984,97 +1002,119 @@ class KnowledgeGraph:
             # Add project node
             proj = record["proj"]
             if proj:
-                nodes.append({
-                    "id": proj["id"],
-                    "type": "project",
-                    "label": proj.get("name", "Project"),
-                    "data": dict(proj),
-                })
+                nodes.append(
+                    {
+                        "id": proj["id"],
+                        "type": "project",
+                        "label": proj.get("name", "Project"),
+                        "data": dict(proj),
+                    }
+                )
 
             # Add problem nodes
             for prob in record["problems"]:
                 if prob:
-                    nodes.append({
-                        "id": prob["id"],
-                        "type": "problem",
-                        "label": prob.get("category", "Problem"),
-                        "data": dict(prob),
-                    })
-                    edges.append({
-                        "source": project_id,
-                        "target": prob["id"],
-                        "type": "HAS_PROBLEM",
-                    })
+                    nodes.append(
+                        {
+                            "id": prob["id"],
+                            "type": "problem",
+                            "label": prob.get("category", "Problem"),
+                            "data": dict(prob),
+                        }
+                    )
+                    edges.append(
+                        {
+                            "source": project_id,
+                            "target": prob["id"],
+                            "type": "HAS_PROBLEM",
+                        }
+                    )
 
             # Add paper links
             for link in record["paper_links"]:
                 if link.get("paper"):
                     paper = link["paper"]
                     if not any(n["id"] == paper["id"] for n in nodes):
-                        nodes.append({
-                            "id": paper["id"],
-                            "type": "paper",
-                            "label": paper.get("title", "Paper")[:50],
-                            "data": dict(paper),
-                        })
+                        nodes.append(
+                            {
+                                "id": paper["id"],
+                                "type": "paper",
+                                "label": paper.get("title", "Paper")[:50],
+                                "data": dict(paper),
+                            }
+                        )
                     if link.get("problem"):
-                        edges.append({
-                            "source": link["problem"],
-                            "target": paper["id"],
-                            "type": "ADDRESSED_BY",
-                            "relevance": link.get("relevance", 0.5),
-                        })
+                        edges.append(
+                            {
+                                "source": link["problem"],
+                                "target": paper["id"],
+                                "type": "ADDRESSED_BY",
+                                "relevance": link.get("relevance", 0.5),
+                            }
+                        )
 
             # Add approach nodes
             for app in record["approaches"]:
                 if app:
-                    nodes.append({
-                        "id": app["id"],
-                        "type": "approach",
-                        "label": app.get("name", "Approach"),
-                        "data": dict(app),
-                    })
-                    edges.append({
-                        "source": project_id,
-                        "target": app["id"],
-                        "type": "HAS_APPROACH",
-                    })
+                    nodes.append(
+                        {
+                            "id": app["id"],
+                            "type": "approach",
+                            "label": app.get("name", "Approach"),
+                            "data": dict(app),
+                        }
+                    )
+                    edges.append(
+                        {
+                            "source": project_id,
+                            "target": app["id"],
+                            "type": "HAS_APPROACH",
+                        }
+                    )
 
             # Add method links
             for link in record["method_links"]:
                 if link.get("method"):
                     method = link["method"]
                     if not any(n["id"] == method["id"] for n in nodes):
-                        nodes.append({
-                            "id": method["id"],
-                            "type": "method",
-                            "label": method.get("name", "Method"),
-                            "data": dict(method),
-                        })
+                        nodes.append(
+                            {
+                                "id": method["id"],
+                                "type": "method",
+                                "label": method.get("name", "Method"),
+                                "data": dict(method),
+                            }
+                        )
                     if link.get("approach"):
-                        edges.append({
-                            "source": link["approach"],
-                            "target": method["id"],
-                            "type": "USES_TECHNIQUE",
-                        })
+                        edges.append(
+                            {
+                                "source": link["approach"],
+                                "target": method["id"],
+                                "type": "USES_TECHNIQUE",
+                            }
+                        )
 
             # Add claim links
             for link in record["claim_links"]:
                 if link.get("claim"):
                     claim = link["claim"]
                     if not any(n["id"] == claim["id"] for n in nodes):
-                        nodes.append({
-                            "id": claim["id"],
-                            "type": "claim",
-                            "label": claim.get("statement", "Claim")[:50],
-                            "data": dict(claim),
-                        })
+                        nodes.append(
+                            {
+                                "id": claim["id"],
+                                "type": "claim",
+                                "label": claim.get("statement", "Claim")[:50],
+                                "data": dict(claim),
+                            }
+                        )
                     if link.get("approach"):
-                        edges.append({
-                            "source": link["approach"],
-                            "target": claim["id"],
-                            "type": "BASED_ON_CLAIM",
-                        })
+                        edges.append(
+                            {
+                                "source": link["approach"],
+                                "target": claim["id"],
+                                "type": "BASED_ON_CLAIM",
+                            }
+                        )
 
             return {"nodes": nodes, "edges": edges}
 

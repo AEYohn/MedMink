@@ -11,12 +11,14 @@ def mock_task_queue():
     """Create a mock task queue."""
     queue = MagicMock()
     queue.add = AsyncMock()
-    queue.get_stats = AsyncMock(return_value={
-        "pending": 5,
-        "in_progress": 2,
-        "completed": 100,
-        "failed": 3,
-    })
+    queue.get_stats = AsyncMock(
+        return_value={
+            "pending": 5,
+            "in_progress": 2,
+            "completed": 100,
+            "failed": 3,
+        }
+    )
     return queue
 
 
@@ -24,9 +26,9 @@ def mock_task_queue():
 def client(mock_knowledge_graph, mock_task_queue):
     """Create a test client with mocked dependencies."""
     # Mock database connections
-    with patch('src.api.main.init_databases', new_callable=AsyncMock):
-        with patch('src.api.main.close_databases', new_callable=AsyncMock):
-            with patch('src.api.main.get_knowledge_graph', new_callable=AsyncMock):
+    with patch("src.api.main.init_databases", new_callable=AsyncMock):
+        with patch("src.api.main.close_databases", new_callable=AsyncMock):
+            with patch("src.api.main.get_knowledge_graph", new_callable=AsyncMock):
                 from src.api.main import app
                 from src.api import deps
 
@@ -49,7 +51,7 @@ class TestHealthEndpoints:
         assert data["name"] == "Research Synthesizer API"
 
     def test_health_endpoint(self, client):
-        with patch('src.api.main.health_check', new_callable=AsyncMock) as mock_health:
+        with patch("src.api.main.health_check", new_callable=AsyncMock) as mock_health:
             mock_health.return_value = {
                 "healthy": True,
                 "postgres": True,

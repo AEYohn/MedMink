@@ -380,6 +380,7 @@ async def get_thought(
 
 class DSPyOptimizeRequest(BaseModel):
     """Request to optimize DSPy modules."""
+
     training_data_path: str | None = None  # Load custom training data
     use_seed_examples: bool = True  # Use built-in seed examples
     max_bootstrapped_demos: int = 3
@@ -388,6 +389,7 @@ class DSPyOptimizeRequest(BaseModel):
 
 class DSPyStatusResponse(BaseModel):
     """DSPy module status response."""
+
     enabled: bool
     optimized: bool
     training_examples: int
@@ -409,6 +411,7 @@ async def get_dspy_status():
 
     try:
         from src.dspy_analysis import get_dspy_client
+
         client = get_dspy_client()
 
         return DSPyStatusResponse(
@@ -436,7 +439,9 @@ async def optimize_dspy_modules(request: DSPyOptimizeRequest):
     from src.config import settings
 
     if not settings.use_dspy:
-        raise HTTPException(status_code=400, detail="DSPy is not enabled. Set USE_DSPY=true in environment.")
+        raise HTTPException(
+            status_code=400, detail="DSPy is not enabled. Set USE_DSPY=true in environment."
+        )
 
     try:
         from src.dspy_analysis import get_dspy_client
@@ -461,7 +466,7 @@ async def optimize_dspy_modules(request: DSPyOptimizeRequest):
         if not examples:
             raise HTTPException(
                 status_code=400,
-                detail="No training examples available. Enable seed examples or provide training data path."
+                detail="No training examples available. Enable seed examples or provide training data path.",
             )
 
         # Add examples to client

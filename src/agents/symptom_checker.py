@@ -26,6 +26,7 @@ ProbabilityLevel = Literal["high", "moderate", "low"]
 @dataclass
 class PossibleCondition:
     """A possible condition based on symptoms."""
+
     name: str
     probability: ProbabilityLevel
     description: str
@@ -34,6 +35,7 @@ class PossibleCondition:
 @dataclass
 class SymptomAnalysis:
     """Result of symptom analysis."""
+
     response: str
     urgency: UrgencyLevel
     possible_conditions: list[PossibleCondition]
@@ -83,7 +85,9 @@ class SymptomTriageSignature(dspy.Signature):
     )
     recommendations: str = dspy.OutputField(desc="JSON list of recommended actions")
     seek_care: bool = dspy.OutputField(desc="Whether to seek professional medical care")
-    care_timeframe: str = dspy.OutputField(desc="When to seek care (e.g., 'immediately', 'within 24 hours')")
+    care_timeframe: str = dspy.OutputField(
+        desc="When to seek care (e.g., 'immediately', 'within 24 hours')"
+    )
     follow_up_questions: str = dspy.OutputField(desc="JSON list of follow-up questions to ask")
 
 

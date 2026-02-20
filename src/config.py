@@ -93,9 +93,7 @@ class Settings(BaseSettings):
 
     # ArXiv
     arxiv_max_results: int = 100
-    arxiv_categories: list[str] = Field(
-        default=["cs.AI", "cs.LG", "cs.CL", "cs.CV", "stat.ML"]
-    )
+    arxiv_categories: list[str] = Field(default=["cs.AI", "cs.LG", "cs.CL", "cs.CV", "stat.ML"])
 
     # Orchestrator
     orchestrator_poll_interval: int = 5  # seconds
@@ -131,7 +129,9 @@ class Settings(BaseSettings):
     medgemma_modal_model: str = "google/medgemma-27b-it"  # Model name served by vLLM
 
     # Modal (remote GPU inference for MedGemma Multimodal)
-    medgemma_multimodal_modal_url: str = ""  # e.g. https://USER--medgemma-multimodal-serve.modal.run
+    medgemma_multimodal_modal_url: str = (
+        ""  # e.g. https://USER--medgemma-multimodal-serve.modal.run
+    )
     medgemma_multimodal_modal_model: str = "google/medgemma-27b-multimodal"
 
     # Modal (Whisper ASR for patient interview)

@@ -289,12 +289,52 @@ class MedicalLiteratureAgent(BaseAgent):
         # Build search query from PICO - extract key terms only
         # Stop words to filter out
         stop_words = {
-            "patients", "with", "the", "in", "and", "or", "who", "have", "had", "are",
-            "for", "to", "of", "a", "an", "that", "this", "from", "by", "as", "on",
-            "treatment", "treatments", "therapy", "therapies", "including", "such",
-            "options", "strategies", "defined", "significant", "improvement", "e.g.",
-            "e.g", "i.e.", "i.e", "other", "different", "various", "standard",
-            "first-line", "first", "line", "second-line", "second", "typically",
+            "patients",
+            "with",
+            "the",
+            "in",
+            "and",
+            "or",
+            "who",
+            "have",
+            "had",
+            "are",
+            "for",
+            "to",
+            "of",
+            "a",
+            "an",
+            "that",
+            "this",
+            "from",
+            "by",
+            "as",
+            "on",
+            "treatment",
+            "treatments",
+            "therapy",
+            "therapies",
+            "including",
+            "such",
+            "options",
+            "strategies",
+            "defined",
+            "significant",
+            "improvement",
+            "e.g.",
+            "e.g",
+            "i.e.",
+            "i.e",
+            "other",
+            "different",
+            "various",
+            "standard",
+            "first-line",
+            "first",
+            "line",
+            "second-line",
+            "second",
+            "typically",
         }
 
         # Extract key medical terms from intervention (not the whole sentence)
@@ -304,25 +344,27 @@ class MedicalLiteratureAgent(BaseAgent):
             if w.strip("(),.") not in stop_words
             and len(w.strip("(),.")) > 3
             and not w.startswith("(")
-        ][:5]  # Take top 5 keywords
+        ][
+            :5
+        ]  # Take top 5 keywords
 
         # Extract key terms from population
         population_keywords = [
             w.strip("(),.")
             for w in pico.population.lower().replace("-", " ").split()
-            if w.strip("(),.") not in stop_words
-            and len(w.strip("(),.")) > 3
+            if w.strip("(),.") not in stop_words and len(w.strip("(),.")) > 3
         ][:3]
 
         # Combine unique keywords
         query_parts = list(dict.fromkeys(intervention_keywords + population_keywords))
 
-        self.logger.debug("Query construction",
+        self.logger.debug(
+            "Query construction",
             intervention=pico.intervention[:50],
             intervention_kw=intervention_keywords,
             population_kw=population_keywords,
             query_parts=query_parts,
-            search_terms_count=len(search_terms) if search_terms else 0
+            search_terms_count=len(search_terms) if search_terms else 0,
         )
 
         # If we have good MeSH search terms, prefer those for better results
@@ -335,8 +377,10 @@ class MedicalLiteratureAgent(BaseAgent):
             # Ultimate fallback: extract key terms from the intervention directly
             # This handles cases where everything got filtered out
             fallback_terms = [
-                w for w in pico.intervention.split()
-                if len(w) > 4 and w.lower() not in {"first", "second", "standard", "treatment", "therapy"}
+                w
+                for w in pico.intervention.split()
+                if len(w) > 4
+                and w.lower() not in {"first", "second", "standard", "treatment", "therapy"}
             ]
             if fallback_terms:
                 query = " ".join(fallback_terms[:4])
@@ -367,17 +411,19 @@ class MedicalLiteratureAgent(BaseAgent):
                 doc = result.get("document", "")
                 title = meta.get("title", doc[:100] if doc else "Unknown")
 
-                papers.append(Paper(
-                    id=result.get("id", ""),
-                    arxiv_id=None,
-                    title=title,
-                    abstract=doc,
-                    authors=[],
-                    categories=[],
-                    published=None,
-                    source="local",
-                    metadata=meta,
-                ))
+                papers.append(
+                    Paper(
+                        id=result.get("id", ""),
+                        arxiv_id=None,
+                        title=title,
+                        abstract=doc,
+                        authors=[],
+                        categories=[],
+                        published=None,
+                        source="local",
+                        metadata=meta,
+                    )
+                )
 
             self.logger.info("Local search complete", found=len(local_results))
         except Exception as e:
@@ -504,7 +550,9 @@ class MedicalLiteratureAgent(BaseAgent):
                     summary=f"Found {paper_count} papers related to the query. Key studies: {'; '.join(paper_titles)}...",
                     key_findings=[],
                     contradictions=[],
-                    limitations=["Automated synthesis unavailable - manual review of papers recommended"],
+                    limitations=[
+                        "Automated synthesis unavailable - manual review of papers recommended"
+                    ],
                     clinical_recommendation="Review the retrieved papers for detailed evidence.",
                     recommendation_strength="none",
                     evidence_grade="very_low",

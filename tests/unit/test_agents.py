@@ -9,14 +9,16 @@ from src.models import Task, TaskType, TaskStatus
 
 class TestIngestAgent:
     @pytest.mark.asyncio
-    async def test_execute_with_no_papers(self, mock_gemini_client, mock_knowledge_graph, sample_task):
+    async def test_execute_with_no_papers(
+        self, mock_gemini_client, mock_knowledge_graph, sample_task
+    ):
         agent = IngestAgent(
             gemini_client=mock_gemini_client,
             knowledge_graph=mock_knowledge_graph,
         )
 
         # Mock the HTTP client to return no papers
-        with patch.object(agent, '_fetch_papers', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(agent, "_fetch_papers", new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = []
 
             result = await agent.execute(sample_task)
@@ -26,14 +28,16 @@ class TestIngestAgent:
             assert result.data.get("message") == "No new papers found"
 
     @pytest.mark.asyncio
-    async def test_execute_creates_thought_signature_with_papers(self, mock_gemini_client, mock_knowledge_graph, sample_task, sample_paper):
+    async def test_execute_creates_thought_signature_with_papers(
+        self, mock_gemini_client, mock_knowledge_graph, sample_task, sample_paper
+    ):
         agent = IngestAgent(
             gemini_client=mock_gemini_client,
             knowledge_graph=mock_knowledge_graph,
         )
 
         # Mock the HTTP client to return papers
-        with patch.object(agent, '_fetch_papers', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(agent, "_fetch_papers", new_callable=AsyncMock) as mock_fetch:
             mock_fetch.return_value = [sample_paper]
 
             result = await agent.execute(sample_task)
@@ -44,14 +48,16 @@ class TestIngestAgent:
             assert result.data.get("papers_ingested") == 1
 
     @pytest.mark.asyncio
-    async def test_execute_handles_error(self, mock_gemini_client, mock_knowledge_graph, sample_task):
+    async def test_execute_handles_error(
+        self, mock_gemini_client, mock_knowledge_graph, sample_task
+    ):
         agent = IngestAgent(
             gemini_client=mock_gemini_client,
             knowledge_graph=mock_knowledge_graph,
         )
 
         # Mock to raise an error
-        with patch.object(agent, '_fetch_papers', new_callable=AsyncMock) as mock_fetch:
+        with patch.object(agent, "_fetch_papers", new_callable=AsyncMock) as mock_fetch:
             mock_fetch.side_effect = Exception("Test error")
 
             result = await agent.execute(sample_task)
@@ -80,7 +86,9 @@ class TestAnalyzeAgent:
         assert result.data.get("message") == "No papers to analyze"
 
     @pytest.mark.asyncio
-    async def test_execute_analyzes_papers(self, mock_gemini_client, mock_knowledge_graph, sample_paper):
+    async def test_execute_analyzes_papers(
+        self, mock_gemini_client, mock_knowledge_graph, sample_paper
+    ):
         agent = AnalyzeAgent(
             gemini_client=mock_gemini_client,
             knowledge_graph=mock_knowledge_graph,

@@ -101,20 +101,12 @@ class CostTracker:
     def _get_daily_cost(self) -> float:
         """Get total cost for today."""
         today = datetime.utcnow().date()
-        return sum(
-            u["cost_usd"]
-            for u in self.usage
-            if u["timestamp"].date() == today
-        )
+        return sum(u["cost_usd"] for u in self.usage if u["timestamp"].date() == today)
 
     def _get_monthly_cost(self) -> float:
         """Get total cost for this month."""
         this_month = datetime.utcnow().replace(day=1).date()
-        return sum(
-            u["cost_usd"]
-            for u in self.usage
-            if u["timestamp"].date() >= this_month
-        )
+        return sum(u["cost_usd"] for u in self.usage if u["timestamp"].date() >= this_month)
 
     def check_budget(self) -> tuple[bool, str | None]:
         """Check if we're within budget."""
@@ -136,9 +128,7 @@ class CostTracker:
             "monthly_budget": self.monthly_budget,
             "total_requests": len(self.usage),
             "daily_requests": sum(
-                1
-                for u in self.usage
-                if u["timestamp"].date() == datetime.utcnow().date()
+                1 for u in self.usage if u["timestamp"].date() == datetime.utcnow().date()
             ),
         }
 
@@ -196,10 +186,13 @@ class GeminiClient:
         if self._use_dspy:
             try:
                 from src.dspy_analysis import get_dspy_client
+
                 self._dspy_client = get_dspy_client()
                 logger.info("DSPy analysis enabled")
             except Exception as e:
-                logger.warning("Failed to initialize DSPy client, falling back to manual prompts", error=str(e))
+                logger.warning(
+                    "Failed to initialize DSPy client, falling back to manual prompts", error=str(e)
+                )
                 self._use_dspy = False
 
         logger.info(
@@ -282,8 +275,14 @@ class GeminiClient:
 
             # Extract usage information
             usage_metadata = getattr(response, "usage_metadata", None)
-            input_tokens = getattr(usage_metadata, "prompt_token_count", estimated_input) if usage_metadata else estimated_input
-            output_tokens = getattr(usage_metadata, "candidates_token_count", 0) if usage_metadata else 0
+            input_tokens = (
+                getattr(usage_metadata, "prompt_token_count", estimated_input)
+                if usage_metadata
+                else estimated_input
+            )
+            output_tokens = (
+                getattr(usage_metadata, "candidates_token_count", 0) if usage_metadata else 0
+            )
             thinking_tokens = 0  # Gemini doesn't expose this separately
 
             # Update rate limiter with actual tokens
@@ -304,29 +303,37 @@ class GeminiClient:
                 try:
                     # Strip markdown code blocks if present
                     import re
+
                     content_str = content.strip() if content else ""
                     if content_str.startswith("```"):
-                        content_str = re.sub(r'^```(?:json)?\s*\n?', '', content_str)
-                        content_str = re.sub(r'\n?```\s*$', '', content_str)
+                        content_str = re.sub(r"^```(?:json)?\s*\n?", "", content_str)
+                        content_str = re.sub(r"\n?```\s*$", "", content_str)
                     if content_str:
                         # Fix unescaped backslashes in LaTeX formulas
                         # First, protect already escaped backslashes
-                        content_str = content_str.replace('\\\\', '\x00DOUBLE_BACKSLASH\x00')
+                        content_str = content_str.replace("\\\\", "\x00DOUBLE_BACKSLASH\x00")
                         # Escape remaining backslashes that aren't valid JSON escapes
                         # Valid JSON escapes: \", \\, \/, \b, \f, \n, \r, \t, \uXXXX
-                        content_str = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', content_str)
+                        content_str = re.sub(r'\\(?!["\\/bfnrtu])', r"\\\\", content_str)
                         # Restore double backslashes
-                        content_str = content_str.replace('\x00DOUBLE_BACKSLASH\x00', '\\\\')
+                        content_str = content_str.replace("\x00DOUBLE_BACKSLASH\x00", "\\\\")
                         content = json.loads(content_str)
                     else:
                         content = {}
                 except Exception as e:
-                    logger.warning("Failed to parse JSON response", content=content[:200] if content else "", error=str(e))
+                    logger.warning(
+                        "Failed to parse JSON response",
+                        content=content[:200] if content else "",
+                        error=str(e),
+                    )
                     # Return empty dict instead of string to prevent .get() errors
                     content = {}
                 # Final safety check - ensure we return a dict not a string
                 if not isinstance(content, dict):
-                    logger.warning("Content is not a dict, converting to empty dict", content_type=type(content).__name__)
+                    logger.warning(
+                        "Content is not a dict, converting to empty dict",
+                        content_type=type(content).__name__,
+                    )
                     content = {}
 
             duration_ms = int((time.time() - start_time) * 1000)
@@ -781,8 +788,7 @@ Focus on claims that are novel, important, or could potentially contradict other
                 logger.warning("DSPy contradiction detection failed, falling back", error=str(e))
 
         claims_text = "\n".join(
-            f"{i}. [{c.get('category', 'unknown')}] {c['statement']}"
-            for i, c in enumerate(claims)
+            f"{i}. [{c.get('category', 'unknown')}] {c['statement']}" for i, c in enumerate(claims)
         )
 
         prompt = f"""Analyze these research claims for contradictions.

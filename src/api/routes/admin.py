@@ -91,18 +91,20 @@ async def create_appointment(request: AppointmentCreateRequest):
     agent = SchedulerAgent()
 
     try:
-        result = await agent.create_appointment({
-            "patient_id": request.patient_id,
-            "patient_name": request.patient_name,
-            "patient_phone": request.patient_phone,
-            "patient_email": request.patient_email,
-            "provider": request.provider,
-            "datetime": request.datetime,
-            "duration": request.duration,
-            "type": request.type,
-            "reason": request.reason,
-            "notes": request.notes,
-        })
+        result = await agent.create_appointment(
+            {
+                "patient_id": request.patient_id,
+                "patient_name": request.patient_name,
+                "patient_phone": request.patient_phone,
+                "patient_email": request.patient_email,
+                "provider": request.provider,
+                "datetime": request.datetime,
+                "duration": request.duration,
+                "type": request.type,
+                "reason": request.reason,
+                "notes": request.notes,
+            }
+        )
 
         return result
 
@@ -163,10 +165,12 @@ async def update_appointment(appointment_id: str, request: AppointmentUpdateRequ
 
     try:
         if request.datetime:
-            result = await agent.reschedule_appointment({
-                "appointment_id": appointment_id,
-                "new_datetime": request.datetime,
-            })
+            result = await agent.reschedule_appointment(
+                {
+                    "appointment_id": appointment_id,
+                    "new_datetime": request.datetime,
+                }
+            )
             return result
 
         # Handle status/notes update
@@ -228,10 +232,12 @@ async def optimize_schedule(request: ScheduleOptimizeRequest):
     agent = SchedulerAgent()
 
     try:
-        result = await agent.optimize_schedule({
-            "date": request.date,
-            "provider": request.provider,
-        })
+        result = await agent.optimize_schedule(
+            {
+                "date": request.date,
+                "provider": request.provider,
+            }
+        )
 
         return result
 
@@ -253,11 +259,13 @@ async def get_available_slots(
     agent = SchedulerAgent()
 
     try:
-        result = await agent.find_available_slots({
-            "date": date,
-            "provider": provider or "",
-            "duration": duration,
-        })
+        result = await agent.find_available_slots(
+            {
+                "date": date,
+                "provider": provider or "",
+                "duration": duration,
+            }
+        )
 
         return result
 
@@ -292,7 +300,8 @@ async def send_reminders(request: ReminderSendRequest):
         else:
             # Get all pending appointments
             appointments = [
-                apt for apt in agent._appointments.values()
+                apt
+                for apt in agent._appointments.values()
                 if apt.status in ["pending", "confirmed"]
             ]
 
@@ -308,19 +317,23 @@ async def send_reminders(request: ReminderSendRequest):
                     channel=request.channel,
                     custom_message=request.message_template,
                 )
-                results.append({
-                    "appointment_id": apt.id,
-                    "patient_name": apt.patient_name,
-                    "status": "sent",
-                    **result,
-                })
+                results.append(
+                    {
+                        "appointment_id": apt.id,
+                        "patient_name": apt.patient_name,
+                        "status": "sent",
+                        **result,
+                    }
+                )
             except Exception as e:
-                results.append({
-                    "appointment_id": apt.id,
-                    "patient_name": apt.patient_name,
-                    "status": "failed",
-                    "error": str(e),
-                })
+                results.append(
+                    {
+                        "appointment_id": apt.id,
+                        "patient_name": apt.patient_name,
+                        "status": "failed",
+                        "error": str(e),
+                    }
+                )
 
         sent_count = sum(1 for r in results if r["status"] == "sent")
 
@@ -350,9 +363,9 @@ async def send_bulk_reminders(request: BulkReminderRequest):
         # Get appointments for that date
         agent = SchedulerAgent()
         appointments = [
-            apt for apt in agent._appointments.values()
-            if apt.datetime.date() == target_date.date()
-            and apt.status in ["pending", "confirmed"]
+            apt
+            for apt in agent._appointments.values()
+            if apt.datetime.date() == target_date.date() and apt.status in ["pending", "confirmed"]
         ]
 
         if not appointments:
@@ -363,10 +376,12 @@ async def send_bulk_reminders(request: BulkReminderRequest):
             }
 
         # Send reminders (delegating to the single reminder endpoint logic)
-        return await send_reminders(ReminderSendRequest(
-            appointment_ids=[apt.id for apt in appointments],
-            channel=request.channel,
-        ))
+        return await send_reminders(
+            ReminderSendRequest(
+                appointment_ids=[apt.id for apt in appointments],
+                channel=request.channel,
+            )
+        )
 
     except Exception as e:
         logger.error("Failed to send bulk reminders", error=str(e))

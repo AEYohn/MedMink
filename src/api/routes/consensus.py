@@ -24,6 +24,7 @@ router = APIRouter(prefix="/consensus", tags=["consensus"])
 
 class ConsensusRequest(BaseModel):
     """Request for consensus analysis."""
+
     question: str = Field(..., min_length=10, max_length=2000)
     include_preprints: bool = Field(default=False)
     max_papers: int = Field(default=5, ge=3, le=20)
@@ -31,6 +32,7 @@ class ConsensusRequest(BaseModel):
 
 class ConsensusResponse(BaseModel):
     """Final consensus response."""
+
     question: str
     pico: dict[str, str]
 

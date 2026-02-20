@@ -59,7 +59,7 @@ class RAGQueryEngine:
             elif result.content_type == "technique":
                 content = f"[Technique {i+1}] {result.metadata.get('name', 'Unknown')}\n"
                 content += f"Description: {result.metadata.get('description', 'N/A')}\n"
-                if result.metadata.get('formula'):
+                if result.metadata.get("formula"):
                     content += f"Formula: {result.metadata.get('formula')}\n"
             else:
                 content = f"[{result.content_type} {i+1}] {json.dumps(result.metadata)}\n"
@@ -241,20 +241,22 @@ Format your response as JSON with these fields:
                 # Get claims for this paper
                 claims = await kg.get_claims_for_paper(paper_id)
 
-                related_papers.append({
-                    "paper_id": paper_id,
-                    "title": paper.title,
-                    "abstract": paper.abstract[:500] if paper.abstract else "",
-                    "relevance": result.combined_score,
-                    "claims": [
-                        {
-                            "statement": c.statement,
-                            "category": c.category,
-                            "confidence": c.confidence,
-                        }
-                        for c in claims[:5]  # Top 5 claims
-                    ],
-                })
+                related_papers.append(
+                    {
+                        "paper_id": paper_id,
+                        "title": paper.title,
+                        "abstract": paper.abstract[:500] if paper.abstract else "",
+                        "relevance": result.combined_score,
+                        "claims": [
+                            {
+                                "statement": c.statement,
+                                "category": c.category,
+                                "confidence": c.confidence,
+                            }
+                            for c in claims[:5]  # Top 5 claims
+                        ],
+                    }
+                )
 
         logger.debug(
             "Retrieved context for paper",

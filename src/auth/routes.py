@@ -124,7 +124,9 @@ async def register(request: RegisterRequest):
             first_name=request.first_name,
             last_name=request.last_name,
             phone=request.phone,
-            date_of_birth=datetime.fromisoformat(request.date_of_birth) if request.date_of_birth else None,
+            date_of_birth=(
+                datetime.fromisoformat(request.date_of_birth) if request.date_of_birth else None
+            ),
             gender=request.gender,
             insurance_provider=request.insurance_provider,
         )

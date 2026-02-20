@@ -193,10 +193,9 @@ Focus on patterns that:
             )
 
         # Build pattern list for clustering
-        pattern_list = "\n".join([
-            f"{i+1}. {p.name}: {p.description[:100]}"
-            for i, p in enumerate(patterns)
-        ])
+        pattern_list = "\n".join(
+            [f"{i+1}. {p.name}: {p.description[:100]}" for i, p in enumerate(patterns)]
+        )
 
         prompt = f"""Analyze these research patterns and identify which ones are related or could be merged.
 
@@ -298,12 +297,14 @@ Respond with JSON:
                 max_output_tokens=1024,
             )
 
-            results.append({
-                "pattern_id": pattern.id,
-                "pattern_name": pattern.name,
-                "paper_count": len(papers),
-                "analysis": analysis.get("content", {}),
-            })
+            results.append(
+                {
+                    "pattern_id": pattern.id,
+                    "pattern_name": pattern.name,
+                    "paper_count": len(papers),
+                    "analysis": analysis.get("content", {}),
+                }
+            )
 
         return AgentResult(
             success=True,
@@ -337,17 +338,15 @@ Respond with JSON:
         if not patterns:
             return []
 
-        pattern_list = "\n".join([
-            f"{i+1}. {p.name} ({p.pattern_type}): {p.template}"
-            for i, p in enumerate(patterns)
-        ])
+        pattern_list = "\n".join(
+            [f"{i+1}. {p.name} ({p.pattern_type}): {p.template}" for i, p in enumerate(patterns)]
+        )
 
         techniques_text = ""
         if techniques:
-            techniques_text = "\nTECHNIQUES USED:\n" + "\n".join([
-                f"- {t.get('name', '')}: {t.get('description', '')[:50]}"
-                for t in techniques[:10]
-            ])
+            techniques_text = "\nTECHNIQUES USED:\n" + "\n".join(
+                [f"- {t.get('name', '')}: {t.get('description', '')[:50]}" for t in techniques[:10]]
+            )
 
         prompt = f"""Match this paper to research patterns.
 
@@ -389,12 +388,14 @@ Only include patterns with adherence_score >= 0.5"""
         for match in matches:
             idx = match.get("pattern_index", 0) - 1
             if 0 <= idx < len(patterns):
-                matched_patterns.append({
-                    "pattern_id": patterns[idx].id,
-                    "pattern_name": patterns[idx].name,
-                    "pattern_type": patterns[idx].pattern_type,
-                    "adherence_score": match.get("adherence_score", 0.5),
-                    "explanation": match.get("explanation", ""),
-                })
+                matched_patterns.append(
+                    {
+                        "pattern_id": patterns[idx].id,
+                        "pattern_name": patterns[idx].name,
+                        "pattern_type": patterns[idx].pattern_type,
+                        "adherence_score": match.get("adherence_score", 0.5),
+                        "explanation": match.get("explanation", ""),
+                    }
+                )
 
         return matched_patterns

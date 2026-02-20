@@ -22,6 +22,7 @@ VISITS_DIR = Path("data/visits")
 @dataclass
 class Visit:
     """A single patient visit record."""
+
     visit_id: str
     patient_id: str
     session_id: str
@@ -96,6 +97,7 @@ class VisitTracker:
         # Try to get management plan
         try:
             from src.medgemma.management_agent import get_management_agent
+
             agent = get_management_agent()
             plan = agent._plans.get(session.session_id)
             if plan:
@@ -130,9 +132,7 @@ class VisitTracker:
 
         return visit_dict
 
-    def compare_visits(
-        self, patient_id: str, visit_id_a: str, visit_id_b: str
-    ) -> dict[str, Any]:
+    def compare_visits(self, patient_id: str, visit_id_a: str, visit_id_b: str) -> dict[str, Any]:
         """Compare two visits and highlight changes.
 
         Args:
@@ -152,7 +152,9 @@ class VisitTracker:
 
         # Compare vitals
         vitals_changes = {}
-        for key in set(list(visit_a.get("vitals", {}).keys()) + list(visit_b.get("vitals", {}).keys())):
+        for key in set(
+            list(visit_a.get("vitals", {}).keys()) + list(visit_b.get("vitals", {}).keys())
+        ):
             val_a = visit_a.get("vitals", {}).get(key)
             val_b = visit_b.get("vitals", {}).get(key)
             if val_a != val_b:
@@ -202,9 +204,21 @@ class VisitTracker:
         # Look for vitals in various phases
         for phase_data in extracted_data.values():
             if isinstance(phase_data, dict):
-                for key in ("blood_pressure", "heart_rate", "temperature", "respiratory_rate",
-                            "oxygen_saturation", "weight", "height", "bmi", "bp", "hr", "temp",
-                            "rr", "spo2"):
+                for key in (
+                    "blood_pressure",
+                    "heart_rate",
+                    "temperature",
+                    "respiratory_rate",
+                    "oxygen_saturation",
+                    "weight",
+                    "height",
+                    "bmi",
+                    "bp",
+                    "hr",
+                    "temp",
+                    "rr",
+                    "spo2",
+                ):
                     if key in phase_data:
                         vitals[key] = phase_data[key]
         return vitals

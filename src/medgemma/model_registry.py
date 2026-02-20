@@ -20,16 +20,18 @@ logger = structlog.get_logger()
 
 class ModelType(StrEnum):
     """Available MedGemma model types."""
-    TEXT_4B = "text_4b"           # google/medgemma-1.5-4b-it
-    TEXT_27B = "text_27b"         # google/medgemma-27b-it
-    MULTIMODAL_27B = "mm_27b"     # google/medgemma-27b-mm (hypothetical)
-    SIGLIP = "siglip"             # MedSigLIP image encoder
-    ASR = "asr"                   # MedASR speech recognition
+
+    TEXT_4B = "text_4b"  # google/medgemma-1.5-4b-it
+    TEXT_27B = "text_27b"  # google/medgemma-27b-it
+    MULTIMODAL_27B = "mm_27b"  # google/medgemma-27b-mm (hypothetical)
+    SIGLIP = "siglip"  # MedSigLIP image encoder
+    ASR = "asr"  # MedASR speech recognition
 
 
 @dataclass
 class ModelConfig:
     """Configuration for a MedGemma model variant."""
+
     model_id: str
     model_type: ModelType
     description: str
@@ -113,12 +115,13 @@ class ModelRegistry:
             elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
                 # Apple Silicon - estimate from system memory
                 import platform
+
                 if platform.machine() == "arm64":
                     # Conservative estimate: use 50% of unified memory
                     import subprocess
+
                     result = subprocess.run(
-                        ["sysctl", "-n", "hw.memsize"],
-                        capture_output=True, text=True
+                        ["sysctl", "-n", "hw.memsize"], capture_output=True, text=True
                     )
                     total_ram = int(result.stdout.strip()) / (1024**3)
                     self._available_vram = total_ram * 0.5
@@ -162,10 +165,17 @@ class ModelRegistry:
         # Image tasks
         if task in ("image", "multimodal"):
             # Try multimodal 27B first if high accuracy needed
-            if require_accuracy == "high" and vram >= MODEL_CONFIGS[ModelType.MULTIMODAL_27B].min_vram_gb:
+            if (
+                require_accuracy == "high"
+                and vram >= MODEL_CONFIGS[ModelType.MULTIMODAL_27B].min_vram_gb
+            ):
                 return ModelType.MULTIMODAL_27B
             # Try SigLIP for encoding + 4B for reasoning
-            if vram >= MODEL_CONFIGS[ModelType.SIGLIP].min_vram_gb + MODEL_CONFIGS[ModelType.TEXT_4B].min_vram_gb:
+            if (
+                vram
+                >= MODEL_CONFIGS[ModelType.SIGLIP].min_vram_gb
+                + MODEL_CONFIGS[ModelType.TEXT_4B].min_vram_gb
+            ):
                 return ModelType.SIGLIP  # Will be combined with text model
             logger.warning("Insufficient VRAM for vision models")
             return ModelType.TEXT_4B  # Fallback: text-only analysis
@@ -249,6 +259,7 @@ class ModelRegistry:
             )
         elif model_type == ModelType.SIGLIP:
             from transformers import AutoModel
+
             model = AutoModel.from_pretrained(
                 config.model_id,
                 trust_remote_code=True,
@@ -258,6 +269,7 @@ class ModelRegistry:
         elif model_type == ModelType.ASR:
             # ASR uses Whisper-like architecture
             from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor
+
             model = AutoModelForSpeechSeq2Seq.from_pretrained(
                 config.model_id,
                 trust_remote_code=True,

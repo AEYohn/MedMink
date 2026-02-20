@@ -96,19 +96,21 @@ class Patient(User):
     def to_dict(self, include_sensitive: bool = False) -> dict[str, Any]:
         """Convert to dictionary."""
         data = super().to_dict(include_sensitive)
-        data.update({
-            "date_of_birth": self.date_of_birth.isoformat() if self.date_of_birth else None,
-            "age": self.age,
-            "gender": self.gender,
-            "insurance_provider": self.insurance_provider,
-            "insurance_id": self.insurance_id if include_sensitive else None,
-            "primary_provider_id": self.primary_provider_id,
-            "emergency_contact_name": self.emergency_contact_name,
-            "emergency_contact_phone": self.emergency_contact_phone,
-            "medical_conditions": self.medical_conditions,
-            "allergies": self.allergies,
-            "medications": self.medications,
-        })
+        data.update(
+            {
+                "date_of_birth": self.date_of_birth.isoformat() if self.date_of_birth else None,
+                "age": self.age,
+                "gender": self.gender,
+                "insurance_provider": self.insurance_provider,
+                "insurance_id": self.insurance_id if include_sensitive else None,
+                "primary_provider_id": self.primary_provider_id,
+                "emergency_contact_name": self.emergency_contact_name,
+                "emergency_contact_phone": self.emergency_contact_phone,
+                "medical_conditions": self.medical_conditions,
+                "allergies": self.allergies,
+                "medications": self.medications,
+            }
+        )
         return data
 
 
@@ -131,17 +133,19 @@ class Provider(User):
     def to_dict(self, include_sensitive: bool = False) -> dict[str, Any]:
         """Convert to dictionary."""
         data = super().to_dict(include_sensitive)
-        data.update({
-            "specialty": self.specialty,
-            "npi_number": self.npi_number if include_sensitive else None,
-            "license_number": self.license_number if include_sensitive else None,
-            "license_state": self.license_state,
-            "accepting_new_patients": self.accepting_new_patients,
-            "languages": self.languages,
-            "education": self.education,
-            "certifications": self.certifications,
-            "bio": self.bio,
-        })
+        data.update(
+            {
+                "specialty": self.specialty,
+                "npi_number": self.npi_number if include_sensitive else None,
+                "license_number": self.license_number if include_sensitive else None,
+                "license_state": self.license_state,
+                "accepting_new_patients": self.accepting_new_patients,
+                "languages": self.languages,
+                "education": self.education,
+                "certifications": self.certifications,
+                "bio": self.bio,
+            }
+        )
         return data
 
 

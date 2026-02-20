@@ -25,9 +25,7 @@ class PathFoundationClient:
         else:
             logger.warning("Path Foundation: no Modal URL configured")
 
-    async def classify_tissue(
-        self, image_b64: str, tile_size: int = 224
-    ) -> dict[str, Any]:
+    async def classify_tissue(self, image_b64: str, tile_size: int = 224) -> dict[str, Any]:
         """Classify tissue types in a pathology image.
 
         Processes the image as 224x224 tiles and aggregates classifications.

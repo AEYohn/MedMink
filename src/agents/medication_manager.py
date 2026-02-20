@@ -24,6 +24,7 @@ SeverityLevel = Literal["major", "moderate", "minor"]
 @dataclass
 class DrugInteraction:
     """A potential drug-drug interaction."""
+
     drug1: str
     drug2: str
     severity: SeverityLevel
@@ -35,6 +36,7 @@ class DrugInteraction:
 @dataclass
 class InteractionCheckResult:
     """Result of drug interaction check."""
+
     safe: bool
     interactions: list[DrugInteraction]
     recommendations: list[str]
@@ -105,14 +107,58 @@ KNOWN_MAJOR_INTERACTIONS = {
 
 # Drug class mappings
 DRUG_CLASSES = {
-    "ssri": ["sertraline", "fluoxetine", "paroxetine", "citalopram", "escitalopram", "prozac", "zoloft", "paxil", "lexapro"],
+    "ssri": [
+        "sertraline",
+        "fluoxetine",
+        "paroxetine",
+        "citalopram",
+        "escitalopram",
+        "prozac",
+        "zoloft",
+        "paxil",
+        "lexapro",
+    ],
     "maoi": ["phenelzine", "tranylcypromine", "selegiline", "isocarboxazid", "nardil", "parnate"],
-    "statin": ["atorvastatin", "simvastatin", "rosuvastatin", "pravastatin", "lovastatin", "lipitor", "crestor", "zocor"],
-    "ace inhibitor": ["lisinopril", "enalapril", "ramipril", "benazepril", "captopril", "prinivil", "vasotec"],
+    "statin": [
+        "atorvastatin",
+        "simvastatin",
+        "rosuvastatin",
+        "pravastatin",
+        "lovastatin",
+        "lipitor",
+        "crestor",
+        "zocor",
+    ],
+    "ace inhibitor": [
+        "lisinopril",
+        "enalapril",
+        "ramipril",
+        "benazepril",
+        "captopril",
+        "prinivil",
+        "vasotec",
+    ],
     "blood thinner": ["warfarin", "coumadin", "eliquis", "xarelto", "apixaban", "rivaroxaban"],
     "nsaid": ["ibuprofen", "naproxen", "aspirin", "advil", "motrin", "aleve"],
-    "opioid": ["hydrocodone", "oxycodone", "morphine", "codeine", "tramadol", "vicodin", "percocet"],
-    "benzodiazepine": ["alprazolam", "lorazepam", "diazepam", "clonazepam", "xanax", "ativan", "valium", "klonopin"],
+    "opioid": [
+        "hydrocodone",
+        "oxycodone",
+        "morphine",
+        "codeine",
+        "tramadol",
+        "vicodin",
+        "percocet",
+    ],
+    "benzodiazepine": [
+        "alprazolam",
+        "lorazepam",
+        "diazepam",
+        "clonazepam",
+        "xanax",
+        "ativan",
+        "valium",
+        "klonopin",
+    ],
 }
 
 
@@ -238,7 +284,7 @@ class MedicationManagerAgent(BaseAgent):
 
         # Check each pair
         for i, drug1 in enumerate(medications):
-            for drug2 in medications[i + 1:]:
+            for drug2 in medications[i + 1 :]:
                 interaction = self._check_pair(drug1, drug2)
                 if interaction:
                     interactions.append(interaction)
@@ -274,8 +320,9 @@ class MedicationManagerAgent(BaseAgent):
         ]
 
         for classes1, classes2, desc in dangerous_combos:
-            if (class1 in classes1 and class2 in classes2) or \
-               (class1 in classes2 and class2 in classes1):
+            if (class1 in classes1 and class2 in classes2) or (
+                class1 in classes2 and class2 in classes1
+            ):
                 return DrugInteraction(
                     drug1=drug1,
                     drug2=drug2,
@@ -317,14 +364,16 @@ class MedicationManagerAgent(BaseAgent):
                 if severity not in ["major", "moderate", "minor"]:
                     severity = "moderate"
 
-                result.append(DrugInteraction(
-                    drug1=i.get("drug1", ""),
-                    drug2=i.get("drug2", ""),
-                    severity=severity,
-                    description=i.get("description", "Potential interaction detected"),
-                    recommendation=i.get("recommendation", "Consult your pharmacist"),
-                    evidence_level="ai-assessed",
-                ))
+                result.append(
+                    DrugInteraction(
+                        drug1=i.get("drug1", ""),
+                        drug2=i.get("drug2", ""),
+                        severity=severity,
+                        description=i.get("description", "Potential interaction detected"),
+                        recommendation=i.get("recommendation", "Consult your pharmacist"),
+                        evidence_level="ai-assessed",
+                    )
+                )
             return result
         except (json.JSONDecodeError, TypeError):
             return []
@@ -361,9 +410,7 @@ class MedicationManagerAgent(BaseAgent):
         recommendations = []
 
         if not interactions:
-            recommendations.append(
-                "No significant interactions found between these medications."
-            )
+            recommendations.append("No significant interactions found between these medications.")
             recommendations.append(
                 "Always take medications as prescribed by your healthcare provider."
             )
@@ -375,16 +422,10 @@ class MedicationManagerAgent(BaseAgent):
                     "healthcare provider before taking these medications together."
                 )
 
-            recommendations.append(
-                "Consider scheduling a medication review with your pharmacist."
-            )
+            recommendations.append("Consider scheduling a medication review with your pharmacist.")
 
-        recommendations.append(
-            "Keep an updated list of all medications and supplements you take."
-        )
-        recommendations.append(
-            "Report any unusual symptoms to your healthcare provider."
-        )
+        recommendations.append("Keep an updated list of all medications and supplements you take.")
+        recommendations.append("Report any unusual symptoms to your healthcare provider.")
 
         return recommendations
 
@@ -395,9 +436,7 @@ class MedicationManagerAgent(BaseAgent):
     ) -> float:
         """Calculate confidence in the interaction check."""
         # Higher confidence if we checked known interactions
-        established_count = sum(
-            1 for i in interactions if i.evidence_level == "established"
-        )
+        established_count = sum(1 for i in interactions if i.evidence_level == "established")
 
         if established_count > 0:
             return 0.9

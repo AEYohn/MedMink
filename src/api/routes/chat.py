@@ -88,8 +88,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
             history = await _get_conversation_history(request.conversation_id, limit=5)
             if history:
                 history_context = "\n".join(
-                    f"{msg['role'].upper()}: {msg['content'][:200]}"
-                    for msg in history
+                    f"{msg['role'].upper()}: {msg['content'][:200]}" for msg in history
                 )
 
         # Query the RAG engine
@@ -178,12 +177,14 @@ async def get_conversation(conversation_id: str) -> ConversationResponse:
 
             # Get messages
             result = await session.execute(
-                text("""
+                text(
+                    """
                     SELECT id, role, content, sources, created_at
                     FROM chat_messages
                     WHERE conversation_id = :conversation_id
                     ORDER BY created_at ASC
-                """),
+                """
+                ),
                 {"conversation_id": conversation_id},
             )
             rows = result.fetchall()
@@ -192,9 +193,7 @@ async def get_conversation(conversation_id: str) -> ConversationResponse:
             for row in rows:
                 sources = None
                 if row.sources:
-                    sources = [
-                        SourceResponse(**s) for s in row.sources
-                    ]
+                    sources = [SourceResponse(**s) for s in row.sources]
                 messages.append(
                     ConversationMessage(
                         id=str(row.id),
@@ -244,21 +243,20 @@ async def _get_conversation_history(
     try:
         async with AsyncSessionLocal() as session:
             result = await session.execute(
-                text("""
+                text(
+                    """
                     SELECT role, content
                     FROM chat_messages
                     WHERE conversation_id = :conversation_id
                     ORDER BY created_at DESC
                     LIMIT :limit
-                """),
+                """
+                ),
                 {"conversation_id": conversation_id, "limit": limit},
             )
             rows = result.fetchall()
 
-            return [
-                {"role": row.role, "content": row.content}
-                for row in reversed(rows)
-            ]
+            return [{"role": row.role, "content": row.content} for row in reversed(rows)]
     except Exception as e:
         logger.warning("Failed to get conversation history", error=str(e))
         return []
@@ -276,21 +274,26 @@ async def _store_message(
         async with AsyncSessionLocal() as session:
             # Ensure conversation exists
             await session.execute(
-                text("""
+                text(
+                    """
                     INSERT INTO chat_conversations (id, created_at, updated_at)
                     VALUES (:id, NOW(), NOW())
                     ON CONFLICT (id) DO UPDATE SET updated_at = NOW()
-                """),
+                """
+                ),
                 {"id": conversation_id},
             )
 
             # Insert message
             import json
+
             await session.execute(
-                text("""
+                text(
+                    """
                     INSERT INTO chat_messages (id, conversation_id, role, content, sources, created_at)
                     VALUES (:id, :conversation_id, :role, :content, :sources, NOW())
-                """),
+                """
+                ),
                 {
                     "id": message_id,
                     "conversation_id": conversation_id,

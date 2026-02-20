@@ -139,7 +139,9 @@ async def create_encounter(data: EncounterCreate, db: AsyncSession = Depends(get
 
 
 @router.patch("/{encounter_id}", response_model=EncounterResponse)
-async def update_encounter(encounter_id: str, data: EncounterUpdate, db: AsyncSession = Depends(get_db)):
+async def update_encounter(
+    encounter_id: str, data: EncounterUpdate, db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(select(Encounter).where(Encounter.id == uuid.UUID(encounter_id)))
     enc = result.scalar_one_or_none()
     if not enc:
@@ -163,6 +165,7 @@ async def delete_encounter(encounter_id: str, db: AsyncSession = Depends(get_db)
 
 
 # --- Events ---
+
 
 @router.get("/{encounter_id}/events", response_model=list[EventResponse])
 async def list_events(encounter_id: str, db: AsyncSession = Depends(get_db)):

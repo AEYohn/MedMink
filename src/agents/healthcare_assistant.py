@@ -185,7 +185,9 @@ class HealthcareAssistant(BaseAgent):
         elif decision.task_type == TaskType.DIFFERENTIAL_DIAGNOSIS:
             # Use Gemini Pro for complex reasoning
             response_text = await self._handle_differential(query, decision)
-            extra_metadata["disclaimer"] = "This is for educational purposes only. Always consult a physician."
+            extra_metadata["disclaimer"] = (
+                "This is for educational purposes only. Always consult a physician."
+            )
 
         elif decision.task_type in {
             TaskType.CLINICAL_NOTE,
@@ -250,7 +252,9 @@ class HealthcareAssistant(BaseAgent):
         if answer.contradictions:
             parts.append("## Conflicting Evidence")
             for c in answer.contradictions:
-                parts.append(f"- **{c.get('topic', 'Unknown')}**: {c.get('possible_explanation', '')}")
+                parts.append(
+                    f"- **{c.get('topic', 'Unknown')}**: {c.get('possible_explanation', '')}"
+                )
             parts.append("")
 
         # Recommendation
@@ -300,10 +304,7 @@ class HealthcareAssistant(BaseAgent):
             max_results=10,
         )
 
-        paper_dicts = [
-            {"pmid": p.id, "title": p.title, "abstract": p.abstract}
-            for p in papers
-        ]
+        paper_dicts = [{"pmid": p.id, "title": p.title, "abstract": p.abstract} for p in papers]
 
         interactions = await self.medical_agent.check_drug_interactions(
             drugs=drugs,
@@ -317,7 +318,9 @@ class HealthcareAssistant(BaseAgent):
             parts.append("### Potential Interactions Found\n")
             for inter in interactions["interactions"]:
                 severity = inter.get("severity", "unknown").upper()
-                parts.append(f"**{inter.get('drug_a', '')} + {inter.get('drug_b', '')}** ({severity})")
+                parts.append(
+                    f"**{inter.get('drug_a', '')} + {inter.get('drug_b', '')}** ({severity})"
+                )
                 parts.append(f"- Effect: {inter.get('effect', 'Unknown')}")
                 parts.append(f"- Mechanism: {inter.get('mechanism', 'Unknown')}")
                 parts.append(f"- Management: {inter.get('management', 'Consult pharmacist')}")
@@ -342,23 +345,51 @@ class HealthcareAssistant(BaseAgent):
 
         for word in words:
             # Clean the word
-            clean = re.sub(r'[^\w]', '', word)
+            clean = re.sub(r"[^\w]", "", word)
             if len(clean) < 3:
                 continue
 
             # Skip common non-drug words
             skip_words = {
-                "the", "and", "with", "can", "take", "drug", "interaction",
-                "between", "what", "are", "does", "have", "taking", "together",
+                "the",
+                "and",
+                "with",
+                "can",
+                "take",
+                "drug",
+                "interaction",
+                "between",
+                "what",
+                "are",
+                "does",
+                "have",
+                "taking",
+                "together",
             }
             if clean.lower() in skip_words:
                 continue
 
             # Keep if it starts with capital (proper noun) or ends in common suffixes
-            if clean[0].isupper() or any(clean.lower().endswith(suf) for suf in [
-                "mab", "nib", "zole", "pril", "sartan", "statin", "cillin", "mycin",
-                "pam", "lam", "done", "ine", "ide", "ate", "ol"
-            ]):
+            if clean[0].isupper() or any(
+                clean.lower().endswith(suf)
+                for suf in [
+                    "mab",
+                    "nib",
+                    "zole",
+                    "pril",
+                    "sartan",
+                    "statin",
+                    "cillin",
+                    "mycin",
+                    "pam",
+                    "lam",
+                    "done",
+                    "ine",
+                    "ide",
+                    "ate",
+                    "ol",
+                ]
+            ):
                 potential_drugs.append(clean)
 
         return potential_drugs[:5]  # Limit to 5 drugs

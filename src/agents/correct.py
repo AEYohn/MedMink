@@ -251,9 +251,11 @@ class CorrectionAgent(BaseAgent):
                 confidence=0.85 if total >= 10 else 0.5,
                 assumptions=["Prediction outcomes are correctly labeled"],
                 expected_outcomes=[
-                    "Future predictions will be better calibrated"
-                    if analysis["recommendations"]
-                    else "Maintain current calibration"
+                    (
+                        "Future predictions will be better calibrated"
+                        if analysis["recommendations"]
+                        else "Maintain current calibration"
+                    )
                 ],
             )
 

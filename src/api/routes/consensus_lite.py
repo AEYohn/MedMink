@@ -70,6 +70,7 @@ async def _search_pubmed(terms: list[str], max_results: int = 5) -> list[dict]:
     """Search PubMed for relevant papers via Entrez API."""
     try:
         from Bio import Entrez
+
         Entrez.email = "medlit-agent@example.com"
 
         query = " AND ".join(f"({t})" for t in terms[:4])
@@ -98,12 +99,14 @@ async def _search_pubmed(terms: list[str], max_results: int = 5) -> list[dict]:
             pub_date = art.get("Journal", {}).get("JournalIssue", {}).get("PubDate", {})
             year = str(pub_date.get("Year", ""))
 
-            papers.append({
-                "title": title,
-                "abstract": abstract,
-                "pmid": pmid,
-                "year": year,
-            })
+            papers.append(
+                {
+                    "title": title,
+                    "abstract": abstract,
+                    "pmid": pmid,
+                    "year": year,
+                }
+            )
 
         return papers
 
@@ -112,7 +115,9 @@ async def _search_pubmed(terms: list[str], max_results: int = 5) -> list[dict]:
         return []
 
 
-def _serialize_step(step: str, status: str, message: str, progress: float, data: dict | None = None) -> str:
+def _serialize_step(
+    step: str, status: str, message: str, progress: float, data: dict | None = None
+) -> str:
     return f"data: {json.dumps({'type': 'step', 'step': step, 'status': status, 'message': message, 'progress': progress, 'data': data or {}})}\n\n"
 
 
@@ -146,12 +151,24 @@ async def _stream_generator(question: str, include_preprints: bool, max_papers: 
         # Step 1: PICO extraction
         yield _serialize_step("parsing", "started", "Parsing clinical question...", 0.05)
         pico, search_terms = await _extract_pico(question)
-        yield _serialize_step("parsing", "completed", f"PICO extracted: {pico.get('intervention', 'N/A')[:40]}", 0.1, pico)
+        yield _serialize_step(
+            "parsing",
+            "completed",
+            f"PICO extracted: {pico.get('intervention', 'N/A')[:40]}",
+            0.1,
+            pico,
+        )
 
         # Step 2: Evidence search
         yield _serialize_step("evidence_search", "started", "Searching PubMed...", 0.12)
         papers = await _search_pubmed(search_terms, max_results=max_papers)
-        yield _serialize_step("evidence_search", "completed", f"Found {len(papers)} papers", 0.2, {"count": len(papers)})
+        yield _serialize_step(
+            "evidence_search",
+            "completed",
+            f"Found {len(papers)} papers",
+            0.2,
+            {"count": len(papers)},
+        )
 
         # Steps 3-6: Consensus engine (only uses medgemma client)
         engine = get_consensus_engine()

@@ -68,9 +68,7 @@ class TechniqueExtractor(dspy.Module):
         # Enhance formula extraction if we have full text
         if enhance_formulas and len(paper_content) > 2000:
             try:
-                formula_result = self.formula_extractor(
-                    text_section=paper_content[:15000]
-                )
+                formula_result = self.formula_extractor(text_section=paper_content[:15000])
                 # Parse and merge any additional formulas found
                 additional_formulas = self._parse_formulas(formula_result.formulas)
                 techniques = self._merge_formulas(techniques, additional_formulas)
@@ -79,7 +77,7 @@ class TechniqueExtractor(dspy.Module):
 
         return dspy.Prediction(
             techniques=techniques,
-            rationale=getattr(result, 'rationale', None),
+            rationale=getattr(result, "rationale", None),
         )
 
     def _parse_formulas(self, formulas_json: str) -> list[dict]:
@@ -135,7 +133,7 @@ class ClaimExtractor(dspy.Module):
 
         return dspy.Prediction(
             claims=result.claims,
-            rationale=getattr(result, 'rationale', None),
+            rationale=getattr(result, "rationale", None),
         )
 
 
@@ -219,7 +217,7 @@ class PaperAnalyzer(dspy.Module):
 
         return dspy.Prediction(
             analysis=analysis,
-            rationale=getattr(result, 'rationale', None),
+            rationale=getattr(result, "rationale", None),
         )
 
     def _merge_techniques(
@@ -331,7 +329,7 @@ class ContradictionDetector(dspy.Module):
         return dspy.Prediction(
             contradictions=result.contradictions,
             analysis_confidence=result.analysis_confidence,
-            rationale=getattr(result, 'rationale', None),
+            rationale=getattr(result, "rationale", None),
         )
 
     def to_dict(self, contradictions: list[DetectedContradiction]) -> dict[str, Any]:
@@ -387,17 +385,21 @@ class BatchPaperAnalyzer(dspy.Module):
                 )
                 results.append(result)
             except Exception as e:
-                logger.warning("Paper analysis failed", title=paper.get("title", "")[:50], error=str(e))
+                logger.warning(
+                    "Paper analysis failed", title=paper.get("title", "")[:50], error=str(e)
+                )
                 # Return empty analysis for failed papers
-                results.append(dspy.Prediction(
-                    analysis=PaperAnalysisResult(
-                        summary="Analysis failed",
-                        claims=[],
-                        methods=[],
-                        techniques=[],
-                        keywords=[],
-                        confidence_overall=0.0,
+                results.append(
+                    dspy.Prediction(
+                        analysis=PaperAnalysisResult(
+                            summary="Analysis failed",
+                            claims=[],
+                            methods=[],
+                            techniques=[],
+                            keywords=[],
+                            confidence_overall=0.0,
+                        )
                     )
-                ))
+                )
 
         return results

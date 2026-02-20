@@ -94,69 +94,75 @@ class ModelRegistry:
         """Register the default set of models."""
 
         # MedGemma - Local medical model (highest priority for medical tasks)
-        self.register_model(ModelConfig(
-            name="medgemma",
-            provider="local",
-            model_id=settings.medgemma_model,
-            capabilities=[
-                ModelCapability.LITERATURE_SYNTHESIS,
-                ModelCapability.EVIDENCE_GRADING,
-                ModelCapability.DRUG_INTERACTION,
-                ModelCapability.CLINICAL_REASONING,
-                ModelCapability.QUESTION_ANSWERING,
-                ModelCapability.EXTRACTION,
-            ],
-            priority=100,  # Highest priority for medical
-            max_context=settings.medgemma_context_length,
-            cost_per_1k_tokens=0.0,
-            is_local=True,
-            supports_medical=True,
-            metadata={"quantization": "Q4_K_M", "family": "gemma"},
-        ))
+        self.register_model(
+            ModelConfig(
+                name="medgemma",
+                provider="local",
+                model_id=settings.medgemma_model,
+                capabilities=[
+                    ModelCapability.LITERATURE_SYNTHESIS,
+                    ModelCapability.EVIDENCE_GRADING,
+                    ModelCapability.DRUG_INTERACTION,
+                    ModelCapability.CLINICAL_REASONING,
+                    ModelCapability.QUESTION_ANSWERING,
+                    ModelCapability.EXTRACTION,
+                ],
+                priority=100,  # Highest priority for medical
+                max_context=settings.medgemma_context_length,
+                cost_per_1k_tokens=0.0,
+                is_local=True,
+                supports_medical=True,
+                metadata={"quantization": "Q4_K_M", "family": "gemma"},
+            )
+        )
 
         # Gemini Flash - Fast cloud model for general tasks
-        self.register_model(ModelConfig(
-            name="gemini-flash",
-            provider="google",
-            model_id="gemini-2.0-flash",
-            capabilities=[
-                ModelCapability.SUMMARIZATION,
-                ModelCapability.QUESTION_ANSWERING,
-                ModelCapability.EXTRACTION,
-                ModelCapability.CLINICAL_DOCUMENTATION,
-                ModelCapability.PATIENT_EDUCATION,
-                ModelCapability.HANDOFF_SUMMARY,
-                ModelCapability.DISCHARGE_SUMMARY,
-                ModelCapability.TRANSLATION,
-            ],
-            priority=50,
-            max_context=32000,
-            cost_per_1k_tokens=0.00035,
-            is_local=False,
-            supports_medical=False,
-            metadata={"version": "2.0", "speed": "fast"},
-        ))
+        self.register_model(
+            ModelConfig(
+                name="gemini-flash",
+                provider="google",
+                model_id="gemini-2.0-flash",
+                capabilities=[
+                    ModelCapability.SUMMARIZATION,
+                    ModelCapability.QUESTION_ANSWERING,
+                    ModelCapability.EXTRACTION,
+                    ModelCapability.CLINICAL_DOCUMENTATION,
+                    ModelCapability.PATIENT_EDUCATION,
+                    ModelCapability.HANDOFF_SUMMARY,
+                    ModelCapability.DISCHARGE_SUMMARY,
+                    ModelCapability.TRANSLATION,
+                ],
+                priority=50,
+                max_context=32000,
+                cost_per_1k_tokens=0.00035,
+                is_local=False,
+                supports_medical=False,
+                metadata={"version": "2.0", "speed": "fast"},
+            )
+        )
 
         # Gemini Pro - Complex reasoning
-        self.register_model(ModelConfig(
-            name="gemini-pro",
-            provider="google",
-            model_id="gemini-1.5-pro",
-            capabilities=[
-                ModelCapability.DIFFERENTIAL_DIAGNOSIS,
-                ModelCapability.CLINICAL_REASONING,
-                ModelCapability.LITERATURE_SYNTHESIS,
-                ModelCapability.EVIDENCE_GRADING,
-                ModelCapability.SUMMARIZATION,
-                ModelCapability.QUESTION_ANSWERING,
-            ],
-            priority=75,  # High priority for complex reasoning
-            max_context=128000,
-            cost_per_1k_tokens=0.00125,
-            is_local=False,
-            supports_medical=True,
-            metadata={"version": "1.5", "reasoning": "advanced"},
-        ))
+        self.register_model(
+            ModelConfig(
+                name="gemini-pro",
+                provider="google",
+                model_id="gemini-1.5-pro",
+                capabilities=[
+                    ModelCapability.DIFFERENTIAL_DIAGNOSIS,
+                    ModelCapability.CLINICAL_REASONING,
+                    ModelCapability.LITERATURE_SYNTHESIS,
+                    ModelCapability.EVIDENCE_GRADING,
+                    ModelCapability.SUMMARIZATION,
+                    ModelCapability.QUESTION_ANSWERING,
+                ],
+                priority=75,  # High priority for complex reasoning
+                max_context=128000,
+                cost_per_1k_tokens=0.00125,
+                is_local=False,
+                supports_medical=True,
+                metadata={"version": "1.5", "reasoning": "advanced"},
+            )
+        )
 
     def register_model(self, config: ModelConfig):
         """Register a model configuration."""
@@ -263,6 +269,7 @@ class ModelRegistry:
         # Initialize MedGemma provider
         try:
             from src.medgemma import get_medgemma_client
+
             medgemma = get_medgemma_client()
             self.register_provider("medgemma", medgemma)
         except Exception as e:
@@ -271,9 +278,12 @@ class ModelRegistry:
         # Initialize Gemini provider
         try:
             from src.gemini import get_gemini_client
+
             gemini = get_gemini_client()
             # Wrap Gemini client to match protocol
-            self.register_provider("gemini-flash", GeminiProviderWrapper(gemini, "gemini-2.0-flash"))
+            self.register_provider(
+                "gemini-flash", GeminiProviderWrapper(gemini, "gemini-2.0-flash")
+            )
             self.register_provider("gemini-pro", GeminiProviderWrapper(gemini, "gemini-1.5-pro"))
         except Exception as e:
             logger.warning("Failed to initialize Gemini", error=str(e))

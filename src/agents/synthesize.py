@@ -40,7 +40,9 @@ class SynthesizeAgent(BaseAgent):
 
             # Gather data from the knowledge graph
             await kg.get_stats()
-            weekly_stats = await kg.get_weekly_stats(datetime.combine(week_start, datetime.min.time()))
+            weekly_stats = await kg.get_weekly_stats(
+                datetime.combine(week_start, datetime.min.time())
+            )
 
             # Get relevant data
             claims = await kg.get_all_claims(limit=100)
@@ -214,7 +216,7 @@ class SynthesizeAgent(BaseAgent):
         for trend in report.emerging_trends:
             md += f"### {trend.get('theme', 'Unnamed Trend')}\n\n"
             md += f"**Evidence:** {trend.get('evidence', 'N/A')}\n\n"
-            if trend.get('implications'):
+            if trend.get("implications"):
                 md += f"**Implications:** {trend.get('implications')}\n\n"
 
         if report.notable_contradictions:
@@ -227,7 +229,7 @@ class SynthesizeAgent(BaseAgent):
             for contradiction in report.notable_contradictions:
                 md += f"### {contradiction.get('topic', 'Unnamed')}\n\n"
                 md += "**Positions:**\n"
-                for pos in contradiction.get('positions', []):
+                for pos in contradiction.get("positions", []):
                     md += f"- {pos}\n"
                 md += f"\n**Analysis:** {contradiction.get('analysis', 'N/A')}\n\n"
 
@@ -290,11 +292,13 @@ class SynthesizeAgent(BaseAgent):
                     outcome_details="Requires human review to verify outcome",
                 )
 
-                outcomes.append({
-                    "prediction": prediction.statement[:100],
-                    "outcome": "unknown",
-                    "needs_review": True,
-                })
+                outcomes.append(
+                    {
+                        "prediction": prediction.statement[:100],
+                        "outcome": "unknown",
+                        "needs_review": True,
+                    }
+                )
                 reviewed += 1
 
             thought = await self.create_thought_signature(

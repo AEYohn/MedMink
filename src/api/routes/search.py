@@ -1,6 +1,5 @@
 """Semantic search API endpoints."""
 
-
 import structlog
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel

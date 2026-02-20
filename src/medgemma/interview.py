@@ -28,13 +28,28 @@ logger = structlog.get_logger()
 
 # Respiratory keywords by language for cough recording prompt detection
 RESPIRATORY_KEYWORDS_BY_LANG: dict[str, list[str]] = {
-    "en": ["cough", "breathing", "wheeze", "dyspnea", "shortness of breath",
-            "chest tightness", "sputum", "hemoptysis"],
+    "en": [
+        "cough",
+        "breathing",
+        "wheeze",
+        "dyspnea",
+        "shortness of breath",
+        "chest tightness",
+        "sputum",
+        "hemoptysis",
+    ],
     "zh": ["咳嗽", "呼吸", "喘息", "胸闷", "痰", "咯血", "气短"],
     "ms": ["batuk", "sesak nafas", "nafas", "semput", "kahak", "dada sesak"],
     "ta": ["இருமல்", "மூச்சு", "மூச்சுத்திணறல்", "சளி", "நெஞ்சு இறுக்கம்"],
-    "es": ["tos", "respirar", "falta de aire", "sibilancia", "flema",
-            "opresión en el pecho", "dificultad para respirar"],
+    "es": [
+        "tos",
+        "respirar",
+        "falta de aire",
+        "sibilancia",
+        "flema",
+        "opresión en el pecho",
+        "dificultad para respirar",
+    ],
     "vi": ["ho", "thở", "khó thở", "đờm", "khò khè", "tức ngực"],
     "ar": ["سعال", "تنفس", "ضيق التنفس", "صفير", "بلغم", "ضيق الصدر"],
 }
@@ -95,6 +110,7 @@ def _dedup_red_flags(flags: list[str]) -> list[str]:
 @dataclass
 class InterviewSession:
     """State for a single patient interview."""
+
     session_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     phase: str = "greeting"
     conversation_history: list[dict[str, str]] = field(default_factory=list)
@@ -193,9 +209,13 @@ class PatientInterviewer:
             if patient_context.get("mrn"):
                 context_parts.append(f"MRN: {patient_context['mrn']}")
             if patient_context.get("conditions"):
-                context_parts.append(f"Known conditions: {', '.join(patient_context['conditions'])}")
+                context_parts.append(
+                    f"Known conditions: {', '.join(patient_context['conditions'])}"
+                )
             if patient_context.get("medications"):
-                context_parts.append(f"Current medications: {', '.join(patient_context['medications'])}")
+                context_parts.append(
+                    f"Current medications: {', '.join(patient_context['medications'])}"
+                )
             if patient_context.get("allergies"):
                 context_parts.append(f"Allergies: {', '.join(patient_context['allergies'])}")
             greeting_prompt = GREETING_WITH_CONTEXT_PROMPT.format(
@@ -215,10 +235,12 @@ class PatientInterviewer:
         fallback = "Hello! What brought you in today?"
         question = data.get("next_question", fallback)
 
-        session.conversation_history.append({
-            "role": "assistant",
-            "content": question,
-        })
+        session.conversation_history.append(
+            {
+                "role": "assistant",
+                "content": question,
+            }
+        )
         session.phase = "chief_complaint"
 
         return {
@@ -235,10 +257,12 @@ class PatientInterviewer:
     ) -> dict[str, Any]:
         """Process a patient response and generate the next question."""
         # Record patient input
-        session.conversation_history.append({
-            "role": "user",
-            "content": patient_input,
-        })
+        session.conversation_history.append(
+            {
+                "role": "user",
+                "content": patient_input,
+            }
+        )
 
         # Track turns in current phase
         turns_in_phase = session.phase_turn_counts.get(session.phase, 0) + 1
@@ -307,9 +331,12 @@ class PatientInterviewer:
 
         # Auto-advance to triage when sufficient information is collected
         sufficient_for_triage = data.get("sufficient_for_triage", False)
-        if (
-            sufficient_for_triage
-            and session.phase not in ("greeting", "chief_complaint", "hpi", "review_and_triage", "complete")
+        if sufficient_for_triage and session.phase not in (
+            "greeting",
+            "chief_complaint",
+            "hpi",
+            "review_and_triage",
+            "complete",
         ):
             logger.info(
                 "Auto-advancing to triage — sufficient info collected",
@@ -327,10 +354,12 @@ class PatientInterviewer:
             if opening:
                 question = opening
 
-        session.conversation_history.append({
-            "role": "assistant",
-            "content": question,
-        })
+        session.conversation_history.append(
+            {
+                "role": "assistant",
+                "content": question,
+            }
+        )
 
         # Feed data to Management Reasoning Agent (async, non-blocking)
         try:
@@ -438,9 +467,10 @@ class PatientInterviewer:
 
         # Manual fallback
         import re
+
         try:
             # Try to find JSON in the response
-            match = re.search(r'\{.*\}', text, re.DOTALL)
+            match = re.search(r"\{.*\}", text, re.DOTALL)
             if match:
                 return json.loads(match.group())
         except (json.JSONDecodeError, Exception):

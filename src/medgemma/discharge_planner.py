@@ -85,6 +85,7 @@ Output ONLY the JSON object. No preamble, no explanation. Start with {{ and end 
 @dataclass
 class DischargePlan:
     """Complete discharge plan."""
+
     patient_instructions: str = ""
     medication_reconciliation: list[dict[str, Any]] = field(default_factory=list)
     follow_up: list[dict[str, Any]] = field(default_factory=list)
@@ -128,10 +129,12 @@ async def generate_discharge_plan(
         current_meds=", ".join(management.get("medications", [])) or "None",
         recommended_treatments=rec_names,
         top_recommendation=top_recommendation or "See treatment plan",
-        immediate_actions=", ".join(acute_management.get("immediate_actions", [])) or "Supportive care",
+        immediate_actions=", ".join(acute_management.get("immediate_actions", []))
+        or "Supportive care",
         monitoring=", ".join(acute_management.get("monitoring_plan", [])) or "Standard",
         activity_restrictions=acute_management.get("activity_restrictions", "None specified"),
-        key_counseling=", ".join(acute_management.get("key_counseling", [])) or "Standard discharge counseling",
+        key_counseling=", ".join(acute_management.get("key_counseling", []))
+        or "Standard discharge counseling",
     )
 
     try:

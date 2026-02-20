@@ -55,21 +55,25 @@ class EMSStorage:
         for filepath in self._storage_dir.glob("*.json"):
             try:
                 data = json.loads(filepath.read_text())
-                runs.append({
-                    "run_id": data.get("run_id", ""),
-                    "session_id": data.get("session_id", ""),
-                    "status": data.get("status", "draft"),
-                    "created_at": data.get("created_at", ""),
-                    "updated_at": data.get("updated_at", ""),
-                    "chief_complaint": data.get("patient", {}).get("chief_complaint", ""),
-                    "section_completeness": data.get("section_completeness", {}),
-                })
+                runs.append(
+                    {
+                        "run_id": data.get("run_id", ""),
+                        "session_id": data.get("session_id", ""),
+                        "status": data.get("status", "draft"),
+                        "created_at": data.get("created_at", ""),
+                        "updated_at": data.get("updated_at", ""),
+                        "chief_complaint": data.get("patient", {}).get("chief_complaint", ""),
+                        "section_completeness": data.get("section_completeness", {}),
+                    }
+                )
             except Exception:
                 continue
         runs.sort(key=lambda r: r.get("updated_at", ""), reverse=True)
         return runs[:limit]
 
-    def update_section(self, run_id: str, section: str, data: dict[str, Any]) -> dict[str, Any] | None:
+    def update_section(
+        self, run_id: str, section: str, data: dict[str, Any]
+    ) -> dict[str, Any] | None:
         """Update a specific section of a run report."""
         filepath = self._run_file(run_id)
         if not filepath.exists():
@@ -81,11 +85,14 @@ class EMSStorage:
             else:
                 run_data[section] = data
             from datetime import datetime
+
             run_data["updated_at"] = datetime.utcnow().isoformat()
             filepath.write_text(json.dumps(run_data, indent=2, default=str))
             return run_data
         except Exception as e:
-            logger.error("Failed to update EMS run section", run_id=run_id, section=section, error=str(e))
+            logger.error(
+                "Failed to update EMS run section", run_id=run_id, section=section, error=str(e)
+            )
             return None
 
 

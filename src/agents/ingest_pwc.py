@@ -206,7 +206,8 @@ class IngestPWCAgent(BaseAgent):
                 categories=[],  # PWC doesn't provide arxiv categories directly
                 published_date=published_date,
                 pdf_url=pdf_url,
-                source_url=item.get("url_abs") or f"https://paperswithcode.com{item.get('url', '')}",
+                source_url=item.get("url_abs")
+                or f"https://paperswithcode.com{item.get('url', '')}",
                 analyzed=False,
             )
 

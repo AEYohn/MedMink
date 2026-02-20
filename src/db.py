@@ -64,10 +64,15 @@ async def get_neo4j_driver(max_retries: int = 2, retry_delay: float = 2.0) -> As
                 break
             except Exception as e:
                 if attempt < max_retries - 1:
-                    logger.warning(f"Neo4j not ready, retrying in {retry_delay}s... (attempt {attempt + 1}/{max_retries})")
+                    logger.warning(
+                        f"Neo4j not ready, retrying in {retry_delay}s... (attempt {attempt + 1}/{max_retries})"
+                    )
                     await asyncio.sleep(retry_delay)
                 else:
-                    logger.warning("Failed to connect to Neo4j after retries - continuing without it", error=str(e))
+                    logger.warning(
+                        "Failed to connect to Neo4j after retries - continuing without it",
+                        error=str(e),
+                    )
                     _neo4j_driver = None
                     return None
     return _neo4j_driver
@@ -146,6 +151,7 @@ async def close_databases():
 async def check_postgres_health() -> bool:
     """Check PostgreSQL health."""
     from sqlalchemy import text
+
     try:
         async with AsyncSessionLocal() as session:
             await session.execute(text("SELECT 1"))

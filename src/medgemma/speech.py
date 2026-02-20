@@ -74,7 +74,9 @@ class MedASRClient:
             self._modal_url = getattr(settings, "whisper_modal_url", "") or ""
             if self._modal_url:
                 self._using_whisper_fallback = True
-                logger.info("MedASR client using Whisper Modal endpoint (MedASR URL not configured)")
+                logger.info(
+                    "MedASR client using Whisper Modal endpoint (MedASR URL not configured)"
+                )
 
         if self._modal_url:
             logger.info("MedASR client configured (Modal remote)", modal_url=self._modal_url)
@@ -91,12 +93,8 @@ class MedASRClient:
             logger.info("Loading MedASR Conformer locally...")
             model_id = getattr(settings, "medasr_model", "google/medasr")
 
-            self._processor = AutoFeatureExtractor.from_pretrained(
-                model_id, trust_remote_code=True
-            )
-            self._model = AutoModelForCTC.from_pretrained(
-                model_id, trust_remote_code=True
-            )
+            self._processor = AutoFeatureExtractor.from_pretrained(model_id, trust_remote_code=True)
+            self._model = AutoModelForCTC.from_pretrained(model_id, trust_remote_code=True)
 
             # Device selection
             if torch.cuda.is_available():
@@ -196,7 +194,11 @@ class MedASRClient:
                     if resp.status != 200:
                         body = await resp.text()
                         logger.error("Modal ASR failed", status=resp.status, body=body[:200])
-                        return {"text": "", "error": f"Modal ASR failed: {resp.status}", "confidence": 0.0}
+                        return {
+                            "text": "",
+                            "error": f"Modal ASR failed: {resp.status}",
+                            "confidence": 0.0,
+                        }
 
                     result = await resp.json()
                     return {
@@ -228,7 +230,11 @@ class MedASRClient:
 
             audio_file = Path(audio_path)
             if not audio_file.exists():
-                return {"text": "", "error": f"Audio file not found: {audio_path}", "confidence": 0.0}
+                return {
+                    "text": "",
+                    "error": f"Audio file not found: {audio_path}",
+                    "confidence": 0.0,
+                }
 
             audio, sr = librosa.load(audio_path, sr=16000)
 
@@ -243,7 +249,9 @@ class MedASRClient:
                         **inputs, max_new_tokens=448, language=language, task="transcribe"
                     )
 
-                transcription = self._processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+                transcription = self._processor.batch_decode(
+                    generated_ids, skip_special_tokens=True
+                )[0]
             else:
                 # MedASR CTC-style decoding
                 inputs = self._processor(audio, sampling_rate=16000, return_tensors="pt")
@@ -263,13 +271,19 @@ class MedASRClient:
                 "text": transcription.strip(),
                 "language": language,
                 "audio_duration_seconds": len(audio) / 16000,
-                "model": "medasr-conformer" if not self._using_whisper_fallback else "whisper-large-v3",
+                "model": (
+                    "medasr-conformer" if not self._using_whisper_fallback else "whisper-large-v3"
+                ),
                 "confidence": 0.95 if not self._using_whisper_fallback else 0.85,
             }
 
         except ImportError as e:
             logger.error("Missing audio dependencies", error=str(e))
-            return {"text": "", "error": "Install: pip install librosa soundfile", "confidence": 0.0}
+            return {
+                "text": "",
+                "error": "Install: pip install librosa soundfile",
+                "confidence": 0.0,
+            }
         except Exception as e:
             logger.error("Transcription failed", error=str(e))
             return {"text": "", "error": str(e), "confidence": 0.0}

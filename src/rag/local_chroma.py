@@ -98,9 +98,7 @@ class LocalChromaStore:
                     model_name=self.embedding_model_name,
                 )
             except Exception:
-                logger.warning(
-                    f"Could not load {self.embedding_model_name}, using fallback"
-                )
+                logger.warning(f"Could not load {self.embedding_model_name}, using fallback")
                 return embedding_functions.SentenceTransformerEmbeddingFunction(
                     model_name="all-MiniLM-L6-v2",
                 )
@@ -295,13 +293,15 @@ class LocalChromaStore:
             distances = results.get("distances", [[]])[0]
 
             for i, paper_id in enumerate(ids):
-                papers.append({
-                    "id": paper_id,
-                    "document": docs[i] if i < len(docs) else "",
-                    "metadata": metas[i] if i < len(metas) else {},
-                    "distance": distances[i] if i < len(distances) else 1.0,
-                    "similarity": 1.0 - (distances[i] if i < len(distances) else 1.0),
-                })
+                papers.append(
+                    {
+                        "id": paper_id,
+                        "document": docs[i] if i < len(docs) else "",
+                        "metadata": metas[i] if i < len(metas) else {},
+                        "distance": distances[i] if i < len(distances) else 1.0,
+                        "similarity": 1.0 - (distances[i] if i < len(distances) else 1.0),
+                    }
+                )
 
             return papers
 

@@ -15,6 +15,7 @@ router = APIRouter(prefix="/api/labs", tags=["lab-extraction"])
 
 class LabValue(BaseModel):
     """Single extracted lab value."""
+
     test: str = ""
     value: str = ""
     unit: str = ""
@@ -24,6 +25,7 @@ class LabValue(BaseModel):
 
 class LabExtractionResponse(BaseModel):
     """Response from lab report extraction."""
+
     labs: list[LabValue] = []
     collection_date: str = ""
     patient_info: str = ""
@@ -47,13 +49,15 @@ def _parse_labs(result: dict) -> list[LabValue]:
     labs = []
     for lab in result.get("labs", []):
         if isinstance(lab, dict):
-            labs.append(LabValue(
-                test=lab.get("test", ""),
-                value=str(lab.get("value", "")),
-                unit=lab.get("unit", ""),
-                reference_range=lab.get("reference_range", ""),
-                flag=lab.get("flag", "normal"),
-            ))
+            labs.append(
+                LabValue(
+                    test=lab.get("test", ""),
+                    value=str(lab.get("value", "")),
+                    unit=lab.get("unit", ""),
+                    reference_range=lab.get("reference_range", ""),
+                    flag=lab.get("flag", "normal"),
+                )
+            )
     return labs
 
 

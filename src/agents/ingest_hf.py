@@ -207,7 +207,9 @@ class IngestHFAgent(BaseAgent):
                 break
 
         # Sort by engagement (upvotes)
-        papers_with_scores = list(zip(papers, [item.get("numUpvotes", 0) for item in data[:len(papers)]], strict=False))
+        papers_with_scores = list(
+            zip(papers, [item.get("numUpvotes", 0) for item in data[: len(papers)]], strict=False)
+        )
         papers_with_scores.sort(key=lambda x: x[1], reverse=True)
         papers = [p for p, _ in papers_with_scores]
 

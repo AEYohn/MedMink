@@ -38,7 +38,9 @@ class Patient(Base):
     allergies = Column(JSONB, default=list)
     conditions = Column(JSONB, default=list)
     medications = Column(JSONB, default=list)
-    status = Column(SAEnum("active", "inactive", name="patient_status_enum"), default="active", nullable=False)
+    status = Column(
+        SAEnum("active", "inactive", name="patient_status_enum"), default="active", nullable=False
+    )
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
@@ -59,12 +61,19 @@ class Encounter(Base):
     analysis_result = Column(JSONB)
     clinician_overrides = Column(JSONB)
     triage_result = Column(JSONB)
-    status = Column(SAEnum("active", "completed", "archived", name="encounter_status_enum"), default="active")
+    status = Column(
+        SAEnum("active", "completed", "archived", name="encounter_status_enum"), default="active"
+    )
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     patient = relationship("Patient", back_populates="encounters")
-    events = relationship("EncounterEvent", back_populates="encounter", lazy="selectin", order_by="EncounterEvent.sequence_num")
+    events = relationship(
+        "EncounterEvent",
+        back_populates="encounter",
+        lazy="selectin",
+        order_by="EncounterEvent.sequence_num",
+    )
     documents = relationship("ClinicalDocument", back_populates="encounter", lazy="selectin")
     images = relationship("MedicalImage", back_populates="encounter", lazy="selectin")
     labs = relationship("LabResult", back_populates="encounter", lazy="selectin")
@@ -75,7 +84,9 @@ class EncounterEvent(Base):
 
     id = Column(Uuid, primary_key=True, default=uuid.uuid4)
     encounter_id = Column(Uuid, ForeignKey("encounters.id"), nullable=False, index=True)
-    event_type = Column(String(50), nullable=False)  # initial_analysis, new_findings, reassessment, chat_message, note
+    event_type = Column(
+        String(50), nullable=False
+    )  # initial_analysis, new_findings, reassessment, chat_message, note
     sequence_num = Column(Integer, default=0)
     role = Column(String(20))  # user, assistant, system
     message_content = Column(Text)
@@ -92,7 +103,9 @@ class ClinicalDocument(Base):
     tenant_id = Column(Uuid, default=DEFAULT_TENANT, nullable=False, index=True)
     encounter_id = Column(Uuid, ForeignKey("encounters.id"), index=True)
     patient_id = Column(Uuid, ForeignKey("patients.id"), index=True)
-    doc_type = Column(String(50), nullable=False)  # discharge_summary, soap_note, referral, imaging_report, lab_report
+    doc_type = Column(
+        String(50), nullable=False
+    )  # discharge_summary, soap_note, referral, imaging_report, lab_report
     title = Column(String(500))
     content = Column(JSONB)
     raw_text = Column(Text)

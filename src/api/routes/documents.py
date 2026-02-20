@@ -80,7 +80,9 @@ async def list_documents(
 
 @router.get("/{document_id}", response_model=DocumentResponse)
 async def get_document(document_id: str, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(ClinicalDocument).where(ClinicalDocument.id == uuid.UUID(document_id)))
+    result = await db.execute(
+        select(ClinicalDocument).where(ClinicalDocument.id == uuid.UUID(document_id))
+    )
     doc = result.scalar_one_or_none()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -109,8 +111,12 @@ async def create_document(data: DocumentCreate, db: AsyncSession = Depends(get_d
 
 
 @router.patch("/{document_id}", response_model=DocumentResponse)
-async def update_document(document_id: str, data: DocumentUpdate, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(ClinicalDocument).where(ClinicalDocument.id == uuid.UUID(document_id)))
+async def update_document(
+    document_id: str, data: DocumentUpdate, db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(ClinicalDocument).where(ClinicalDocument.id == uuid.UUID(document_id))
+    )
     doc = result.scalar_one_or_none()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")

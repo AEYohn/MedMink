@@ -186,6 +186,7 @@ def require_role(*allowed_roles: UserRole):
         ):
             ...
     """
+
     async def role_checker(
         current_user: TokenData = Depends(get_current_user),
     ) -> TokenData:

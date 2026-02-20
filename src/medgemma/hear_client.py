@@ -53,9 +53,7 @@ class HeARClient:
                     content_type="audio/wav",
                 )
 
-                async with session.post(
-                    f"{self._modal_url}/classify", data=form
-                ) as resp:
+                async with session.post(f"{self._modal_url}/classify", data=form) as resp:
                     if resp.status != 200:
                         body = await resp.text()
                         logger.error("HeAR classify failed", status=resp.status, body=body[:200])
@@ -93,9 +91,7 @@ class HeARClient:
                     content_type="audio/wav",
                 )
 
-                async with session.post(
-                    f"{self._modal_url}/embed", data=form
-                ) as resp:
+                async with session.post(f"{self._modal_url}/embed", data=form) as resp:
                     if resp.status != 200:
                         body = await resp.text()
                         logger.error("HeAR embed failed", status=resp.status, body=body[:200])

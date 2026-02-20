@@ -14,6 +14,7 @@ from typing import Any
 @dataclass
 class DispatchInfo:
     """CAD/dispatch information."""
+
     call_type: str = ""  # 911, IFT, mutual aid, standby
     dispatch_complaint: str = ""
     priority: str = ""  # emergent, non-emergent, ALS, BLS
@@ -32,6 +33,7 @@ class DispatchInfo:
 @dataclass
 class SceneAssessment:
     """Scene size-up and assessment."""
+
     location_type: str = ""  # residence, street, workplace, public
     address: str = ""
     scene_safe: bool | None = None
@@ -45,6 +47,7 @@ class SceneAssessment:
 @dataclass
 class PatientInfo:
     """Patient demographics and history."""
+
     name: str = ""
     age: str = ""
     sex: str = ""
@@ -59,6 +62,7 @@ class PatientInfo:
 @dataclass
 class PrimaryAssessment:
     """Primary survey / initial assessment."""
+
     avpu: str = ""  # Alert, Verbal, Pain, Unresponsive
     airway_status: str = ""  # patent, obstructed, managed
     breathing_status: str = ""  # adequate, inadequate, absent
@@ -75,6 +79,7 @@ class PrimaryAssessment:
 @dataclass
 class VitalSet:
     """A single set of vital signs."""
+
     time: str = ""
     bp_systolic: int | None = None
     bp_diastolic: int | None = None
@@ -91,6 +96,7 @@ class VitalSet:
 @dataclass
 class SecondaryAssessment:
     """Secondary survey and detailed assessment."""
+
     vitals: list[VitalSet] = field(default_factory=list)
     # Head-to-toe
     head: str = ""
@@ -111,6 +117,7 @@ class SecondaryAssessment:
 @dataclass
 class Intervention:
     """A procedure or intervention performed."""
+
     time: str = ""
     procedure: str = ""
     details: str = ""
@@ -121,6 +128,7 @@ class Intervention:
 @dataclass
 class MedicationGiven:
     """A medication administered in the field."""
+
     time: str = ""
     medication: str = ""
     dose: str = ""
@@ -131,6 +139,7 @@ class MedicationGiven:
 @dataclass
 class TransportInfo:
     """Transport and disposition details."""
+
     destination: str = ""
     destination_type: str = ""  # ER, trauma center, stroke center, burn center
     transport_mode: str = ""  # emergent, non-emergent, no transport
@@ -142,6 +151,7 @@ class TransportInfo:
 @dataclass
 class ValidationFlag:
     """A validation finding from rule or AI checking."""
+
     severity: str = "warning"  # error, warning, info
     section: str = ""
     field: str = ""
@@ -154,6 +164,7 @@ class ValidationFlag:
 @dataclass
 class EMSRunReport:
     """Complete ePCR run report."""
+
     run_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     session_id: str = ""
     status: str = "draft"  # draft, in_progress, complete, locked
@@ -199,13 +210,22 @@ def compute_section_completeness(report: EMSRunReport) -> dict[str, float]:
         return round(filled / total, 2) if total > 0 else 0.0
 
     d = report.dispatch
-    dispatch_fields = [d.call_type, d.dispatch_complaint, d.priority, d.time_dispatched,
-                       d.time_on_scene, d.time_at_patient]
+    dispatch_fields = [
+        d.call_type,
+        d.dispatch_complaint,
+        d.priority,
+        d.time_dispatched,
+        d.time_on_scene,
+        d.time_at_patient,
+    ]
     dispatch_score = _ratio(sum(1 for f in dispatch_fields if f), len(dispatch_fields))
 
     s = report.scene
-    scene_fields = [s.location_type, s.scene_safe is not None,
-                    s.mechanism_of_injury or s.nature_of_illness]
+    scene_fields = [
+        s.location_type,
+        s.scene_safe is not None,
+        s.mechanism_of_injury or s.nature_of_illness,
+    ]
     scene_score = _ratio(sum(1 for f in scene_fields if f), len(scene_fields))
 
     p = report.patient
@@ -219,7 +239,11 @@ def compute_section_completeness(report: EMSRunReport) -> dict[str, float]:
     vitals_score = 1.0 if report.secondary_assessment.vitals else 0.0
 
     sa = report.secondary_assessment
-    secondary_fields = [sa.head or sa.neuro, sa.chest, sa.cardiac_rhythm or sa.twelve_lead or sa.stroke_screen]
+    secondary_fields = [
+        sa.head or sa.neuro,
+        sa.chest,
+        sa.cardiac_rhythm or sa.twelve_lead or sa.stroke_screen,
+    ]
     secondary_score = _ratio(sum(1 for f in secondary_fields if f), len(secondary_fields))
 
     interventions_score = 1.0 if report.interventions or report.medications else 0.0

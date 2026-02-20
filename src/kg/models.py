@@ -89,7 +89,9 @@ class TechniqueNode(BaseNode):
     """Represents a specific technique, algorithm, or mathematical formulation."""
 
     name: str = ""
-    technique_type: str = ""  # algorithm, architecture, loss_function, optimization, regularization, math_formula, training_technique, inference_technique, data_augmentation, other
+    technique_type: str = (
+        ""  # algorithm, architecture, loss_function, optimization, regularization, math_formula, training_technique, inference_technique, data_augmentation, other
+    )
     description: str = ""
     formula: str | None = None  # LaTeX formula if applicable
     pseudocode: str | None = None  # Step-by-step algorithm pseudocode

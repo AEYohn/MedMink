@@ -49,11 +49,13 @@ router = APIRouter(prefix="/api/case", tags=["case-analysis"])
 
 class CaseAnalysisRequest(BaseModel):
     """Request for clinical case analysis."""
+
     case_text: str = Field(..., min_length=50, description="Clinical vignette text")
 
 
 class CaseAnalysisResponse(BaseModel):
     """Response from case analysis."""
+
     parsed_case: dict[str, Any]
     treatment_options: list[dict[str, Any]]
     top_recommendation: str
@@ -69,6 +71,7 @@ class CaseAnalysisResponse(BaseModel):
 
 class CaseFollowUpRequest(BaseModel):
     """Request for follow-up question about a case analysis."""
+
     case_text: str = Field(..., min_length=10)
     analysis_summary: dict[str, Any]
     question: str = Field(..., min_length=5, max_length=2000)
@@ -78,6 +81,7 @@ class CaseFollowUpRequest(BaseModel):
 
 class CaseReassessmentRequest(BaseModel):
     """Request for reassessing a case with new findings."""
+
     original_case_text: str = Field(..., min_length=50)
     new_findings: list[dict[str, Any]] = Field(..., min_length=1)
     previous_parsed_case: dict[str, Any] = Field(...)
@@ -87,6 +91,7 @@ class CaseReassessmentRequest(BaseModel):
 
 class CaseFollowUpResponse(BaseModel):
     """Response to a follow-up question."""
+
     answer: str
     suggested_questions: list[str] = []
 
@@ -227,7 +232,9 @@ def _generate_followup_suggestions(
 
     not_rec = [t for t in treatment_options if t.get("verdict") == "not_recommended"]
     if not_rec and "not recommended" not in q_lower:
-        suggestions.append(f"Why was {not_rec[0].get('name', 'that option')} rated not recommended?")
+        suggestions.append(
+            f"Why was {not_rec[0].get('name', 'that option')} rated not recommended?"
+        )
 
     if "discharge" not in q_lower and "disposition" not in q_lower:
         suggestions.append("What are the discharge criteria and follow-up plan?")
@@ -338,7 +345,10 @@ QUESTION: {request.question}"""
         # Return graceful error as answer text (HTTP 200), not HTTP 500
         return CaseFollowUpResponse(
             answer=f"I encountered an issue generating a response. Please try rephrasing your question. (Error: {str(e)[:100]})",
-            suggested_questions=["Can you explain the top recommendation?", "What are the key drug interactions?"],
+            suggested_questions=[
+                "Can you explain the top recommendation?",
+                "What are the key drug interactions?",
+            ],
         )
 
 
@@ -401,6 +411,7 @@ async def reassess_case_stream(request: CaseReassessmentRequest):
 
 class ImageAnalysisResponse(BaseModel):
     """Response from image analysis."""
+
     modality: str = ""
     findings: list[str] = []
     impression: str = ""
@@ -454,19 +465,12 @@ async def analyze_image(
 
 EXAMPLE_CASES = {
     "musculoskeletal": """A 21-year-old male college student presents with progressive neck stiffness and pain for the past 3 days. He reports difficulty turning his head to the left. No fever, no trauma history. He spends 8+ hours daily on his laptop. Physical exam shows limited cervical range of motion, tenderness over the left trapezius and sternocleidomastoid muscles, no neurological deficits. No meningeal signs.""",
-
     "cardiology": """A 62-year-old female with history of hypertension and hyperlipidemia presents with substernal chest pressure radiating to her left jaw for the past 45 minutes. She is diaphoretic and nauseated. Vitals: BP 165/95, HR 102, SpO2 96% on room air. ECG shows ST-segment elevation in leads II, III, and aVF. Troponin I is 2.4 ng/mL (normal <0.04).""",
-
     "infectious_disease": """A 35-year-old female presents with 3 days of dysuria, urinary frequency, and suprapubic pain. She denies fever, flank pain, or vaginal discharge. No history of recurrent UTIs. Urinalysis shows positive leukocyte esterase, positive nitrites, and >50 WBC/hpf. She has no drug allergies.""",
-
     "neurology": """A 45-year-old male presents with the worst headache of his life, onset 2 hours ago while lifting weights. He reports neck stiffness and photophobia. Vital signs: BP 180/100, HR 90. Neurological exam shows no focal deficits but positive Kernig's and Brudzinski's signs. Non-contrast CT head is negative.""",
-
     "psychiatry": """A 28-year-old female presents with 4 weeks of persistent low mood, anhedonia, poor sleep with early morning awakening, decreased appetite with 8-pound weight loss, difficulty concentrating at work, and passive suicidal ideation without plan or intent. PHQ-9 score is 18. No prior psychiatric history. No substance use.""",
-
     "endocrinology": """A 48-year-old male with a 15-year history of HIV, well-controlled on antiretroviral therapy (viral load undetectable, CD4 count 620 cells/mm³), presents with progressive truncal obesity over the past 2 years despite regular exercise and a balanced diet. Physical examination reveals increased abdominal girth with relatively thin extremities. CT imaging confirms a significant increase in visceral adipose tissue. His BMI is 27 kg/m² and fasting glucose is 108 mg/dL. His current antiretroviral regimen was recently switched from an older protease inhibitor-based regimen to an integrase inhibitor-based regimen, but the abdominal fat accumulation has not improved after 12 months.""",
-
     "pulmonology": """A 55-year-old male with a 30 pack-year smoking history presents with worsening dyspnea on exertion over the past 6 months. He now gets short of breath walking up one flight of stairs. He has a chronic productive cough with white sputum. PFTs show FEV1/FVC ratio of 0.62, FEV1 55% predicted. Chest X-ray shows hyperinflation.""",
-
     "dermatology": """A 32-year-old female presents with a 2-month history of an expanding erythematous, scaly plaque on her right shin. The lesion is well-demarcated, approximately 5cm in diameter, with central clearing giving an annular appearance. She recently adopted a kitten. KOH preparation of skin scrapings is positive for fungal hyphae.""",
 }
 
@@ -489,8 +493,10 @@ async def get_all_examples():
 
 # --- Differential Diagnosis ---
 
+
 class DDxRequest(BaseModel):
     """Request for differential diagnosis generation."""
+
     case_text: str = Field(..., min_length=10)
     parsed_case: dict[str, Any]
 
@@ -511,8 +517,10 @@ async def generate_ddx(request: DDxRequest):
 
 # --- Risk Scores ---
 
+
 class RiskScoreRequest(BaseModel):
     """Request for clinical risk score calculation."""
+
     case_text: str = Field(..., min_length=10)
     parsed_case: dict[str, Any]
 
@@ -533,8 +541,10 @@ async def compute_risk_scores(request: RiskScoreRequest):
 
 # --- Medication Safety ---
 
+
 class MedicationSafetyRequest(BaseModel):
     """Request for medication safety check."""
+
     current_medications: list[str] = Field(default_factory=list)
     new_medications: list[str] = Field(default_factory=list)
     patient_conditions: list[str] = Field(default_factory=list)
@@ -565,8 +575,10 @@ async def medication_safety_check(request: MedicationSafetyRequest):
 
 # --- Discharge Planning ---
 
+
 class DischargePlanRequest(BaseModel):
     """Request for discharge plan generation."""
+
     parsed_case: dict[str, Any]
     treatment_options: list[dict[str, Any]] = Field(default_factory=list)
     acute_management: dict[str, Any] = Field(default_factory=dict)
@@ -591,8 +603,10 @@ async def discharge_plan_endpoint(request: DischargePlanRequest):
 
 # --- Referral Note ---
 
+
 class ReferralRequest(BaseModel):
     """Request for referral note generation."""
+
     specialty: str = Field(..., min_length=2)
     parsed_case: dict[str, Any]
     treatment_options: list[dict[str, Any]] = Field(default_factory=list)
@@ -617,8 +631,10 @@ async def referral_endpoint(request: ReferralRequest):
 
 # --- Handoff Note ---
 
+
 class HandoffRequest(BaseModel):
     """Request for handoff note generation."""
+
     format: str = Field(default="ipass", pattern="^(ipass|sbar)$")
     parsed_case: dict[str, Any]
     treatment_options: list[dict[str, Any]] = Field(default_factory=list)
@@ -645,8 +661,10 @@ async def handoff_endpoint(request: HandoffRequest):
 
 # --- CXR Foundation (Chest X-ray Classification) ---
 
+
 class CXRClassifyRequest(BaseModel):
     """Request for chest X-ray classification."""
+
     image_b64: str = Field(..., min_length=100)
     conditions: list[str] = Field(default_factory=list)
 
@@ -675,8 +693,10 @@ async def cxr_classify(request: CXRClassifyRequest):
 
 # --- Derm Foundation (Skin Lesion Classification) ---
 
+
 class DermClassifyRequest(BaseModel):
     """Request for dermoscopy image classification."""
+
     image_b64: str = Field(..., min_length=100)
 
 
@@ -701,8 +721,10 @@ async def derm_classify(request: DermClassifyRequest):
 
 # --- Path Foundation (Digital Pathology) ---
 
+
 class PathClassifyRequest(BaseModel):
     """Request for pathology image classification."""
+
     image_b64: str = Field(..., min_length=100)
     tile_size: int = Field(default=224)
 
@@ -731,13 +753,16 @@ async def pathology_classify(request: PathClassifyRequest):
 
 # --- TxGemma (Drug Property Prediction) ---
 
+
 class DrugPropertyRequest(BaseModel):
     """Request for drug property prediction."""
+
     drug: str = Field(..., min_length=2)
 
 
 class DrugInteractionRequest(BaseModel):
     """Request for drug-drug interaction prediction."""
+
     drug_a: str = Field(..., min_length=2)
     drug_b: str = Field(..., min_length=2)
 
@@ -782,6 +807,7 @@ async def drug_interaction(request: DrugInteractionRequest):
 
 class AIAssistRequest(BaseModel):
     """Request for inline AI assist."""
+
     context_type: str = Field(..., description="Type: treatment, section, medication")
     context_item: str = Field(..., min_length=1, description="The specific item to ask about")
     question: str = Field(..., description="why_recommended, alternatives, or explain")
@@ -790,6 +816,7 @@ class AIAssistRequest(BaseModel):
 
 class AIAssistResponse(BaseModel):
     """Response from inline AI assist."""
+
     answer: str
 
 
@@ -857,6 +884,7 @@ async def drug_toxicity(request: DrugPropertyRequest):
 
 class SendReferralRequest(BaseModel):
     """Request to create and send a specialist referral."""
+
     case_session_id: str
     patient_id: str = ""
     referral_note: dict[str, Any]
@@ -866,6 +894,7 @@ class SendReferralRequest(BaseModel):
 
 class ReferralResponseRequest(BaseModel):
     """Specialist response to a referral."""
+
     specialist_name: str = Field(..., min_length=1)
     response: str = Field(..., min_length=1)
     recommendations: list[str] = Field(default_factory=list)
@@ -903,6 +932,7 @@ async def get_referral(referral_id: str):
     if not referral:
         raise HTTPException(status_code=404, detail="Referral not found")
     from dataclasses import asdict
+
     return asdict(referral)
 
 
@@ -914,6 +944,7 @@ async def get_shared_referral(token: str):
     if not referral:
         raise HTTPException(status_code=404, detail="Referral not found or link expired")
     from dataclasses import asdict
+
     return asdict(referral)
 
 
@@ -945,6 +976,7 @@ async def respond_to_referral(referral_id: str, request: ReferralResponseRequest
     if not referral:
         raise HTTPException(status_code=404, detail="Referral not found")
     from dataclasses import asdict
+
     return asdict(referral)
 
 

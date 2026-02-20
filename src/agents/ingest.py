@@ -182,7 +182,11 @@ class IngestAgent(BaseAgent):
                 authors=[author.name for author in entry.authors],
                 categories=categories,
                 published_date=published,
-                updated_date=datetime(*entry.updated_parsed[:6]) if hasattr(entry, "updated_parsed") else None,
+                updated_date=(
+                    datetime(*entry.updated_parsed[:6])
+                    if hasattr(entry, "updated_parsed")
+                    else None
+                ),
                 pdf_url=pdf_url,
                 source_url=entry.id,
                 analyzed=False,

@@ -210,7 +210,7 @@ class DSPyAnalysisClient:
 
         results = []
         for pred in predictions:
-            if hasattr(pred, 'analysis'):
+            if hasattr(pred, "analysis"):
                 results.append(self.paper_analyzer.to_dict(pred.analysis))
             else:
                 results.append({"summary": "", "claims": [], "methods": [], "techniques": []})

@@ -53,6 +53,7 @@ MAX_TURNS_PER_PHASE: dict[str, int] = {
 @dataclass
 class EMSReportSession:
     """State for a single EMS report documentation session."""
+
     session_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     run_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     phase: str = "dispatch"
@@ -123,20 +124,24 @@ class EMSReportAssistant:
             )
         except Exception as e:
             logger.error("MedGemma failed in start_session", error=str(e))
-            response_text = json.dumps({
-                "next_question": "Ready to document. What's the call?",
-                "phase_complete": False,
-                "extracted_data": {},
-                "validation_flags": [],
-            })
+            response_text = json.dumps(
+                {
+                    "next_question": "Ready to document. What's the call?",
+                    "phase_complete": False,
+                    "extracted_data": {},
+                    "validation_flags": [],
+                }
+            )
 
         data = self._parse_response(response_text)
         question = data.get("next_question", "Ready to document. What's the call?")
 
-        session.conversation_history.append({
-            "role": "assistant",
-            "content": question,
-        })
+        session.conversation_history.append(
+            {
+                "role": "assistant",
+                "content": question,
+            }
+        )
 
         return {
             "session_id": session.session_id,
@@ -180,12 +185,14 @@ class EMSReportAssistant:
             )
         except Exception as e:
             logger.error("MedGemma failed in process_dictation", error=str(e))
-            response_text = json.dumps({
-                "next_question": f"Got it — {text[:50]}. What else?",
-                "phase_complete": False,
-                "extracted_data": {},
-                "validation_flags": [],
-            })
+            response_text = json.dumps(
+                {
+                    "next_question": f"Got it — {text[:50]}. What else?",
+                    "phase_complete": False,
+                    "extracted_data": {},
+                    "validation_flags": [],
+                }
+            )
 
         data = self._parse_response(response_text)
 
@@ -255,8 +262,13 @@ class EMSReportAssistant:
         report = self._build_report(session)
         report_dict = asdict(report)
         # Remove bulky fields
-        for key in ("validation_flags", "section_completeness", "narrative",
-                     "icd10_codes", "medical_necessity"):
+        for key in (
+            "validation_flags",
+            "section_completeness",
+            "narrative",
+            "icd10_codes",
+            "medical_necessity",
+        ):
             report_dict.pop(key, None)
 
         prompt = EMS_NARRATIVE_PROMPT.format(
@@ -390,9 +402,9 @@ class EMSReportAssistant:
         if "interventions" in ed and isinstance(ed["interventions"], list):
             for item in ed["interventions"]:
                 if isinstance(item, dict):
-                    report.interventions.append(Intervention(**{
-                        k: v for k, v in item.items() if hasattr(Intervention, k)
-                    }))
+                    report.interventions.append(
+                        Intervention(**{k: v for k, v in item.items() if hasattr(Intervention, k)})
+                    )
 
         if "medications" in ed and isinstance(ed["medications"], list):
             for item in ed["medications"]:
@@ -400,9 +412,11 @@ class EMSReportAssistant:
                     # Map common LLM field names to dataclass fields
                     if "name" in item and "medication" not in item:
                         item["medication"] = item.pop("name")
-                    report.medications.append(MedicationGiven(**{
-                        k: v for k, v in item.items() if hasattr(MedicationGiven, k)
-                    }))
+                    report.medications.append(
+                        MedicationGiven(
+                            **{k: v for k, v in item.items() if hasattr(MedicationGiven, k)}
+                        )
+                    )
 
         if "transport" in ed and isinstance(ed["transport"], dict):
             for k, v in ed["transport"].items():
@@ -436,8 +450,9 @@ class EMSReportAssistant:
             pass
 
         import re
+
         try:
-            match = re.search(r'\{.*\}', text, re.DOTALL)
+            match = re.search(r"\{.*\}", text, re.DOTALL)
             if match:
                 return json.loads(match.group())
         except (json.JSONDecodeError, Exception):

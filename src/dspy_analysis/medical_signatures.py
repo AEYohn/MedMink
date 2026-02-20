@@ -28,17 +28,16 @@ class PICOElements(BaseModel):
     )
     comparison: str = Field(
         default="standard of care",
-        description="Comparator (alternative treatment, placebo, standard of care)"
+        description="Comparator (alternative treatment, placebo, standard of care)",
     )
     outcome: str = Field(
         description="Primary outcomes of interest (mortality, efficacy, adverse events)"
     )
     question_type: Literal["therapy", "diagnosis", "prognosis", "etiology", "harm"] = Field(
-        default="therapy",
-        description="Type of clinical question"
+        default="therapy", description="Type of clinical question"
     )
 
-    @field_validator('question_type', mode='before')
+    @field_validator("question_type", mode="before")
     @classmethod
     def normalize_question_type(cls, v):
         """Normalize question_type to lowercase to handle MedGemma capitalization."""
@@ -52,8 +51,13 @@ class EvidenceGrade(BaseModel):
 
     pmid: str = Field(description="PubMed ID or DOI")
     study_design: Literal[
-        "systematic_review", "rct", "cohort", "case_control",
-        "case_series", "case_report", "expert_opinion"
+        "systematic_review",
+        "rct",
+        "cohort",
+        "case_control",
+        "case_series",
+        "case_report",
+        "expert_opinion",
     ] = Field(description="Study design type")
     sample_size: int = Field(default=0, description="Number of participants")
     risk_of_bias: Literal["low", "moderate", "high", "critical"] = Field(
@@ -70,8 +74,7 @@ class ClinicalFinding(BaseModel):
 
     finding: str = Field(description="The clinical finding statement")
     effect_size: str | None = Field(
-        default=None,
-        description="Quantitative effect (OR, RR, HR, NNT with CI)"
+        default=None, description="Quantitative effect (OR, RR, HR, NNT with CI)"
     )
     citation: str = Field(description="PMID or author (year)")
     confidence: float = Field(ge=0, le=1, description="Confidence in finding")
@@ -96,9 +99,7 @@ class DrugInteraction(BaseModel):
 
     drug_a: str = Field(description="First drug name")
     drug_b: str = Field(description="Second drug name")
-    severity: Literal["major", "moderate", "minor"] = Field(
-        description="Interaction severity"
-    )
+    severity: Literal["major", "moderate", "minor"] = Field(description="Interaction severity")
     mechanism: str = Field(description="PK/PD mechanism of interaction")
     effect: str = Field(description="Clinical effect of interaction")
     management: str = Field(description="Recommended clinical action")
@@ -130,20 +131,16 @@ class TreatmentComparison(BaseModel):
     condition: str = Field(description="Medical condition")
     treatments: list[str] = Field(description="Treatments being compared")
     efficacy_winner: str | None = Field(
-        default=None,
-        description="Treatment with better efficacy (if determinable)"
+        default=None, description="Treatment with better efficacy (if determinable)"
     )
     safety_winner: str | None = Field(
-        default=None,
-        description="Treatment with better safety profile (if determinable)"
+        default=None, description="Treatment with better safety profile (if determinable)"
     )
     key_differences: list[str] = Field(
-        default_factory=list,
-        description="Key differences between treatments"
+        default_factory=list, description="Key differences between treatments"
     )
     context_factors: list[str] = Field(
-        default_factory=list,
-        description="Patient factors influencing treatment choice"
+        default_factory=list, description="Patient factors influencing treatment choice"
     )
 
 
@@ -213,9 +210,7 @@ class DrugInteractionCheck(dspy.Signature):
     """
 
     drug_list: list[str] = dspy.InputField(desc="List of drug names to check")
-    papers: list[dict] = dspy.InputField(
-        desc="Papers containing drug interaction information"
-    )
+    papers: list[dict] = dspy.InputField(desc="Papers containing drug interaction information")
 
     interactions: list[DrugInteraction] = dspy.OutputField(
         desc="Identified drug interactions with severity and evidence"
@@ -240,12 +235,8 @@ class TreatmentComparisonAnalysis(dspy.Signature):
     treatments: list[str] = dspy.InputField(desc="Treatments to compare")
     papers: list[dict] = dspy.InputField(desc="Papers with comparative data")
 
-    comparison: TreatmentComparison = dspy.OutputField(
-        desc="Structured treatment comparison"
-    )
-    evidence_summary: str = dspy.OutputField(
-        desc="Narrative summary of comparison evidence"
-    )
+    comparison: TreatmentComparison = dspy.OutputField(desc="Structured treatment comparison")
+    evidence_summary: str = dspy.OutputField(desc="Narrative summary of comparison evidence")
 
 
 class AdverseEventExtraction(dspy.Signature):
@@ -287,13 +278,9 @@ class ClinicalGuidelineAlignment(dspy.Signature):
 
     question: str = dspy.InputField(desc="Clinical question")
     papers: list[dict] = dspy.InputField(desc="Recent literature evidence")
-    guideline_summary: str = dspy.InputField(
-        desc="Summary of relevant guideline recommendations"
-    )
+    guideline_summary: str = dspy.InputField(desc="Summary of relevant guideline recommendations")
 
-    alignment_assessment: str = dspy.OutputField(
-        desc="Assessment of evidence-guideline alignment"
-    )
+    alignment_assessment: str = dspy.OutputField(desc="Assessment of evidence-guideline alignment")
     potential_updates: list[str] = dspy.OutputField(
         desc="Areas where evidence may warrant guideline updates"
     )
@@ -315,19 +302,13 @@ class PopulationApplicability(dspy.Signature):
     Provide an applicability score and caveats.
     """
 
-    patient_profile: str = dspy.InputField(
-        desc="Description of target patient characteristics"
-    )
-    papers: list[dict] = dspy.InputField(
-        desc="Papers with their inclusion/exclusion criteria"
-    )
+    patient_profile: str = dspy.InputField(desc="Description of target patient characteristics")
+    papers: list[dict] = dspy.InputField(desc="Papers with their inclusion/exclusion criteria")
 
     applicability_scores: list[dict] = dspy.OutputField(
         desc="Per-paper applicability scores with rationale"
     )
-    best_matching_papers: list[str] = dspy.OutputField(
-        desc="PMIDs of most applicable studies"
-    )
+    best_matching_papers: list[str] = dspy.OutputField(desc="PMIDs of most applicable studies")
     generalizability_caveats: list[str] = dspy.OutputField(
         desc="Important caveats when applying evidence to target population"
     )

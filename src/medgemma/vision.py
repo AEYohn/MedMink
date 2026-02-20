@@ -30,7 +30,16 @@ MODALITY_PATTERNS = {
     "ultrasound": ["ultrasound", "us", "sonogram", "echo"],
     "pathology": ["pathology", "histology", "biopsy", "h&e", "ihc"],
     "dermoscopy": ["dermoscopy", "dermatoscopy", "lesion", "mole"],
-    "clinical_photo": ["photo", "photograph", "camera", "iphone", "wound", "rash", "bruise", "swelling"],
+    "clinical_photo": [
+        "photo",
+        "photograph",
+        "camera",
+        "iphone",
+        "wound",
+        "rash",
+        "bruise",
+        "swelling",
+    ],
     "fundus": ["fundus", "retina", "optic", "macula"],
     "oct": ["oct", "optical coherence"],
 }
@@ -48,7 +57,6 @@ MODALITY_PROMPTS = {
 7. Soft Tissues
 
 Clinical context: {context}""",
-
     "ct": """Analyze this CT scan systematically. Report:
 1. Window Settings
 2. Anatomy (normal vs abnormal)
@@ -57,7 +65,6 @@ Clinical context: {context}""",
 5. Comparison to priors if available
 
 Clinical context: {context}""",
-
     "pathology": """Analyze this histopathology image. Report:
 1. Tissue Type
 2. Architecture (normal vs disrupted)
@@ -66,7 +73,6 @@ Clinical context: {context}""",
 5. Most likely diagnosis
 
 Clinical context: {context}""",
-
     "dermoscopy": """Analyze this dermoscopy image using ABCDE criteria:
 1. Asymmetry
 2. Border (irregular, poorly defined)
@@ -75,7 +81,6 @@ Clinical context: {context}""",
 5. Dermoscopic Structures (network, globules, streaks)
 
 Clinical context: {context}""",
-
     "fundus": """Analyze this fundus photograph. Report:
 1. Optic Disc (cup-to-disc ratio, pallor, swelling)
 2. Macula (foveal reflex, deposits, hemorrhages)
@@ -83,7 +88,6 @@ Clinical context: {context}""",
 4. Retina (hemorrhages, exudates, lesions)
 
 Clinical context: {context}""",
-
     "clinical_photo": """This is a clinical photograph (not a dermoscopy or medical scan). Describe what you observe:
 1. Body region and visible structures
 2. Skin appearance — color, texture, any visible lesions or abnormalities
@@ -92,7 +96,6 @@ Clinical context: {context}""",
 Important: A consumer photograph has lower diagnostic reliability than dermoscopy or radiology. State this in your impression.
 
 Clinical context: {context}""",
-
     "default": """Describe what you observe in this image.
 1. What type of image is this? (medical scan, clinical photo, consumer photo, etc.)
 2. Body region visible
@@ -142,15 +145,21 @@ class MedVisionClient:
     """
 
     def __init__(self):
-        self._modal_url = getattr(settings, 'medgemma_multimodal_modal_url', '') or ''
-        self._modal_model = getattr(settings, 'medgemma_multimodal_modal_model', 'google/medgemma-27b-multimodal')
+        self._modal_url = getattr(settings, "medgemma_multimodal_modal_url", "") or ""
+        self._modal_model = getattr(
+            settings, "medgemma_multimodal_modal_model", "google/medgemma-27b-multimodal"
+        )
 
         # Fall back to the text-based Modal URL if multimodal URL not set
         if not self._modal_url:
-            self._modal_url = getattr(settings, 'medgemma_modal_url', '') or ''
+            self._modal_url = getattr(settings, "medgemma_modal_url", "") or ""
             if self._modal_url:
-                self._modal_model = getattr(settings, 'medgemma_modal_model', 'google/medgemma-27b-it')
-                logger.info("Vision client using text Modal endpoint (multimodal URL not configured)")
+                self._modal_model = getattr(
+                    settings, "medgemma_modal_model", "google/medgemma-27b-it"
+                )
+                logger.info(
+                    "Vision client using text Modal endpoint (multimodal URL not configured)"
+                )
 
         if self._modal_url:
             logger.info(
@@ -212,7 +221,9 @@ class MedVisionClient:
         # Cap confidence for non-medical modalities
         if modality in ("default", "clinical_photo"):
             result["confidence"] = min(result.get("confidence", 0.5), 0.5)
-            result["limitations"] = "This is a consumer photograph, not a medical scan. Findings have lower diagnostic reliability."
+            result["limitations"] = (
+                "This is a consumer photograph, not a medical scan. Findings have lower diagnostic reliability."
+            )
 
         return result
 
@@ -236,7 +247,10 @@ class MedVisionClient:
                             "classifications": cxr_result.get("classifications", []),
                             "model": "cxr-foundation",
                         }
-                        logger.info("CXR Foundation enhanced analysis", n_conditions=len(cxr_result.get("classifications", [])))
+                        logger.info(
+                            "CXR Foundation enhanced analysis",
+                            n_conditions=len(cxr_result.get("classifications", [])),
+                        )
             except Exception as e:
                 logger.warning("CXR Foundation enhancement failed", error=str(e))
 
@@ -255,7 +269,10 @@ class MedVisionClient:
                             "malignancy_probability": derm_result.get("malignancy_probability", 0),
                             "model": "derm-foundation",
                         }
-                        logger.info("Derm Foundation enhanced analysis", risk=derm_result.get("overall_risk"))
+                        logger.info(
+                            "Derm Foundation enhanced analysis",
+                            risk=derm_result.get("overall_risk"),
+                        )
             except Exception as e:
                 logger.warning("Derm Foundation enhancement failed", error=str(e))
 
@@ -274,7 +291,9 @@ class MedVisionClient:
                             "tiles_analyzed": path_result.get("tiles_analyzed", 0),
                             "model": "path-foundation",
                         }
-                        logger.info("Path Foundation enhanced analysis", grade=path_result.get("grade"))
+                        logger.info(
+                            "Path Foundation enhanced analysis", grade=path_result.get("grade")
+                        )
             except Exception as e:
                 logger.warning("Path Foundation enhancement failed", error=str(e))
 
@@ -353,7 +372,9 @@ class MedVisionClient:
                 ) as resp:
                     if resp.status != 200:
                         body = await resp.text()
-                        logger.error("Modal multimodal request failed", status=resp.status, body=body[:500])
+                        logger.error(
+                            "Modal multimodal request failed", status=resp.status, body=body[:500]
+                        )
                         return await self._analyze_text_only(modality, "")
 
                     data = await resp.json()
@@ -446,8 +467,8 @@ class MedVisionClient:
                 response = response[start:end]
 
         # Fix trailing commas
-        response = re.sub(r',\s*}', '}', response)
-        response = re.sub(r',\s*]', ']', response)
+        response = re.sub(r",\s*}", "}", response)
+        response = re.sub(r",\s*]", "]", response)
 
         try:
             return json.loads(response)

@@ -19,6 +19,7 @@ logger = structlog.get_logger()
 
 class ConsensusStep(StrEnum):
     """Steps in the consensus pipeline."""
+
     PARSING = "parsing"
     PRIMARY_ANALYSIS = "primary_analysis"
     SKEPTICAL_REVIEW = "skeptical_review"
@@ -31,6 +32,7 @@ class ConsensusStep(StrEnum):
 @dataclass
 class StepUpdate:
     """Real-time update for a pipeline step."""
+
     step: ConsensusStep
     status: str  # "started", "progress", "completed", "error"
     message: str
@@ -41,6 +43,7 @@ class StepUpdate:
 @dataclass
 class ModelPerspective:
     """A single model's perspective on a clinical question."""
+
     role: str  # "primary", "skeptical", "vision"
     synthesis: str
     evidence_grade: str
@@ -53,6 +56,7 @@ class ModelPerspective:
 @dataclass
 class ConsensusResult:
     """Final consensus result from multiple model perspectives."""
+
     question: str
     pico: dict[str, str]
 
@@ -153,7 +157,7 @@ class ConsensusEngine:
                 step=ConsensusStep.PRIMARY_ANALYSIS,
                 status="started",
                 message="Primary clinician analyzing evidence...",
-                progress=0.2
+                progress=0.2,
             )
 
             primary = await self._get_primary_perspective(question, papers, pico)
@@ -163,7 +167,7 @@ class ConsensusEngine:
                 status="completed",
                 message=f"Primary analysis complete: {primary.evidence_grade} evidence",
                 data={"grade": primary.evidence_grade, "confidence": primary.confidence},
-                progress=0.4
+                progress=0.4,
             )
 
             # Step 2: Skeptical review
@@ -171,7 +175,7 @@ class ConsensusEngine:
                 step=ConsensusStep.SKEPTICAL_REVIEW,
                 status="started",
                 message="Skeptical reviewer challenging findings...",
-                progress=0.5
+                progress=0.5,
             )
 
             skeptical = await self._get_skeptical_perspective(question, papers, pico, primary)
@@ -181,7 +185,7 @@ class ConsensusEngine:
                 status="completed",
                 message=f"Review complete: {len(skeptical.concerns)} concerns raised",
                 data={"concerns": skeptical.concerns[:3]},
-                progress=0.7
+                progress=0.7,
             )
 
             # Step 3: Vision analysis (if image provided)
@@ -191,7 +195,7 @@ class ConsensusEngine:
                     step=ConsensusStep.SYNTHESIS,
                     status="started",
                     message="Analyzing medical image...",
-                    progress=0.75
+                    progress=0.75,
                 )
                 vision = await self._get_vision_perspective(image_path, question)
                 yield StepUpdate(
@@ -199,7 +203,7 @@ class ConsensusEngine:
                     status="completed",
                     message="Image analysis complete",
                     data={"findings": vision.key_points[:2] if vision else []},
-                    progress=0.8
+                    progress=0.8,
                 )
 
             # Step 4: Consensus synthesis
@@ -207,7 +211,7 @@ class ConsensusEngine:
                 step=ConsensusStep.CONSENSUS,
                 status="started",
                 message="Synthesizing consensus from all perspectives...",
-                progress=0.85
+                progress=0.85,
             )
 
             result = await self._synthesize_consensus(
@@ -224,7 +228,7 @@ class ConsensusEngine:
                 status="completed",
                 message=f"Consensus reached: {result.agreement_score:.0%} agreement",
                 data={"agreement": result.agreement_score},
-                progress=0.95
+                progress=0.95,
             )
 
             # Final result
@@ -232,7 +236,7 @@ class ConsensusEngine:
                 step=ConsensusStep.COMPLETE,
                 status="completed",
                 message="Analysis complete",
-                progress=1.0
+                progress=1.0,
             )
 
             yield result
@@ -243,7 +247,7 @@ class ConsensusEngine:
                 step=self._current_step,
                 status="error",
                 message=f"Analysis failed: {str(e)}",
-                progress=0.0
+                progress=0.0,
             )
             raise
 

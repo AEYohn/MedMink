@@ -15,6 +15,7 @@ from src.api.routes import (
     case_analysis,
     charting,
     chat,
+    compliance,
     consensus,
     documents,
     ems,
@@ -130,6 +131,7 @@ app.include_router(patients_crud.router)
 app.include_router(encounters.router)
 app.include_router(documents.router)
 app.include_router(ems.router)
+app.include_router(compliance.router)
 
 
 # WebSocket connection manager
@@ -184,6 +186,7 @@ async def get_status():
         stats = await kg.get_stats()
 
         from src.gemini import get_gemini_client
+
         gemini = get_gemini_client()
         gemini_stats = gemini.get_stats()
 
@@ -209,6 +212,7 @@ async def get_status():
 async def get_cost_tracking():
     """Get cost tracking information."""
     from src.gemini import get_gemini_client
+
     gemini = get_gemini_client()
     return gemini.cost_tracker.get_stats()
 
@@ -262,7 +266,9 @@ async def websocket_endpoint(websocket: WebSocket):
 
             # Echo or handle commands
             if data == "ping":
-                await websocket.send_json({"type": "pong", "timestamp": datetime.utcnow().isoformat()})
+                await websocket.send_json(
+                    {"type": "pong", "timestamp": datetime.utcnow().isoformat()}
+                )
             elif data == "status":
                 kg = await get_knowledge_graph()
                 stats = await kg.get_stats()
@@ -284,11 +290,13 @@ async def activity_feed(websocket: WebSocket):
             kg = await get_knowledge_graph()
             stats = await kg.get_weekly_stats()
 
-            await websocket.send_json({
-                "type": "activity",
-                "timestamp": datetime.utcnow().isoformat(),
-                "data": stats,
-            })
+            await websocket.send_json(
+                {
+                    "type": "activity",
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "data": stats,
+                }
+            )
 
     except WebSocketDisconnect:
         manager.disconnect(websocket)
@@ -297,11 +305,13 @@ async def activity_feed(websocket: WebSocket):
 # Broadcast helper for agents to use
 async def broadcast_event(event_type: str, data: dict[str, Any]):
     """Broadcast an event to all connected clients."""
-    await manager.broadcast({
-        "type": event_type,
-        "timestamp": datetime.utcnow().isoformat(),
-        "data": data,
-    })
+    await manager.broadcast(
+        {
+            "type": event_type,
+            "timestamp": datetime.utcnow().isoformat(),
+            "data": data,
+        }
+    )
 
 
 if __name__ == "__main__":

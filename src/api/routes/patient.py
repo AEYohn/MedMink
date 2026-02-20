@@ -6,7 +6,6 @@ Provides endpoints for:
 - Appointment booking (patient-side)
 """
 
-
 import structlog
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -96,7 +95,9 @@ class AppointmentRequest(BaseModel):
     provider_id: str = Field(..., description="Provider/doctor ID")
     preferred_date: str = Field(..., description="Preferred date (YYYY-MM-DD)")
     preferred_time: str | None = Field(default=None, description="Preferred time (HH:MM)")
-    appointment_type: str = Field(default="in-person", description="in-person, telehealth, or phone")
+    appointment_type: str = Field(
+        default="in-person", description="in-person, telehealth, or phone"
+    )
     reason: str = Field(..., max_length=500, description="Reason for visit")
     duration: int = Field(default=30, ge=15, le=120, description="Duration in minutes")
 
@@ -166,9 +167,7 @@ async def check_medication_interactions(request: MedicationCheckRequest):
 
         return MedicationCheckResponse(
             safe=result["safe"],
-            interactions=[
-                DrugInteractionResponse(**i) for i in result["interactions"]
-            ],
+            interactions=[DrugInteractionResponse(**i) for i in result["interactions"]],
             recommendations=result["recommendations"],
             confidence=result["confidence"],
         )
@@ -224,10 +223,7 @@ async def get_available_slots(request: AvailableSlotsRequest):
         )
 
         # Filter to only return available slots
-        available = [
-            slot for slot in result["slots"]
-            if slot["available"]
-        ]
+        available = [slot for slot in result["slots"] if slot["available"]]
 
         return {
             "date": result["date"],

@@ -63,7 +63,9 @@ def _similarity_to_novelty(similarity: float) -> float:
         return 0.3 + 0.3 * (SIMILARITY_THRESHOLDS["medium"] - similarity) / range_size
     else:
         # Highly novel range: 0.0-0.70 -> novelty 0.6-1.0
-        return 0.6 + 0.4 * (SIMILARITY_THRESHOLDS["low"] - similarity) / SIMILARITY_THRESHOLDS["low"]
+        return (
+            0.6 + 0.4 * (SIMILARITY_THRESHOLDS["low"] - similarity) / SIMILARITY_THRESHOLDS["low"]
+        )
 
 
 def _classify_novelty(max_similarity: float) -> NoveltyLevel:
@@ -122,9 +124,13 @@ class NoveltyChecker:
 
         # Build explanation
         if novelty_level == NoveltyLevel.DERIVATIVE:
-            explanation = f"Very similar to existing technique: {similar[0].metadata.get('name', 'unknown')}"
+            explanation = (
+                f"Very similar to existing technique: {similar[0].metadata.get('name', 'unknown')}"
+            )
         elif novelty_level == NoveltyLevel.INCREMENTAL:
-            explanation = f"Incremental improvement over: {similar[0].metadata.get('name', 'unknown')}"
+            explanation = (
+                f"Incremental improvement over: {similar[0].metadata.get('name', 'unknown')}"
+            )
         elif novelty_level == NoveltyLevel.MODERATELY_NOVEL:
             explanation = "Moderately novel - builds on existing concepts with notable differences"
         else:

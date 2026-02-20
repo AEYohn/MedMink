@@ -37,6 +37,7 @@ TEST_CASES = [
             "do_not_do_should_include": ["oral feeding", "morphine"],
             "home_med_exceptions": [],
             "timing_keywords_in_rationale": [],
+            "expected_primary_ddx": ["pancreatitis"],
         },
     },
     {
@@ -68,6 +69,7 @@ TEST_CASES = [
             "do_not_do_should_include": [],
             "home_med_exceptions": [],
             "timing_keywords_in_rationale": [],
+            "expected_primary_ddx": ["STEMI", "myocardial infarction", "MI"],
         },
     },
     {
@@ -99,6 +101,7 @@ TEST_CASES = [
             "do_not_do_should_include": [],
             "home_med_exceptions": [],
             "timing_keywords_in_rationale": [],
+            "expected_primary_ddx": ["pulmonary embolism", "PE"],
         },
     },
     {
@@ -129,6 +132,7 @@ TEST_CASES = [
             "do_not_do_should_include": ["amoxicillin", "ampicillin", "contact sport"],
             "home_med_exceptions": [],
             "timing_keywords_in_rationale": [],
+            "expected_primary_ddx": ["mononucleosis", "EBV"],
         },
     },
     {
@@ -160,6 +164,7 @@ TEST_CASES = [
             "do_not_do_should_include": ["NSAID"],
             "home_med_exceptions": [],
             "timing_keywords_in_rationale": [],
+            "expected_primary_ddx": ["osteoarthritis"],
         },
     },
     {
@@ -191,6 +196,7 @@ TEST_CASES = [
             "do_not_do_should_include": ["lithium", "thiazide"],
             "home_med_exceptions": ["lithium", "thiazide", "hctz"],
             "timing_keywords_in_rationale": [],
+            "expected_primary_ddx": ["lithium toxicity", "lithium intoxication"],
         },
     },
     {
@@ -233,12 +239,247 @@ TEST_CASES = [
             "should_correct_labs": [],
             "expected_consults": ["neurology", "interventional"],
             "do_not_do_should_include": [
-                "aspirin", "anticoagul", "oral", "NPO", "PO", "swallow",
+                "aspirin",
+                "anticoagul",
+                "oral",
+                "NPO",
+                "PO",
+                "swallow",
             ],
             "home_med_exceptions": [],
             "timing_keywords_in_rationale": [
-                "24h", "4.5", "before", "prior to", "after",
+                "24h",
+                "4.5",
+                "before",
+                "prior to",
+                "after",
             ],
+            "expected_primary_ddx": ["ischemic stroke", "MCA", "CVA"],
+        },
+    },
+    # --- New cases (Phase 4) ---
+    {
+        "id": "dka_new_onset",
+        "name": "New-Onset DKA — Endocrinology",
+        "case_text": (
+            "A 28-year-old male with no significant past medical history presents with 2 weeks "
+            "of polyuria, polydipsia, and 15-lb weight loss. He developed nausea, vomiting, "
+            "and diffuse abdominal pain over the past 24 hours. "
+            "Vitals: BP 100/62, HR 124, RR 28 (Kussmaul), T 37.0°C, SpO2 98% on RA. "
+            "Exam: dry mucous membranes, fruity breath odor, diffuse abdominal tenderness "
+            "without rebound. "
+            "Labs: glucose 485 mg/dL, pH 7.18, pCO2 18, HCO3 8 mEq/L, anion gap 28, "
+            "K+ 5.2 (corrected ~3.8 for pH), Na 131, BUN 28, Cr 1.4, "
+            "beta-hydroxybutyrate 6.2 mmol/L, urinalysis with ketones 4+, glucose 4+. "
+            "HbA1c 13.2%."
+        ),
+        "expected": {
+            "category_contains": ["endocrinology"],
+            "risk_stratification_contains": ["severe", "high"],
+            "disposition_contains": ["ICU", "intensive"],
+            "must_recommend": [
+                "insulin",
+                "IV fluid",
+                "potassium",
+            ],
+            "must_not_recommend_as_harmful": [
+                "insulin",
+                "IV fluid",
+            ],
+            "should_address_etiology": [],
+            "should_correct_labs": ["glucose", "potassium", "pH", "anion gap"],
+            "expected_consults": ["endocrinology", "ICU"],
+            "do_not_do_should_include": ["oral hypoglycemic", "bicarbonate"],
+            "home_med_exceptions": [],
+            "timing_keywords_in_rationale": ["1h", "2h", "gap closure", "before transition"],
+            "expected_primary_ddx": ["diabetic ketoacidosis", "DKA"],
+        },
+    },
+    {
+        "id": "sepsis_urosource",
+        "name": "Urosepsis — Infectious Disease / Critical Care",
+        "case_text": (
+            "A 75-year-old female with diabetes mellitus, recurrent UTIs, and an indwelling "
+            "Foley catheter removed 3 days ago presents with fever, rigors, and confusion "
+            "for 12 hours. She was found by her daughter, disoriented and unable to stand. "
+            "Vitals: BP 82/50, HR 118, RR 24, T 39.8°C, SpO2 93% on RA. "
+            "Exam: lethargic but arousable, suprapubic tenderness, CVAT on the right. "
+            "Labs: WBC 22,400 with 15% bands, lactate 4.8 mmol/L, Cr 2.3 (baseline 1.0), "
+            "BUN 42, glucose 210, procalcitonin 12.5 ng/mL. "
+            "UA: positive nitrites, large leukocyte esterase, >100 WBC/hpf, bacteria 3+. "
+            "Blood cultures drawn x2. CT abdomen/pelvis: right-sided hydronephrosis with "
+            "perinephric stranding."
+        ),
+        "expected": {
+            "category_contains": ["infectious", "critical"],
+            "risk_stratification_contains": ["severe", "high", "septic shock"],
+            "disposition_contains": ["ICU", "intensive"],
+            "must_recommend": [
+                "antibiotic",
+                "IV fluid",
+                "blood culture",
+            ],
+            "must_not_recommend_as_harmful": [
+                "antibiotic",
+                "IV fluid",
+            ],
+            "should_address_etiology": ["urinary", "UTI", "urosepsis", "obstructive"],
+            "should_correct_labs": ["lactate", "glucose"],
+            "expected_consults": ["ICU", "infectious disease"],
+            "do_not_do_should_include": ["delay antibiotic", "oral antibiotic"],
+            "home_med_exceptions": [],
+            "timing_keywords_in_rationale": ["1 hour", "3-hour bundle", "within"],
+            "expected_primary_ddx": ["urosepsis", "sepsis", "pyelonephritis"],
+        },
+    },
+    {
+        "id": "sah_thunderclap",
+        "name": "SAH with AComA Aneurysm — Neurosurgery",
+        "case_text": (
+            "A 48-year-old male with history of smoking and untreated hypertension presents "
+            "with sudden-onset 'worst headache of my life' that began 2 hours ago while "
+            "straining at the gym. He had a brief loss of consciousness witnessed by his "
+            "training partner, followed by nausea, vomiting, and neck stiffness. "
+            "Vitals: BP 195/110, HR 56 (Cushing reflex), RR 14, T 37.2°C, SpO2 97% on RA. "
+            "Exam: GCS 12 (E3V4M5), photophobia, nuchal rigidity, bilateral papilledema. "
+            "Hunt-Hess grade 3, WFNS grade III. "
+            "CT head: diffuse subarachnoid hemorrhage, modified Fisher grade 3, early "
+            "hydrocephalus. CTA: 7mm saccular aneurysm of the anterior communicating artery "
+            "(AComA). No intraparenchymal hemorrhage."
+        ),
+        "expected": {
+            "category_contains": ["neurology", "neurosurgery"],
+            "risk_stratification_contains": ["severe", "high", "critical"],
+            "disposition_contains": ["ICU", "neuro"],
+            "must_recommend": [
+                "nimodipine",
+                ["clip", "coil", "secure"],
+            ],
+            "must_not_recommend_as_harmful": [
+                "nimodipine",
+            ],
+            "should_address_etiology": ["aneurysm", "AComA"],
+            "should_correct_labs": [],
+            "expected_consults": ["neurosurgery", "neuro-ICU"],
+            "do_not_do_should_include": ["anticoagul", "lumbar puncture"],
+            "home_med_exceptions": [],
+            "timing_keywords_in_rationale": ["24h", "72h", "within"],
+            "expected_primary_ddx": ["subarachnoid hemorrhage", "SAH"],
+        },
+    },
+    {
+        "id": "afib_rvr",
+        "name": "New-Onset Atrial Fibrillation with RVR — Cardiology",
+        "case_text": (
+            "A 68-year-old male with hypertension, type 2 diabetes, prior stroke 2 years ago "
+            "(with residual mild left-sided weakness), and heart failure with preserved EF (55%) "
+            "presents with palpitations, lightheadedness, and exertional dyspnea for 3 days. "
+            "He has no prior history of atrial fibrillation. Duration of symptoms unclear — "
+            "possibly >48 hours. "
+            "Vitals: BP 95/60, HR 155 (irregularly irregular), RR 22, SpO2 94% on RA. "
+            "Exam: irregular tachycardia, no murmurs, mild bibasilar crackles, 1+ bilateral "
+            "ankle edema. ECG confirms atrial fibrillation with rapid ventricular response, "
+            "no acute ST changes. "
+            "Labs: troponin I 0.06 ng/mL (normal <0.04), BNP 680 pg/mL, TSH 0.8, "
+            "Cr 1.1, K+ 4.2, Mg 1.7. CHA₂DS₂-VASc score: 4 (HTN, DM, age ≥65, prior stroke)."
+        ),
+        "expected": {
+            "category_contains": ["cardiology"],
+            "risk_stratification_contains": ["high", "moderate"],
+            "disposition_contains": ["telemetry", "step-down", "ICU", "CCU"],
+            "must_recommend": [
+                ["diltiazem", "amiodarone", "beta-blocker", "metoprolol"],
+                "anticoagul",
+            ],
+            "must_not_recommend_as_harmful": [
+                "anticoagul",
+            ],
+            "should_address_etiology": [],
+            "should_correct_labs": [],
+            "expected_consults": ["cardiology"],
+            "do_not_do_should_include": ["cardioversion"],
+            "home_med_exceptions": [],
+            "timing_keywords_in_rationale": [],
+            "expected_primary_ddx": ["atrial fibrillation", "AFib", "AF"],
+        },
+    },
+    {
+        "id": "eclampsia",
+        "name": "Eclampsia — OB/GYN Emergency",
+        "case_text": (
+            "A 32-year-old G2P1 female at 34 weeks gestation is brought to the ED after "
+            "a witnessed generalized tonic-clonic seizure at home lasting approximately "
+            "90 seconds. She has no prior seizure history. Her pregnancy has been complicated "
+            "by gestational hypertension diagnosed at 28 weeks. She reports severe headache "
+            "and visual changes ('seeing spots') for the past 6 hours. "
+            "Vitals: BP 185/110, HR 108, RR 20, T 37.3°C, SpO2 96% on RA. "
+            "Exam: postictal but responsive, 3+ bilateral lower extremity edema, "
+            "hyperreflexia with clonus (3 beats), RUQ tenderness. Fetal heart rate 140 with "
+            "minimal variability. "
+            "Labs: platelet count 88,000, AST 245, ALT 198, LDH 620, Cr 1.3, "
+            "uric acid 7.8, proteinuria 4+ on dipstick, protein/creatinine ratio 5.2. "
+            "Peripheral smear: schistocytes present."
+        ),
+        "expected": {
+            "category_contains": ["obstetrics", "gynecology", "OB"],
+            "risk_stratification_contains": ["severe", "high", "critical"],
+            "disposition_contains": ["ICU", "L&D", "labor"],
+            "must_recommend": [
+                "magnesium",
+                ["labetalol", "hydralazine"],
+                "delivery",
+            ],
+            "must_not_recommend_as_harmful": [
+                "magnesium",
+            ],
+            "should_address_etiology": ["preeclampsia", "eclampsia", "HELLP"],
+            "should_correct_labs": [],
+            "expected_consults": ["OB", "neonatology", "anesthesia"],
+            "do_not_do_should_include": ["ACE inhibitor", "NSAID"],
+            "home_med_exceptions": [],
+            "timing_keywords_in_rationale": [],
+            "expected_primary_ddx": ["eclampsia", "preeclampsia", "HELLP"],
+        },
+    },
+    {
+        "id": "sickle_cell_crisis",
+        "name": "Acute Chest Syndrome in Sickle Cell Disease — Hematology",
+        "case_text": (
+            "A 22-year-old female with known HbSS sickle cell disease (baseline Hb 7.5 g/dL) "
+            "presents with acute-onset chest pain, fever, and progressive dyspnea for 18 hours. "
+            "She was admitted 3 days ago for a vaso-occlusive crisis with rib and hip pain, "
+            "managed with IV morphine PCA and IV fluids. Over the past 12 hours, she developed "
+            "a productive cough with rust-colored sputum. "
+            "Vitals: BP 100/65, HR 112, RR 26, T 38.9°C, SpO2 88% on 4L NC. "
+            "Exam: bilateral crackles more prominent on the right, decreased breath sounds "
+            "right base, hepatomegaly, no leg swelling. "
+            "Labs: Hb 5.8 g/dL (baseline 7.5), reticulocyte count 12%, WBC 18,500, "
+            "platelet 95,000, LDH 890, total bilirubin 4.2, Cr 0.9. "
+            "ABG: pH 7.35, pO2 58, pCO2 32 (compensated respiratory alkalosis). "
+            "CXR: bilateral pulmonary infiltrates, right greater than left, "
+            "new since admission. Blood cultures drawn x2."
+        ),
+        "expected": {
+            "category_contains": ["hematology"],
+            "risk_stratification_contains": ["severe", "high", "critical"],
+            "disposition_contains": ["ICU", "intensive", "step-down"],
+            "must_recommend": [
+                "transfusion",
+                "IV fluid",
+                "oxygen",
+                "antibiotic",
+            ],
+            "must_not_recommend_as_harmful": [
+                "transfusion",
+                "antibiotic",
+            ],
+            "should_address_etiology": ["sickle", "acute chest syndrome", "ACS"],
+            "should_correct_labs": [],
+            "expected_consults": ["hematology", "pulmonology"],
+            "do_not_do_should_include": ["excessive fluid"],
+            "home_med_exceptions": [],
+            "timing_keywords_in_rationale": ["exchange transfusion", "within"],
+            "expected_primary_ddx": ["acute chest syndrome", "ACS", "sickle cell"],
         },
     },
 ]

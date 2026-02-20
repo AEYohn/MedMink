@@ -50,7 +50,7 @@ class IngestPubMedAgent(BaseAgent):
         max_results = params.get("max_results", 100)
         article_types = params.get(
             "article_types",
-            ["Clinical Trial", "Meta-Analysis", "Systematic Review", "Randomized Controlled Trial"]
+            ["Clinical Trial", "Meta-Analysis", "Systematic Review", "Randomized Controlled Trial"],
         )
 
         try:
@@ -175,7 +175,7 @@ class IngestPubMedAgent(BaseAgent):
         # Fetch in batches to avoid API limits
         batch_size = 50
         for i in range(0, len(pmids), batch_size):
-            batch = pmids[i:i + batch_size]
+            batch = pmids[i : i + batch_size]
             batch_papers = await self._fetch_batch(batch)
             papers.extend(batch_papers)
 

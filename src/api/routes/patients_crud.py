@@ -90,9 +90,7 @@ async def list_patients(
     if search:
         like = f"%{search}%"
         query = query.where(
-            Patient.first_name.ilike(like)
-            | Patient.last_name.ilike(like)
-            | Patient.mrn.ilike(like)
+            Patient.first_name.ilike(like) | Patient.last_name.ilike(like) | Patient.mrn.ilike(like)
         )
     result = await db.execute(query)
     return [_to_response(p) for p in result.scalars().all()]

@@ -21,6 +21,7 @@ router = APIRouter(prefix="/api/interview", tags=["interview"])
 
 class PatientContext(BaseModel):
     """Patient demographics and chart data sent from the frontend."""
+
     id: str | None = None
     name: str | None = None
     age: int | None = None
@@ -108,8 +109,11 @@ async def respond_text(request: TextRespondRequest):
     session = get_session(request.session_id)
     if not session and request.conversation_history:
         session = restore_session(
-            request.session_id, request.conversation_history,
-            request.phase, request.patient_id, request.language,
+            request.session_id,
+            request.conversation_history,
+            request.phase,
+            request.patient_id,
+            request.language,
         )
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -228,8 +232,10 @@ async def complete_interview(session_id: str, body: CompleteRequest | None = Non
     session = get_session(session_id)
     if not session and body and body.conversation_history:
         session = restore_session(
-            session_id, body.conversation_history,
-            body.phase, body.patient_id,
+            session_id,
+            body.conversation_history,
+            body.phase,
+            body.patient_id,
         )
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -273,6 +279,7 @@ async def get_interview_status(session_id: str):
 
 # --- HeAR Respiratory Sound Screening ---
 
+
 @router.post("/analyze-cough")
 async def analyze_cough(audio: UploadFile = File(...)):
     """Analyze cough/breathing audio for respiratory conditions using HeAR.
@@ -315,6 +322,7 @@ async def analyze_cough(audio: UploadFile = File(...)):
 
 # --- AMIE-style Management Plan ---
 
+
 @router.get("/management-plan/{session_id}")
 async def get_management_plan(session_id: str):
     """Get the current management plan for an interview session.
@@ -340,6 +348,7 @@ async def get_management_plan(session_id: str):
 
 
 # --- Longitudinal Visit Management ---
+
 
 @router.get("/visits/{patient_id}")
 async def get_visit_history(patient_id: str):

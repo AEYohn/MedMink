@@ -102,10 +102,7 @@ async def get_pattern(
         "frequency": pattern.frequency,
         "novelty_score": pattern.novelty_score,
         "effectiveness_score": pattern.effectiveness_score,
-        "papers": [
-            {"id": p.id, "title": p.title}
-            for p in papers
-        ],
+        "papers": [{"id": p.id, "title": p.title} for p in papers],
     }
 
 
@@ -191,10 +188,22 @@ async def get_pattern_types():
     """Get available pattern types."""
     return {
         "types": [
-            {"value": "methodology", "label": "Methodology", "description": "Research methodology patterns"},
-            {"value": "architecture", "label": "Architecture", "description": "Model architecture patterns"},
+            {
+                "value": "methodology",
+                "label": "Methodology",
+                "description": "Research methodology patterns",
+            },
+            {
+                "value": "architecture",
+                "label": "Architecture",
+                "description": "Model architecture patterns",
+            },
             {"value": "training", "label": "Training", "description": "Training strategy patterns"},
             {"value": "data", "label": "Data", "description": "Data processing patterns"},
-            {"value": "evaluation", "label": "Evaluation", "description": "Evaluation methodology patterns"},
+            {
+                "value": "evaluation",
+                "label": "Evaluation",
+                "description": "Evaluation methodology patterns",
+            },
         ]
     }

@@ -34,7 +34,9 @@ class AgentResult:
             "success": self.success,
             "data": self.data,
             "error": self.error,
-            "thought_signature": self.thought_signature.model_dump() if self.thought_signature else None,
+            "thought_signature": (
+                self.thought_signature.model_dump() if self.thought_signature else None
+            ),
             "metrics": self.metrics,
         }
 
@@ -57,6 +59,7 @@ class BaseAgent(ABC):
         """Get Gemini client."""
         if self._gemini is None:
             from src.gemini import get_gemini_client
+
             self._gemini = get_gemini_client()
         return self._gemini
 
@@ -65,6 +68,7 @@ class BaseAgent(ABC):
         if self._kg is None:
             try:
                 from src.kg import get_knowledge_graph
+
                 self._kg = await get_knowledge_graph()
             except Exception as e:
                 self.logger.warning("Knowledge graph unavailable", error=str(e))

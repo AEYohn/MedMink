@@ -27,13 +27,15 @@ def healthcare_client(
     mock_twilio_client,
 ):
     """Create a test client with mocked healthcare dependencies."""
-    with patch('src.api.main.init_databases', new_callable=AsyncMock):
-        with patch('src.api.main.close_databases', new_callable=AsyncMock):
-            with patch('src.api.main.get_knowledge_graph', new_callable=AsyncMock):
+    with patch("src.api.main.init_databases", new_callable=AsyncMock):
+        with patch("src.api.main.close_databases", new_callable=AsyncMock):
+            with patch("src.api.main.get_knowledge_graph", new_callable=AsyncMock):
                 # Mock MedGemma
-                with patch('src.medgemma.get_medgemma_client', return_value=mock_medgemma_client):
+                with patch("src.medgemma.get_medgemma_client", return_value=mock_medgemma_client):
                     # Mock Twilio
-                    with patch('src.integrations.twilio.get_twilio_client', return_value=mock_twilio_client):
+                    with patch(
+                        "src.integrations.twilio.get_twilio_client", return_value=mock_twilio_client
+                    ):
                         from src.api.main import app
                         from src.api import deps
 
@@ -57,8 +59,8 @@ def auth_headers(healthcare_client):
             "email": "testuser@example.com",
             "password": "testpassword123",
             "first_name": "Test",
-            "last_name": "User"
-        }
+            "last_name": "User",
+        },
     )
     assert response.status_code == 200
     token = response.json()["access_token"]
@@ -81,8 +83,8 @@ class TestAuthRoutes:
                 "email": "newuser@example.com",
                 "password": "securepass123",
                 "first_name": "New",
-                "last_name": "User"
-            }
+                "last_name": "User",
+            },
         )
 
         assert response.status_code == 200
@@ -101,8 +103,8 @@ class TestAuthRoutes:
                 "email": "duplicate@example.com",
                 "password": "password123",
                 "first_name": "First",
-                "last_name": "User"
-            }
+                "last_name": "User",
+            },
         )
 
         # Attempt duplicate registration
@@ -112,8 +114,8 @@ class TestAuthRoutes:
                 "email": "duplicate@example.com",
                 "password": "differentpass",
                 "first_name": "Second",
-                "last_name": "User"
-            }
+                "last_name": "User",
+            },
         )
 
         assert response.status_code == 400
@@ -128,17 +130,13 @@ class TestAuthRoutes:
                 "email": "logintest@example.com",
                 "password": "mypassword123",
                 "first_name": "Login",
-                "last_name": "Test"
-            }
+                "last_name": "Test",
+            },
         )
 
         # Login
         response = healthcare_client.post(
-            "/api/auth/login",
-            json={
-                "email": "logintest@example.com",
-                "password": "mypassword123"
-            }
+            "/api/auth/login", json={"email": "logintest@example.com", "password": "mypassword123"}
         )
 
         assert response.status_code == 200
@@ -155,17 +153,14 @@ class TestAuthRoutes:
                 "email": "wrongpass@example.com",
                 "password": "correctpassword",
                 "first_name": "Wrong",
-                "last_name": "Pass"
-            }
+                "last_name": "Pass",
+            },
         )
 
         # Login with wrong password
         response = healthcare_client.post(
             "/api/auth/login",
-            json={
-                "email": "wrongpass@example.com",
-                "password": "incorrectpassword"
-            }
+            json={"email": "wrongpass@example.com", "password": "incorrectpassword"},
         )
 
         assert response.status_code == 401
@@ -180,15 +175,14 @@ class TestAuthRoutes:
                 "email": "refreshtest@example.com",
                 "password": "password123",
                 "first_name": "Refresh",
-                "last_name": "Test"
-            }
+                "last_name": "Test",
+            },
         )
         refresh_token = reg_response.json()["refresh_token"]
 
         # Refresh
         response = healthcare_client.post(
-            "/api/auth/refresh",
-            json={"refresh_token": refresh_token}
+            "/api/auth/refresh", json={"refresh_token": refresh_token}
         )
 
         assert response.status_code == 200
@@ -198,10 +192,7 @@ class TestAuthRoutes:
 
     def test_get_current_user(self, healthcare_client, auth_headers):
         """Test getting current user profile."""
-        response = healthcare_client.get(
-            "/api/auth/me",
-            headers=auth_headers
-        )
+        response = healthcare_client.get("/api/auth/me", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -222,10 +213,12 @@ class TestPatientRoutes:
 
     def test_symptom_analysis(self, healthcare_client, mock_symptom_analyzer):
         """Test symptom analysis returns urgency and recommendations."""
-        with patch('src.api.routes.patient.analyze_symptoms', mock_symptom_analyzer.analyze_symptoms):
+        with patch(
+            "src.api.routes.patient.analyze_symptoms", mock_symptom_analyzer.analyze_symptoms
+        ):
             response = healthcare_client.post(
                 "/api/patient/symptoms",
-                json={"symptoms": "I have had a headache for the past two days"}
+                json={"symptoms": "I have had a headache for the past two days"},
             )
 
             assert response.status_code == 200
@@ -238,7 +231,7 @@ class TestPatientRoutes:
 
     def test_symptom_emergency_detection(self, healthcare_client):
         """Test that chest pain triggers emergency urgency."""
-        with patch('src.api.routes.patient.analyze_symptoms') as mock_analyze:
+        with patch("src.api.routes.patient.analyze_symptoms") as mock_analyze:
             mock_analyze.return_value = {
                 "response": "These symptoms require immediate medical attention.",
                 "urgency": "emergency",
@@ -247,12 +240,12 @@ class TestPatientRoutes:
                 "seek_care": True,
                 "care_timeframe": "immediately",
                 "follow_up_questions": [],
-                "confidence": 0.95
+                "confidence": 0.95,
             }
 
             response = healthcare_client.post(
                 "/api/patient/symptoms",
-                json={"symptoms": "I am experiencing severe chest pain and shortness of breath"}
+                json={"symptoms": "I am experiencing severe chest pain and shortness of breath"},
             )
 
             assert response.status_code == 200
@@ -262,10 +255,13 @@ class TestPatientRoutes:
 
     def test_medication_check(self, healthcare_client, mock_medication_checker):
         """Test medication interaction check returns interactions."""
-        with patch('src.api.routes.patient.check_drug_interactions', mock_medication_checker.check_interactions):
+        with patch(
+            "src.api.routes.patient.check_drug_interactions",
+            mock_medication_checker.check_interactions,
+        ):
             response = healthcare_client.post(
                 "/api/patient/medications/check",
-                json={"medications": ["warfarin", "aspirin", "ibuprofen"]}
+                json={"medications": ["warfarin", "aspirin", "ibuprofen"]},
             )
 
             assert response.status_code == 200
@@ -280,7 +276,9 @@ class TestPatientRoutes:
         """Test booking an appointment."""
         tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
-        with patch('src.agents.scheduler.create_appointment', mock_scheduler_agent.create_appointment):
+        with patch(
+            "src.agents.scheduler.create_appointment", mock_scheduler_agent.create_appointment
+        ):
             response = healthcare_client.post(
                 "/api/patient/appointments/book",
                 json={
@@ -288,8 +286,8 @@ class TestPatientRoutes:
                     "preferred_date": tomorrow,
                     "preferred_time": "10:00",
                     "appointment_type": "in-person",
-                    "reason": "Annual checkup"
-                }
+                    "reason": "Annual checkup",
+                },
             )
 
             assert response.status_code == 200
@@ -301,13 +299,11 @@ class TestPatientRoutes:
         """Test getting available appointment slots."""
         tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
-        with patch('src.agents.scheduler.find_available_slots', mock_scheduler_agent.find_available_slots):
+        with patch(
+            "src.agents.scheduler.find_available_slots", mock_scheduler_agent.find_available_slots
+        ):
             response = healthcare_client.post(
-                "/api/patient/appointments/available-slots",
-                json={
-                    "date": tomorrow,
-                    "duration": 30
-                }
+                "/api/patient/appointments/available-slots", json={"date": tomorrow, "duration": 30}
             )
 
             assert response.status_code == 200
@@ -326,21 +322,22 @@ class TestAdminRoutes:
 
     def test_create_appointment(self, healthcare_client, sample_appointment_request):
         """Test creating an appointment."""
-        with patch('src.api.routes.admin.SchedulerAgent') as MockAgent:
+        with patch("src.api.routes.admin.SchedulerAgent") as MockAgent:
             mock_instance = MagicMock()
-            mock_instance.create_appointment = AsyncMock(return_value={
-                "success": True,
-                "appointment": {
-                    "id": "apt-new-123",
-                    **sample_appointment_request,
-                    "status": "pending"
+            mock_instance.create_appointment = AsyncMock(
+                return_value={
+                    "success": True,
+                    "appointment": {
+                        "id": "apt-new-123",
+                        **sample_appointment_request,
+                        "status": "pending",
+                    },
                 }
-            })
+            )
             MockAgent.return_value = mock_instance
 
             response = healthcare_client.post(
-                "/api/admin/appointments",
-                json=sample_appointment_request
+                "/api/admin/appointments", json=sample_appointment_request
             )
 
             assert response.status_code == 200
@@ -350,12 +347,14 @@ class TestAdminRoutes:
 
     def test_list_appointments(self, healthcare_client):
         """Test listing all appointments."""
-        with patch('src.api.routes.admin.SchedulerAgent') as MockAgent:
+        with patch("src.api.routes.admin.SchedulerAgent") as MockAgent:
             mock_instance = MagicMock()
-            mock_instance.get_appointments = AsyncMock(return_value=[
-                {"id": "apt-1", "patient_name": "John Doe", "status": "confirmed"},
-                {"id": "apt-2", "patient_name": "Jane Smith", "status": "pending"}
-            ])
+            mock_instance.get_appointments = AsyncMock(
+                return_value=[
+                    {"id": "apt-1", "patient_name": "John Doe", "status": "confirmed"},
+                    {"id": "apt-2", "patient_name": "Jane Smith", "status": "pending"},
+                ]
+            )
             MockAgent.return_value = mock_instance
 
             response = healthcare_client.get("/api/admin/appointments")
@@ -369,11 +368,13 @@ class TestAdminRoutes:
         """Test listing appointments filtered by date."""
         tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
-        with patch('src.api.routes.admin.SchedulerAgent') as MockAgent:
+        with patch("src.api.routes.admin.SchedulerAgent") as MockAgent:
             mock_instance = MagicMock()
-            mock_instance.get_appointments = AsyncMock(return_value=[
-                {"id": "apt-1", "patient_name": "John Doe", "datetime": f"{tomorrow}T10:00:00"}
-            ])
+            mock_instance.get_appointments = AsyncMock(
+                return_value=[
+                    {"id": "apt-1", "patient_name": "John Doe", "datetime": f"{tomorrow}T10:00:00"}
+                ]
+            )
             MockAgent.return_value = mock_instance
 
             response = healthcare_client.get(f"/api/admin/appointments?date={tomorrow}")
@@ -384,15 +385,17 @@ class TestAdminRoutes:
 
     def test_get_appointment(self, healthcare_client):
         """Test getting a single appointment by ID."""
-        with patch('src.api.routes.admin.SchedulerAgent') as MockAgent:
+        with patch("src.api.routes.admin.SchedulerAgent") as MockAgent:
             mock_instance = MagicMock()
             mock_instance._appointments = {
                 "apt-123": MagicMock(
-                    to_dict=MagicMock(return_value={
-                        "id": "apt-123",
-                        "patient_name": "John Doe",
-                        "status": "confirmed"
-                    })
+                    to_dict=MagicMock(
+                        return_value={
+                            "id": "apt-123",
+                            "patient_name": "John Doe",
+                            "status": "confirmed",
+                        }
+                    )
                 )
             }
             MockAgent.return_value = mock_instance
@@ -405,36 +408,37 @@ class TestAdminRoutes:
 
     def test_update_appointment(self, healthcare_client):
         """Test updating an appointment."""
-        with patch('src.api.routes.admin.SchedulerAgent') as MockAgent:
+        with patch("src.api.routes.admin.SchedulerAgent") as MockAgent:
             mock_instance = MagicMock()
             mock_instance._appointments = {
                 "apt-123": MagicMock(
                     status="pending",
                     notes=None,
-                    to_dict=MagicMock(return_value={
-                        "id": "apt-123",
-                        "status": "confirmed",
-                        "notes": "Updated notes"
-                    })
+                    to_dict=MagicMock(
+                        return_value={
+                            "id": "apt-123",
+                            "status": "confirmed",
+                            "notes": "Updated notes",
+                        }
+                    ),
                 )
             }
             MockAgent.return_value = mock_instance
 
             response = healthcare_client.patch(
                 "/api/admin/appointments/apt-123",
-                json={"status": "confirmed", "notes": "Updated notes"}
+                json={"status": "confirmed", "notes": "Updated notes"},
             )
 
             assert response.status_code == 200
 
     def test_cancel_appointment(self, healthcare_client):
         """Test cancelling an appointment."""
-        with patch('src.api.routes.admin.SchedulerAgent') as MockAgent:
+        with patch("src.api.routes.admin.SchedulerAgent") as MockAgent:
             mock_instance = MagicMock()
-            mock_instance.cancel_appointment = AsyncMock(return_value={
-                "success": True,
-                "message": "Appointment cancelled"
-            })
+            mock_instance.cancel_appointment = AsyncMock(
+                return_value={"success": True, "message": "Appointment cancelled"}
+            )
             MockAgent.return_value = mock_instance
 
             response = healthcare_client.delete("/api/admin/appointments/apt-123")
@@ -447,19 +451,20 @@ class TestAdminRoutes:
         """Test schedule optimization returns recommendations."""
         tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
-        with patch('src.api.routes.admin.SchedulerAgent') as MockAgent:
+        with patch("src.api.routes.admin.SchedulerAgent") as MockAgent:
             mock_instance = MagicMock()
-            mock_instance.optimize_schedule = AsyncMock(return_value={
-                "date": tomorrow,
-                "utilization": 65.5,
-                "recommendations": ["Consider filling afternoon gaps"],
-                "gaps": []
-            })
+            mock_instance.optimize_schedule = AsyncMock(
+                return_value={
+                    "date": tomorrow,
+                    "utilization": 65.5,
+                    "recommendations": ["Consider filling afternoon gaps"],
+                    "gaps": [],
+                }
+            )
             MockAgent.return_value = mock_instance
 
             response = healthcare_client.post(
-                "/api/admin/schedule/optimize",
-                json={"date": tomorrow}
+                "/api/admin/schedule/optimize", json={"date": tomorrow}
             )
 
             assert response.status_code == 200
@@ -471,15 +476,17 @@ class TestAdminRoutes:
         """Test getting available schedule slots."""
         tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
-        with patch('src.api.routes.admin.SchedulerAgent') as MockAgent:
+        with patch("src.api.routes.admin.SchedulerAgent") as MockAgent:
             mock_instance = MagicMock()
-            mock_instance.find_available_slots = AsyncMock(return_value={
-                "date": tomorrow,
-                "slots": [
-                    {"start_time": f"{tomorrow}T09:00:00", "available": True},
-                    {"start_time": f"{tomorrow}T09:30:00", "available": False},
-                ]
-            })
+            mock_instance.find_available_slots = AsyncMock(
+                return_value={
+                    "date": tomorrow,
+                    "slots": [
+                        {"start_time": f"{tomorrow}T09:00:00", "available": True},
+                        {"start_time": f"{tomorrow}T09:30:00", "available": False},
+                    ],
+                }
+            )
             MockAgent.return_value = mock_instance
 
             response = healthcare_client.get(f"/api/admin/schedule/available-slots?date={tomorrow}")
@@ -490,17 +497,16 @@ class TestAdminRoutes:
 
     def test_send_reminder(self, healthcare_client, mock_twilio_client):
         """Test sending appointment reminders."""
-        with patch('src.api.routes.admin.SchedulerAgent') as MockAgent:
+        with patch("src.api.routes.admin.SchedulerAgent") as MockAgent:
             mock_instance = MagicMock()
             mock_instance._appointments = {}
             MockAgent.return_value = mock_instance
 
-            with patch('src.integrations.twilio.send_appointment_reminder') as mock_send:
+            with patch("src.integrations.twilio.send_appointment_reminder") as mock_send:
                 mock_send.return_value = {"message_sid": "SM123", "status": "sent"}
 
                 response = healthcare_client.post(
-                    "/api/admin/reminders/send",
-                    json={"channel": "sms"}
+                    "/api/admin/reminders/send", json={"channel": "sms"}
                 )
 
                 assert response.status_code == 200
@@ -511,14 +517,13 @@ class TestAdminRoutes:
         """Test sending bulk reminders."""
         tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
-        with patch('src.api.routes.admin.SchedulerAgent') as MockAgent:
+        with patch("src.api.routes.admin.SchedulerAgent") as MockAgent:
             mock_instance = MagicMock()
             mock_instance._appointments = {}
             MockAgent.return_value = mock_instance
 
             response = healthcare_client.post(
-                "/api/admin/reminders/bulk",
-                json={"date": tomorrow, "channel": "sms"}
+                "/api/admin/reminders/bulk", json={"date": tomorrow, "channel": "sms"}
             )
 
             assert response.status_code == 200
@@ -549,13 +554,16 @@ class TestMedicalRoutes:
 
     def test_clinical_ask(self, healthcare_client, mock_clinical_agent):
         """Test clinical question returns evidence synthesis."""
-        with patch('src.api.routes.medical.ask_clinical_question', mock_clinical_agent.ask_clinical_question):
+        with patch(
+            "src.api.routes.medical.ask_clinical_question",
+            mock_clinical_agent.ask_clinical_question,
+        ):
             response = healthcare_client.post(
                 "/api/medical/ask",
                 json={
                     "question": "What is the evidence for metformin in type 2 diabetes?",
-                    "max_papers": 10
-                }
+                    "max_papers": 10,
+                },
             )
 
             assert response.status_code == 200
@@ -568,7 +576,7 @@ class TestMedicalRoutes:
 
     def test_medical_assistant(self, healthcare_client):
         """Test multi-model healthcare assistant query."""
-        with patch('src.api.routes.medical.ask_healthcare_assistant') as mock_ask:
+        with patch("src.api.routes.medical.ask_healthcare_assistant") as mock_ask:
             mock_ask.return_value = MagicMock(
                 query="What are the symptoms of diabetes?",
                 response="Common symptoms include increased thirst, frequent urination...",
@@ -577,12 +585,11 @@ class TestMedicalRoutes:
                 confidence=0.85,
                 reasoning="Patient education query routed to fast model",
                 sources=[],
-                metadata={}
+                metadata={},
             )
 
             response = healthcare_client.post(
-                "/api/medical/assistant",
-                json={"query": "What are the symptoms of diabetes?"}
+                "/api/medical/assistant", json={"query": "What are the symptoms of diabetes?"}
             )
 
             assert response.status_code == 200
@@ -593,20 +600,22 @@ class TestMedicalRoutes:
 
     def test_route_preview(self, healthcare_client):
         """Test routing decision preview."""
-        with patch('src.api.routes.medical.get_task_router') as mock_get_router:
+        with patch("src.api.routes.medical.get_task_router") as mock_get_router:
             mock_router = MagicMock()
-            mock_router.route = AsyncMock(return_value=MagicMock(
-                task_type=MagicMock(value="literature_search"),
-                model_name="medgemma-4b",
-                confidence=0.9,
-                reasoning="Medical literature query detected",
-                fallback_models=["gemini-pro"]
-            ))
+            mock_router.route = AsyncMock(
+                return_value=MagicMock(
+                    task_type=MagicMock(value="literature_search"),
+                    model_name="medgemma-4b",
+                    confidence=0.9,
+                    reasoning="Medical literature query detected",
+                    fallback_models=["gemini-pro"],
+                )
+            )
             mock_get_router.return_value = mock_router
 
             response = healthcare_client.post(
                 "/api/medical/route",
-                json={"query": "What does the literature say about metformin?"}
+                json={"query": "What does the literature say about metformin?"},
             )
 
             assert response.status_code == 200
@@ -617,7 +626,7 @@ class TestMedicalRoutes:
 
     def test_list_models(self, healthcare_client):
         """Test listing available models."""
-        with patch('src.routing.get_model_registry') as mock_get_registry:
+        with patch("src.routing.get_model_registry") as mock_get_registry:
             mock_registry = MagicMock()
             mock_registry.list_models.return_value = [
                 MagicMock(
@@ -626,7 +635,7 @@ class TestMedicalRoutes:
                     capabilities=[MagicMock(value="medical_qa")],
                     is_local=True,
                     supports_medical=True,
-                    priority=1
+                    priority=1,
                 ),
                 MagicMock(
                     name="gemini-pro",
@@ -634,8 +643,8 @@ class TestMedicalRoutes:
                     capabilities=[MagicMock(value="general_qa")],
                     is_local=False,
                     supports_medical=True,
-                    priority=2
-                )
+                    priority=2,
+                ),
             ]
             mock_get_registry.return_value = mock_registry
 
@@ -648,7 +657,7 @@ class TestMedicalRoutes:
 
     def test_ingest_pubmed(self, healthcare_client, sample_pubmed_papers):
         """Test PubMed paper ingestion."""
-        with patch('src.api.routes.medical.search_pubmed_papers') as mock_search:
+        with patch("src.api.routes.medical.search_pubmed_papers") as mock_search:
             mock_papers = []
             for p in sample_pubmed_papers:
                 paper = MagicMock()
@@ -665,10 +674,7 @@ class TestMedicalRoutes:
 
             response = healthcare_client.post(
                 "/api/medical/ingest/pubmed",
-                json={
-                    "mesh_terms": ["diabetes mellitus", "metformin"],
-                    "max_results": 20
-                }
+                json={"mesh_terms": ["diabetes mellitus", "metformin"], "max_results": 20},
             )
 
             assert response.status_code == 200
@@ -678,7 +684,7 @@ class TestMedicalRoutes:
 
     def test_ingest_preprints(self, healthcare_client):
         """Test medRxiv preprint ingestion."""
-        with patch('src.api.routes.medical.search_preprints') as mock_search:
+        with patch("src.api.routes.medical.search_preprints") as mock_search:
             mock_paper = MagicMock()
             mock_paper.id = "medrxiv-12345"
             mock_paper.title = "COVID-19 Treatment Study"
@@ -692,11 +698,7 @@ class TestMedicalRoutes:
 
             response = healthcare_client.post(
                 "/api/medical/ingest/preprints",
-                json={
-                    "server": "medrxiv",
-                    "days_back": 30,
-                    "keywords": ["covid-19", "treatment"]
-                }
+                json={"server": "medrxiv", "days_back": 30, "keywords": ["covid-19", "treatment"]},
             )
 
             assert response.status_code == 200
@@ -705,13 +707,13 @@ class TestMedicalRoutes:
 
     def test_medical_health(self, healthcare_client, mock_medgemma_client):
         """Test medical service health check."""
-        with patch('src.medgemma.get_medgemma_client', return_value=mock_medgemma_client):
-            with patch('src.rag.local_chroma.get_local_chroma') as mock_chroma:
+        with patch("src.medgemma.get_medgemma_client", return_value=mock_medgemma_client):
+            with patch("src.rag.local_chroma.get_local_chroma") as mock_chroma:
                 mock_chroma_instance = MagicMock()
                 mock_chroma_instance.count = 1500
                 mock_chroma.return_value = mock_chroma_instance
 
-                with patch('src.routing.get_model_registry') as mock_registry:
+                with patch("src.routing.get_model_registry") as mock_registry:
                     mock_registry_instance = MagicMock()
                     mock_registry_instance.list_models.return_value = [MagicMock(), MagicMock()]
                     mock_registry.return_value = mock_registry_instance
@@ -743,7 +745,7 @@ class TestHealthChecks:
 
     def test_admin_health(self, healthcare_client, mock_twilio_client):
         """Test admin service health endpoint."""
-        with patch('src.integrations.twilio.get_twilio_status') as mock_status:
+        with patch("src.integrations.twilio.get_twilio_status") as mock_status:
             mock_status.return_value = "available"
 
             response = healthcare_client.get("/api/admin/health")
@@ -764,8 +766,7 @@ class TestEdgeCases:
     def test_symptom_check_too_short(self, healthcare_client):
         """Test symptom check with too short input."""
         response = healthcare_client.post(
-            "/api/patient/symptoms",
-            json={"symptoms": "pain"}  # Less than 5 characters
+            "/api/patient/symptoms", json={"symptoms": "pain"}  # Less than 5 characters
         )
 
         # Should fail validation
@@ -774,8 +775,7 @@ class TestEdgeCases:
     def test_medication_check_single_drug(self, healthcare_client):
         """Test medication check with only one drug (needs at least 2)."""
         response = healthcare_client.post(
-            "/api/patient/medications/check",
-            json={"medications": ["aspirin"]}  # Only one drug
+            "/api/patient/medications/check", json={"medications": ["aspirin"]}  # Only one drug
         )
 
         # Should fail validation - need at least 2 medications
@@ -783,7 +783,7 @@ class TestEdgeCases:
 
     def test_appointment_not_found(self, healthcare_client):
         """Test getting non-existent appointment."""
-        with patch('src.api.routes.admin.SchedulerAgent') as MockAgent:
+        with patch("src.api.routes.admin.SchedulerAgent") as MockAgent:
             mock_instance = MagicMock()
             mock_instance._appointments = {}
             MockAgent.return_value = mock_instance
@@ -795,8 +795,7 @@ class TestEdgeCases:
     def test_invalid_refresh_token(self, healthcare_client):
         """Test refresh with invalid token."""
         response = healthcare_client.post(
-            "/api/auth/refresh",
-            json={"refresh_token": "invalid-token-here"}
+            "/api/auth/refresh", json={"refresh_token": "invalid-token-here"}
         )
 
         assert response.status_code == 401
@@ -804,11 +803,7 @@ class TestEdgeCases:
     def test_login_nonexistent_user(self, healthcare_client):
         """Test login with non-existent email."""
         response = healthcare_client.post(
-            "/api/auth/login",
-            json={
-                "email": "doesnotexist@example.com",
-                "password": "anypassword"
-            }
+            "/api/auth/login", json={"email": "doesnotexist@example.com", "password": "anypassword"}
         )
 
         assert response.status_code == 401

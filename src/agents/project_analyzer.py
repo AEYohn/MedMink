@@ -124,9 +124,11 @@ class ProjectAnalyzerAgent(BaseAgent):
                         explanation = paper_rel.get("explanation", "")
 
                         for problem in problems:
-                            if any(aspect.lower() in problem.category.lower() or
-                                   aspect.lower() in problem.statement.lower()
-                                   for aspect in aspects):
+                            if any(
+                                aspect.lower() in problem.category.lower()
+                                or aspect.lower() in problem.statement.lower()
+                                for aspect in aspects
+                            ):
                                 await kg.link_paper_to_problem(
                                     paper_id=paper_id,
                                     problem_id=problem.id,
@@ -168,7 +170,10 @@ class ProjectAnalyzerAgent(BaseAgent):
                         # Try to find existing method
                         methods = await kg.get_popular_methods(limit=100)
                         for method in methods:
-                            if technique.lower() in method.name.lower() or method.name.lower() in technique.lower():
+                            if (
+                                technique.lower() in method.name.lower()
+                                or method.name.lower() in technique.lower()
+                            ):
                                 await kg.link_approach_to_method(approach.id, method.id)
                                 break
 
@@ -354,13 +359,14 @@ Be thorough but precise. Focus on extracting actionable problem components."""
         if isinstance(content, str):
             import json
             import re
+
             # Strip markdown code blocks if present
             content_str = content.strip()
             if content_str.startswith("```"):
                 # Remove opening ```json or ```
-                content_str = re.sub(r'^```(?:json)?\s*\n?', '', content_str)
+                content_str = re.sub(r"^```(?:json)?\s*\n?", "", content_str)
                 # Remove closing ```
-                content_str = re.sub(r'\n?```\s*$', '', content_str)
+                content_str = re.sub(r"\n?```\s*$", "", content_str)
             try:
                 content = json.loads(content_str)
             except json.JSONDecodeError:
@@ -387,8 +393,11 @@ Be thorough but precise. Focus on extracting actionable problem components."""
                 # Search by looking at existing papers
                 papers = await kg.get_unanalyzed_papers(limit=20)
                 for paper in papers:
-                    if any(term.lower() in paper.title.lower() or term.lower() in paper.abstract.lower()
-                           for term in query.split()):
+                    if any(
+                        term.lower() in paper.title.lower()
+                        or term.lower() in paper.abstract.lower()
+                        for term in query.split()
+                    ):
                         if paper.id not in [p.id for p in existing_papers]:
                             existing_papers.append(paper)
 
@@ -461,10 +470,12 @@ Be thorough but precise. Focus on extracting actionable problem components."""
         problem_summary = problem_breakdown.get("problem_statement", "")
         key_domains = problem_breakdown.get("key_domains", [])
 
-        papers_text = "\n\n".join([
-            f"PAPER {i+1} (ID: {p.id}):\nTitle: {p.title}\nAbstract: {p.abstract[:500]}"
-            for i, p in enumerate(papers[:15])
-        ])
+        papers_text = "\n\n".join(
+            [
+                f"PAPER {i+1} (ID: {p.id}):\nTitle: {p.title}\nAbstract: {p.abstract[:500]}"
+                for i, p in enumerate(papers[:15])
+            ]
+        )
 
         prompt = f"""Given this problem and these papers, rate each paper's relevance.
 
@@ -501,10 +512,11 @@ Be selective - only rate papers that are genuinely relevant to solving this prob
         if isinstance(content, str):
             import json
             import re
+
             content_str = content.strip()
             if content_str.startswith("```"):
-                content_str = re.sub(r'^```(?:json)?\s*\n?', '', content_str)
-                content_str = re.sub(r'\n?```\s*$', '', content_str)
+                content_str = re.sub(r"^```(?:json)?\s*\n?", "", content_str)
+                content_str = re.sub(r"\n?```\s*$", "", content_str)
             try:
                 content = json.loads(content_str)
             except json.JSONDecodeError:
@@ -529,11 +541,14 @@ Be selective - only rate papers that are genuinely relevant to solving this prob
 
         # Build paper claims summary
         relevant_papers = paper_relevance.get("paper_relevance", [])
-        papers_summary = "\n".join([
-            f"- {p.get('paper_id', 'unknown')}: Relevance {p.get('relevance', 0):.2f}, "
-            f"Techniques: {', '.join(p.get('techniques', []))}"
-            for p in relevant_papers if p.get("relevance", 0) > 0.3
-        ])
+        papers_summary = "\n".join(
+            [
+                f"- {p.get('paper_id', 'unknown')}: Relevance {p.get('relevance', 0):.2f}, "
+                f"Techniques: {', '.join(p.get('techniques', []))}"
+                for p in relevant_papers
+                if p.get("relevance", 0) > 0.3
+            ]
+        )
 
         prompt = f"""Given this problem analysis and relevant research, synthesize solution approaches.
 
@@ -584,13 +599,19 @@ Focus on practical, implementable approaches. Be specific about techniques."""
         if isinstance(content, str):
             import json
             import re
+
             content_str = content.strip()
             if content_str.startswith("```"):
-                content_str = re.sub(r'^```(?:json)?\s*\n?', '', content_str)
-                content_str = re.sub(r'\n?```\s*$', '', content_str)
+                content_str = re.sub(r"^```(?:json)?\s*\n?", "", content_str)
+                content_str = re.sub(r"\n?```\s*$", "", content_str)
             try:
                 content = json.loads(content_str)
             except json.JSONDecodeError:
-                content = {"approaches": [], "implementation_order": [], "key_insights": [], "gaps": []}
+                content = {
+                    "approaches": [],
+                    "implementation_order": [],
+                    "key_insights": [],
+                    "gaps": [],
+                }
 
         return content

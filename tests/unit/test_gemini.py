@@ -64,8 +64,8 @@ class TestCostTracker:
 
 class TestGeminiClient:
     def test_estimate_tokens(self):
-        with patch('google.generativeai.configure'):
-            with patch('google.generativeai.GenerativeModel'):
+        with patch("google.generativeai.configure"):
+            with patch("google.generativeai.GenerativeModel"):
                 client = GeminiClient(api_key="test-key")
 
         # Test token estimation (roughly 4 chars per token)
@@ -76,8 +76,8 @@ class TestGeminiClient:
         assert estimated == len(text) // 4
 
     def test_get_stats(self):
-        with patch('google.generativeai.configure'):
-            with patch('google.generativeai.GenerativeModel'):
+        with patch("google.generativeai.configure"):
+            with patch("google.generativeai.GenerativeModel"):
                 client = GeminiClient(api_key="test-key")
 
         stats = client.get_stats()

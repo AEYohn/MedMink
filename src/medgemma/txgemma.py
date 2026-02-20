@@ -25,9 +25,7 @@ class TxGemmaClient:
         else:
             logger.warning("TxGemma: no Modal URL configured")
 
-    async def predict_interaction(
-        self, drug_a: str, drug_b: str
-    ) -> dict[str, Any]:
+    async def predict_interaction(self, drug_a: str, drug_b: str) -> dict[str, Any]:
         """Predict drug-drug interaction.
 
         Args:
@@ -49,7 +47,9 @@ class TxGemmaClient:
                 ) as resp:
                     if resp.status != 200:
                         body = await resp.text()
-                        logger.error("TxGemma interaction failed", status=resp.status, body=body[:200])
+                        logger.error(
+                            "TxGemma interaction failed", status=resp.status, body=body[:200]
+                        )
                         return self._unavailable("interaction")
                     return await resp.json()
 
@@ -107,7 +107,9 @@ class TxGemmaClient:
                 ) as resp:
                     if resp.status != 200:
                         body = await resp.text()
-                        logger.error("TxGemma properties failed", status=resp.status, body=body[:200])
+                        logger.error(
+                            "TxGemma properties failed", status=resp.status, body=body[:200]
+                        )
                         return self._unavailable("properties")
                     return await resp.json()
 

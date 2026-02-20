@@ -7,13 +7,14 @@ import sys
 import pytest
 
 # Mock the problematic imports before they're loaded
-sys.modules['neo4j'] = MagicMock()
-sys.modules['src.db'] = MagicMock()
-sys.modules['src.config'] = MagicMock()
+sys.modules["neo4j"] = MagicMock()
+sys.modules["src.db"] = MagicMock()
+sys.modules["src.config"] = MagicMock()
 
 # Now we can safely import from kg.models directly (not through __init__)
 # We need to use importlib to get around the cached imports
 import importlib.util
+
 spec = importlib.util.spec_from_file_location("kg_models", "src/kg/models.py")
 kg_models = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(kg_models)

@@ -300,8 +300,7 @@ async def handle_incoming_sms(
     else:
         response_action = "unknown"
         reply_message = (
-            "We didn't understand your response. "
-            "Reply CONFIRM, CANCEL, or HELP for assistance."
+            "We didn't understand your response. " "Reply CONFIRM, CANCEL, or HELP for assistance."
         )
 
     logger.info(

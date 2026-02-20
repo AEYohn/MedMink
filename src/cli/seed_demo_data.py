@@ -89,7 +89,10 @@ DEMO_PAPERS = [
 ]
 
 DEMO_METHODS = [
-    {"name": "Transformer", "description": "Self-attention based architecture for sequence modeling"},
+    {
+        "name": "Transformer",
+        "description": "Self-attention based architecture for sequence modeling",
+    },
     {"name": "Mixture of Experts", "description": "Sparse activation for efficient scaling"},
     {"name": "RLHF", "description": "Reinforcement Learning from Human Feedback for alignment"},
     {"name": "DPO", "description": "Direct Preference Optimization for simpler alignment"},
@@ -100,11 +103,36 @@ DEMO_METHODS = [
 ]
 
 DEMO_TRENDS = [
-    {"name": "Scaling Laws", "description": "Research into predictable scaling behavior of neural networks", "direction": "rising", "velocity": 8.5},
-    {"name": "Multimodal Models", "description": "Unifying vision, language, and other modalities", "direction": "rising", "velocity": 9.2},
-    {"name": "AI Alignment", "description": "Methods for ensuring AI systems are safe and beneficial", "direction": "rising", "velocity": 7.8},
-    {"name": "Efficient Inference", "description": "Techniques for faster and cheaper model inference", "direction": "rising", "velocity": 8.0},
-    {"name": "CNN Architectures", "description": "Classical convolutional neural network research", "direction": "declining", "velocity": 3.5},
+    {
+        "name": "Scaling Laws",
+        "description": "Research into predictable scaling behavior of neural networks",
+        "direction": "rising",
+        "velocity": 8.5,
+    },
+    {
+        "name": "Multimodal Models",
+        "description": "Unifying vision, language, and other modalities",
+        "direction": "rising",
+        "velocity": 9.2,
+    },
+    {
+        "name": "AI Alignment",
+        "description": "Methods for ensuring AI systems are safe and beneficial",
+        "direction": "rising",
+        "velocity": 7.8,
+    },
+    {
+        "name": "Efficient Inference",
+        "description": "Techniques for faster and cheaper model inference",
+        "direction": "rising",
+        "velocity": 8.0,
+    },
+    {
+        "name": "CNN Architectures",
+        "description": "Classical convolutional neural network research",
+        "direction": "declining",
+        "velocity": 3.5,
+    },
 ]
 
 
@@ -218,10 +246,26 @@ async def seed_demo_data(clear_existing: bool = False):
 
     # Add predictions
     predictions = [
-        ("Mixture of Experts will become the dominant architecture for LLMs by end of year", "method_adoption", 0.75),
-        ("Multimodal models will achieve human-level performance on VQA benchmarks", "performance_improvement", 0.6),
-        ("A new attention mechanism will reduce quadratic complexity to linear", "new_capability", 0.4),
-        ("Constitutional AI approaches will be adopted by major AI labs", "trend_continuation", 0.8),
+        (
+            "Mixture of Experts will become the dominant architecture for LLMs by end of year",
+            "method_adoption",
+            0.75,
+        ),
+        (
+            "Multimodal models will achieve human-level performance on VQA benchmarks",
+            "performance_improvement",
+            0.6,
+        ),
+        (
+            "A new attention mechanism will reduce quadratic complexity to linear",
+            "new_capability",
+            0.4,
+        ),
+        (
+            "Constitutional AI approaches will be adopted by major AI labs",
+            "trend_continuation",
+            0.8,
+        ),
     ]
 
     for statement, category, confidence in predictions:

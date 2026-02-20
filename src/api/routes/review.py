@@ -86,11 +86,13 @@ async def get_review_item(
 ):
     """Get a review item with full details."""
     result = await session.execute(
-        text("""
+        text(
+            """
             SELECT id, item_type, item_id, reason, priority, status, reviewer_notes, created_at
             FROM review_items
             WHERE id = :id
-        """),
+        """
+        ),
         {"id": item_id},
     )
     row = result.fetchone()
@@ -191,11 +193,13 @@ async def submit_review_decision(
 
     # Update the review item
     await session.execute(
-        text("""
+        text(
+            """
             UPDATE review_items
             SET status = :status, reviewer_notes = :notes, reviewed_at = NOW()
             WHERE id = :id
-        """),
+        """
+        ),
         {"id": item_id, "status": decision.status, "notes": decision.notes},
     )
 
@@ -229,10 +233,12 @@ async def create_review_item(
     item_id = str(uuid4())
 
     await session.execute(
-        text("""
+        text(
+            """
             INSERT INTO review_items (id, item_type, item_id, reason, priority, status, created_at)
             VALUES (:id, :item_type, :item_id, :reason, :priority, 'pending', NOW())
-        """),
+        """
+        ),
         {
             "id": item_id,
             "item_type": request.item_type,
@@ -259,14 +265,16 @@ async def create_review_item(
 async def get_review_stats(session: AsyncSession = Depends(get_db_session)):
     """Get review queue statistics."""
     result = await session.execute(
-        text("""
+        text(
+            """
             SELECT
                 status,
                 item_type,
                 COUNT(*) as count
             FROM review_items
             GROUP BY status, item_type
-        """)
+        """
+        )
     )
     rows = result.fetchall()
 

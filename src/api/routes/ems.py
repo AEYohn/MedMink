@@ -184,10 +184,7 @@ async def add_vitals(request: QuickVitalsRequest):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    vitals = {
-        k: v for k, v in request.model_dump().items()
-        if k != "session_id" and v is not None
-    }
+    vitals = {k: v for k, v in request.model_dump().items() if k != "session_id" and v is not None}
 
     # Merge into extracted data
     if "vitals_sets" not in session.extracted_data:
@@ -211,10 +208,7 @@ async def add_intervention(request: QuickInterventionRequest):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    intervention = {
-        k: v for k, v in request.model_dump().items()
-        if k != "session_id"
-    }
+    intervention = {k: v for k, v in request.model_dump().items() if k != "session_id"}
 
     if "interventions" not in session.extracted_data:
         session.extracted_data["interventions"] = []
@@ -233,10 +227,7 @@ async def add_medication(request: QuickMedicationRequest):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    med = {
-        k: v for k, v in request.model_dump().items()
-        if k != "session_id"
-    }
+    med = {k: v for k, v in request.model_dump().items() if k != "session_id"}
 
     if "medications" not in session.extracted_data:
         session.extracted_data["medications"] = []
@@ -282,6 +273,7 @@ async def validate_session(session_id: str):
     report = assistant._build_report(session)
 
     from src.medgemma.ems_validation import validate_report
+
     flags = await validate_report(report, include_ai=True)
 
     flag_dicts = [asdict(f) for f in flags]
@@ -301,6 +293,7 @@ async def complete_report(session_id: str):
 
     # Run full validation first
     from src.medgemma.ems_validation import validate_report
+
     report = assistant._build_report(session)
     flags = await validate_report(report, include_ai=True)
     flag_dicts = [asdict(f) for f in flags]
@@ -357,7 +350,9 @@ async def _transcribe_audio(audio: UploadFile) -> str | None:
     """Transcribe audio via Modal MedASR/Whisper."""
     from src.config import settings
 
-    asr_url = getattr(settings, "medasr_modal_url", "") or getattr(settings, "whisper_modal_url", "")
+    asr_url = getattr(settings, "medasr_modal_url", "") or getattr(
+        settings, "whisper_modal_url", ""
+    )
     if not asr_url:
         return None
 
@@ -368,8 +363,12 @@ async def _transcribe_audio(audio: UploadFile) -> str | None:
         timeout = aiohttp.ClientTimeout(total=60)
         async with aiohttp.ClientSession(timeout=timeout) as http_session:
             form = aiohttp.FormData()
-            form.add_field("audio", audio_data, filename=audio.filename or "recording.webm",
-                           content_type=audio.content_type or "audio/webm")
+            form.add_field(
+                "audio",
+                audio_data,
+                filename=audio.filename or "recording.webm",
+                content_type=audio.content_type or "audio/webm",
+            )
             async with http_session.post(f"{asr_url}/transcribe", data=form) as resp:
                 if resp.status != 200:
                     return None

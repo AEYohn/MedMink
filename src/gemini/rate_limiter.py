@@ -75,9 +75,7 @@ class RateLimiter:
             if self._current_token_count() + estimated_tokens > self.tokens_per_minute:
                 # Find when enough tokens will be available
                 tokens_needed = (
-                    self._current_token_count()
-                    + estimated_tokens
-                    - self.tokens_per_minute
+                    self._current_token_count() + estimated_tokens - self.tokens_per_minute
                 )
                 tokens_freed = 0
                 for timestamp, count in sorted(self.state.tokens):

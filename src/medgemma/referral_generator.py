@@ -125,6 +125,7 @@ Output ONLY the JSON object. No preamble, no explanation. Start with {{ and end 
 @dataclass
 class ReferralNote:
     """Structured referral note."""
+
     specialty: str = ""
     urgency: str = "routine"  # emergent, urgent, routine
     clinical_question: str = ""
@@ -138,6 +139,7 @@ class ReferralNote:
 @dataclass
 class HandoffNote:
     """Structured handoff note (I-PASS or SBAR)."""
+
     format: str = "ipass"  # ipass or sbar
     content: dict[str, Any] = field(default_factory=dict)
 
@@ -245,8 +247,7 @@ async def generate_handoff_note(
     management = parsed_case.get("management", {})
 
     treatments_str = ", ".join(
-        f"{t.get('name', '')} ({t.get('verdict', '')})"
-        for t in treatment_options[:6]
+        f"{t.get('name', '')} ({t.get('verdict', '')})" for t in treatment_options[:6]
     )
 
     acute_bits = []

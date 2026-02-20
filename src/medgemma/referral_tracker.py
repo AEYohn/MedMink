@@ -136,9 +136,7 @@ class ReferralTracker:
             ).isoformat()
 
         # Save individual file
-        self._referral_file(referral.referral_id).write_text(
-            json.dumps(asdict(referral), indent=2)
-        )
+        self._referral_file(referral.referral_id).write_text(json.dumps(asdict(referral), indent=2))
 
         # Update index
         index = self._read_index()
@@ -292,9 +290,7 @@ class ReferralTracker:
         return referral
 
     def _save_referral(self, referral: Referral) -> None:
-        self._referral_file(referral.referral_id).write_text(
-            json.dumps(asdict(referral), indent=2)
-        )
+        self._referral_file(referral.referral_id).write_text(json.dumps(asdict(referral), indent=2))
 
     def _update_index_status(self, referral_id: str, new_status: str) -> None:
         index = self._read_index()

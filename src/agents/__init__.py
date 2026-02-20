@@ -18,6 +18,7 @@ def __getattr__(name: str):
     }
     if name in _lazy_map:
         import importlib
+
         module = importlib.import_module(_lazy_map[name])
         return getattr(module, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

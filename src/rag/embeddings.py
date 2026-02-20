@@ -28,7 +28,9 @@ class EmbeddingService:
         genai.configure(api_key=self.api_key)
         self._genai = genai
         self.dimension = EMBEDDING_DIMENSION
-        logger.info("Embedding service initialized", model=EMBEDDING_MODEL, dimension=EMBEDDING_DIMENSION)
+        logger.info(
+            "Embedding service initialized", model=EMBEDDING_MODEL, dimension=EMBEDDING_DIMENSION
+        )
 
     def _truncate_text(self, text: str) -> str:
         """Truncate text to fit within token limits (rough approximation)."""
@@ -113,7 +115,7 @@ class EmbeddingService:
         # Process in batches
         all_embeddings = []
         for batch_start in range(0, len(processed_texts), MAX_BATCH_SIZE):
-            batch = processed_texts[batch_start:batch_start + MAX_BATCH_SIZE]
+            batch = processed_texts[batch_start : batch_start + MAX_BATCH_SIZE]
 
             result = await asyncio.to_thread(
                 self._genai.embed_content,

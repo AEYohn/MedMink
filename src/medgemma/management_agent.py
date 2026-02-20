@@ -74,6 +74,7 @@ Output ONLY the JSON. No preamble."""
 @dataclass
 class ManagementPlan:
     """Structured management plan built by the Management Reasoning Agent."""
+
     differential_diagnosis: list[dict[str, Any]] = field(default_factory=list)
     recommended_investigations: list[dict[str, Any]] = field(default_factory=list)
     treatment_plan: dict[str, Any] = field(default_factory=dict)
@@ -137,8 +138,12 @@ class ManagementReasoningAgent:
 
             data = self._client._parse_json_response(response)
 
-            plan.differential_diagnosis = data.get("differential_diagnosis", plan.differential_diagnosis)
-            plan.recommended_investigations = data.get("recommended_investigations", plan.recommended_investigations)
+            plan.differential_diagnosis = data.get(
+                "differential_diagnosis", plan.differential_diagnosis
+            )
+            plan.recommended_investigations = data.get(
+                "recommended_investigations", plan.recommended_investigations
+            )
             plan.treatment_plan = data.get("treatment_plan", plan.treatment_plan)
             plan.disposition = data.get("disposition", plan.disposition)
             plan.knowledge_gaps = data.get("knowledge_gaps", plan.knowledge_gaps)

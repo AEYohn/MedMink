@@ -110,6 +110,7 @@ async def analyze_project(
     name = request.name
     if not name:
         from urllib.parse import urlparse
+
         parsed = urlparse(request.url)
         path_parts = [p for p in parsed.path.split("/") if p]
         if path_parts:
@@ -230,14 +231,16 @@ async def get_project(
         for r in records:
             paper = r["paper"]
             if paper["id"] not in seen_papers:
-                papers.append({
-                    "id": paper["id"],
-                    "title": paper.get("title", ""),
-                    "abstract": paper.get("abstract", "")[:500],
-                    "arxiv_id": paper.get("arxiv_id", ""),
-                    "relevance": r["relevance"],
-                    "explanation": r["explanation"],
-                })
+                papers.append(
+                    {
+                        "id": paper["id"],
+                        "title": paper.get("title", ""),
+                        "abstract": paper.get("abstract", "")[:500],
+                        "arxiv_id": paper.get("arxiv_id", ""),
+                        "relevance": r["relevance"],
+                        "explanation": r["explanation"],
+                    }
+                )
                 seen_papers.add(paper["id"])
 
     # Build synthesis summary

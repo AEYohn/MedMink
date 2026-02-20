@@ -17,7 +17,6 @@ from src.medgemma.client import get_medgemma_client
 from src.medgemma.interview_prompts import (
     GREETING_PROMPT,
     GREETING_WITH_CONTEXT_PROMPT,
-    INTERVIEW_SYSTEM_PROMPT,
     INTERVIEW_TURN_PROMPT,
     PHASE_CRITERIA,
     TRIAGE_PROMPT,
@@ -63,6 +62,34 @@ MAX_TURNS_PER_PHASE: dict[str, int] = {
     "allergies": 1,
     "review_and_triage": 1,
 }
+
+
+def _dedup_red_flags(flags: list[str]) -> list[str]:
+    """Deduplicate red flags using substring containment.
+
+    If flag A's normalized text is contained within flag B's, keep only B
+    (the more specific/detailed one). Exact duplicates also collapsed.
+    """
+    result: list[str] = []
+    for flag in flags:
+        key = flag.strip().lower()
+        if not key:
+            continue
+        subsumed = False
+        for i, existing in enumerate(result):
+            ekey = existing.strip().lower()
+            if key in ekey:
+                # New flag is less specific — skip it
+                subsumed = True
+                break
+            if ekey in key:
+                # Existing flag is less specific — replace with new (more detailed)
+                result[i] = flag
+                subsumed = True
+                break
+        if not subsumed:
+            result.append(flag)
+    return result
 
 
 @dataclass
@@ -257,18 +284,16 @@ class PatientInterviewer:
             else:
                 session.extracted_data[phase_key] = new_data
 
-        # Check for red flags
+        # Merge red flags with substring-aware dedup
         red_flags = data.get("red_flags", [])
         if red_flags:
-            session.red_flags.extend(red_flags)
+            session.red_flags = _dedup_red_flags(session.red_flags + red_flags)
 
         # Advance phase if model says complete OR max turns exceeded
         phase_complete = data.get("phase_complete", False)
         max_turns = MAX_TURNS_PER_PHASE.get(session.phase, 3)
-        forced = False
         if not phase_complete and turns_in_phase >= max_turns:
             phase_complete = True
-            forced = True
             logger.warning(
                 "Forcing phase advancement — max turns exceeded",
                 phase=session.phase,
@@ -279,6 +304,20 @@ class PatientInterviewer:
 
         if phase_complete:
             session.phase = self._next_phase(session)
+
+        # Auto-advance to triage when sufficient information is collected
+        sufficient_for_triage = data.get("sufficient_for_triage", False)
+        if (
+            sufficient_for_triage
+            and session.phase not in ("greeting", "chief_complaint", "hpi", "review_and_triage", "complete")
+        ):
+            logger.info(
+                "Auto-advancing to triage — sufficient info collected",
+                session_id=session.session_id,
+                current_phase=session.phase,
+            )
+            session.phase = "review_and_triage"
+            phase_complete = True
 
         # On phase transition, use the deterministic opening question for the new phase
         # instead of trusting the model (which generated the question while in the old phase)
@@ -322,6 +361,7 @@ class PatientInterviewer:
             "question": question,
             "phase": session.phase,
             "phase_complete": phase_complete,
+            "sufficient_for_triage": sufficient_for_triage,
             "extracted_data": session.extracted_data,
             "red_flags": session.red_flags,
             "prompt_cough_recording": prompt_cough,
@@ -345,10 +385,9 @@ class PatientInterviewer:
 
         triage = self._parse_response(response_text)
 
-        # Merge any session-level red flags
+        # Merge any session-level red flags with substring-aware dedup
         triage_flags = triage.get("red_flags", [])
-        all_flags = list(set(session.red_flags + triage_flags))
-        triage["red_flags"] = all_flags
+        triage["red_flags"] = _dedup_red_flags(session.red_flags + triage_flags)
 
         session.triage_result = triage
         session.phase = "complete"

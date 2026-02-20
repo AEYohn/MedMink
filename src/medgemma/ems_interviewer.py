@@ -19,8 +19,6 @@ from src.medgemma.client import get_medgemma_client
 from src.medgemma.ems_models import (
     EMSRunReport,
     Intervention,
-    MedicationGiven,
-    VitalSet,
     compute_section_completeness,
 )
 from src.medgemma.ems_prompts import (
@@ -116,12 +114,21 @@ class EMSReportAssistant:
         if dispatch_info:
             session.extracted_data["dispatch"] = dispatch_info
 
-        response_text = await self._client.generate(
-            prompt=EMS_GREETING_PROMPT,
-            system_prompt=EMS_SYSTEM_PROMPT,
-            temperature=0.3,
-            max_tokens=256,
-        )
+        try:
+            response_text = await self._client.generate(
+                prompt=EMS_GREETING_PROMPT,
+                system_prompt=EMS_SYSTEM_PROMPT,
+                temperature=0.3,
+                max_tokens=256,
+            )
+        except Exception as e:
+            logger.error("MedGemma failed in start_session", error=str(e))
+            response_text = json.dumps({
+                "next_question": "Ready to document. What's the call?",
+                "phase_complete": False,
+                "extracted_data": {},
+                "validation_flags": [],
+            })
 
         data = self._parse_response(response_text)
         question = data.get("next_question", "Ready to document. What's the call?")
@@ -164,12 +171,21 @@ class EMSReportAssistant:
             medic_input=text,
         )
 
-        response_text = await self._client.generate(
-            prompt=prompt,
-            system_prompt=EMS_SYSTEM_PROMPT,
-            temperature=0.3,
-            max_tokens=1024,
-        )
+        try:
+            response_text = await self._client.generate(
+                prompt=prompt,
+                system_prompt=EMS_SYSTEM_PROMPT,
+                temperature=0.3,
+                max_tokens=1024,
+            )
+        except Exception as e:
+            logger.error("MedGemma failed in process_dictation", error=str(e))
+            response_text = json.dumps({
+                "next_question": f"Got it — {text[:50]}. What else?",
+                "phase_complete": False,
+                "extracted_data": {},
+                "validation_flags": [],
+            })
 
         data = self._parse_response(response_text)
 
@@ -247,12 +263,16 @@ class EMSReportAssistant:
             report_json=json.dumps(report_dict, indent=2, default=str),
         )
 
-        narrative = await self._client.generate(
-            prompt=prompt,
-            system_prompt="You are an EMS documentation specialist. Write clear, professional ePCR narratives.",
-            temperature=0.3,
-            max_tokens=2000,
-        )
+        try:
+            narrative = await self._client.generate(
+                prompt=prompt,
+                system_prompt="You are an EMS documentation specialist. Write clear, professional ePCR narratives.",
+                temperature=0.3,
+                max_tokens=2000,
+            )
+        except Exception as e:
+            logger.error("MedGemma failed in generate_narrative", error=str(e))
+            narrative = "Narrative generation temporarily unavailable. Please retry."
 
         # Strip any JSON wrapping if the model adds it
         if narrative.startswith("{") or narrative.startswith("["):
@@ -273,12 +293,16 @@ class EMSReportAssistant:
             report_json=json.dumps(report_dict, indent=2, default=str),
         )
 
-        response = await self._client.generate(
-            prompt=prompt,
-            system_prompt="You are a medical coding specialist. Output ONLY valid JSON.",
-            temperature=0.2,
-            max_tokens=1000,
-        )
+        try:
+            response = await self._client.generate(
+                prompt=prompt,
+                system_prompt="You are a medical coding specialist. Output ONLY valid JSON.",
+                temperature=0.2,
+                max_tokens=1000,
+            )
+        except Exception as e:
+            logger.error("MedGemma failed in suggest_icd10", error=str(e))
+            response = json.dumps({"codes": []})
 
         data = self._parse_response(response)
         return data.get("codes", [])
@@ -292,12 +316,16 @@ class EMSReportAssistant:
             report_json=json.dumps(report_dict, indent=2, default=str),
         )
 
-        statement = await self._client.generate(
-            prompt=prompt,
-            system_prompt="You are an EMS billing specialist. Write clear medical necessity statements.",
-            temperature=0.2,
-            max_tokens=500,
-        )
+        try:
+            statement = await self._client.generate(
+                prompt=prompt,
+                system_prompt="You are an EMS billing specialist. Write clear medical necessity statements.",
+                temperature=0.2,
+                max_tokens=500,
+            )
+        except Exception as e:
+            logger.error("MedGemma failed in generate_medical_necessity", error=str(e))
+            statement = "Medical necessity statement temporarily unavailable. Please retry."
 
         # Strip any JSON wrapping
         if statement.startswith("{"):
@@ -312,13 +340,7 @@ class EMSReportAssistant:
     def _build_report(self, session: EMSReportSession) -> EMSRunReport:
         """Build an EMSRunReport from session extracted data."""
         from src.medgemma.ems_models import (
-            DispatchInfo,
             MedicationGiven,
-            PatientInfo,
-            PrimaryAssessment,
-            SceneAssessment,
-            SecondaryAssessment,
-            TransportInfo,
             VitalSet,
         )
 
@@ -375,6 +397,9 @@ class EMSReportAssistant:
         if "medications" in ed and isinstance(ed["medications"], list):
             for item in ed["medications"]:
                 if isinstance(item, dict):
+                    # Map common LLM field names to dataclass fields
+                    if "name" in item and "medication" not in item:
+                        item["medication"] = item.pop("name")
                     report.medications.append(MedicationGiven(**{
                         k: v for k, v in item.items() if hasattr(MedicationGiven, k)
                     }))

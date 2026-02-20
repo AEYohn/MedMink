@@ -6,12 +6,7 @@ consensus scoring and identify areas of disagreement.
 
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-try:
-    from enum import StrEnum
-except ImportError:
-    import enum
-    class StrEnum(str, enum.Enum):
-        pass
+from enum import StrEnum
 from typing import Any
 
 import structlog

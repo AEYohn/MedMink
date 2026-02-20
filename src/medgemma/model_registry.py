@@ -10,12 +10,7 @@ Provides dynamic model loading and hot-swapping for different MedGemma variants:
 
 import asyncio
 from dataclasses import dataclass
-try:
-    from enum import StrEnum
-except ImportError:
-    import enum
-    class StrEnum(str, enum.Enum):
-        pass
+from enum import StrEnum
 from typing import Any
 
 import structlog

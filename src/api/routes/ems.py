@@ -15,7 +15,6 @@ from src.medgemma.ems_interviewer import (
     get_ems_session,
     restore_ems_session,
 )
-from src.medgemma.ems_models import Intervention, MedicationGiven, VitalSet
 from src.medgemma.ems_storage import get_ems_storage
 
 logger = structlog.get_logger()

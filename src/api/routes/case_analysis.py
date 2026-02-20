@@ -35,6 +35,7 @@ from src.medgemma.referral_generator import (
     handoff_note_to_dict,
     referral_note_to_dict,
 )
+from src.medgemma.referral_tracker import get_referral_tracker
 from src.medgemma.risk_scores import (
     calculate_risk_scores,
     risk_score_report_to_dict,
@@ -852,8 +853,6 @@ async def drug_toxicity(request: DrugPropertyRequest):
 
 
 # ─── Referral Tracking ───────────────────────────────────────────────────────
-
-from src.medgemma.referral_tracker import get_referral_tracker
 
 
 class SendReferralRequest(BaseModel):

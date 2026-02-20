@@ -7,7 +7,6 @@ clinical inconsistencies and documentation gaps.
 
 import json
 from dataclasses import asdict
-from typing import Any
 
 import structlog
 

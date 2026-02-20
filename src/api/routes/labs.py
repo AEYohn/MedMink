@@ -98,7 +98,7 @@ async def extract_lab_report(
             )
             page_labs = _parse_labs(result)
             # Deduplicate by test name (keep later page if duplicate)
-            existing_tests = {l.test.lower() for l in all_labs}
+            existing_tests = {lab.test.lower() for lab in all_labs}
             for lab in page_labs:
                 if lab.test.lower() not in existing_tests:
                     all_labs.append(lab)

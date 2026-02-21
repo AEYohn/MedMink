@@ -16,6 +16,7 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = usePersistentState('sidebar-collapsed', false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   useKeyboardShortcuts();
 
   // Command palette keyboard shortcut
@@ -36,13 +37,27 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      <Header onOpenCommandPalette={() => setCommandPaletteOpen(true)} />
+      <Header
+        onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+        onMobileMenuToggle={() => setMobileSidebarOpen(true)}
+      />
 
       <div className="flex-1 flex min-h-0">
+        {/* Desktop sidebar — hidden on mobile */}
+        <div className="hidden md:flex">
+          <Sidebar
+            isCollapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          />
+        </div>
+
+        {/* Mobile sidebar drawer */}
         <Sidebar
-          isCollapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          isMobile
+          isOpen={mobileSidebarOpen}
+          onClose={() => setMobileSidebarOpen(false)}
         />
+
         <main className="flex-1 overflow-y-auto flex flex-col">
           <Breadcrumbs />
           <div className="flex-1 animate-fade-in">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { createDocument } from '@/lib/document-storage';
 import {
@@ -108,16 +108,15 @@ export function DischargeEditor({
   const dischargeMeds = overrides.dischargeMeds;
   const instructions = overrides.dischargeInstructions;
 
-  // Auto-populate from accepted treatments when discharge meds are empty
-  const hasPopulatedRef = useRef(false);
-  useEffect(() => {
-    if (hasPopulatedRef.current || dischargeMeds.length > 0) return;
-    const acceptedMeds: DischargeMedOverride[] = [];
+  // Reactively sync accepted/modified treatments into discharge meds.
+  // Preserves clinician-added meds and manually edited AI meds.
+  const acceptedFromAI = useMemo(() => {
+    const meds: DischargeMedOverride[] = [];
     for (const t of treatmentOptions) {
       const name = (t.name as string) || '';
       const treatmentOverride = overrides.treatments[name];
-      if (treatmentOverride?.verdict === 'accepted') {
-        acceptedMeds.push({
+      if (treatmentOverride?.verdict === 'accepted' || treatmentOverride?.verdict === 'modified') {
+        meds.push({
           name,
           dose: treatmentOverride.modifiedDose || '',
           frequency: '',
@@ -126,15 +125,40 @@ export function DischargeEditor({
         });
       }
     }
-    if (acceptedMeds.length > 0) {
-      hasPopulatedRef.current = true;
+    return meds;
+  }, [treatmentOptions, overrides.treatments]);
+
+  useEffect(() => {
+    // Keep clinician-added meds untouched
+    const clinicianMeds = dischargeMeds.filter(m => m.source === 'clinician');
+
+    // Keep AI meds the clinician has manually edited (dose or frequency differs from default)
+    const editedAIMeds = dischargeMeds.filter(m => {
+      if (m.source !== 'ai') return false;
+      const match = acceptedFromAI.find(a => a.name === m.name);
+      if (!match) return false; // AI med no longer accepted — drop it
+      return m.dose !== match.dose || m.frequency !== match.frequency;
+    });
+
+    // Merge: edited AI meds take priority, then unedited accepted AI meds, then clinician meds
+    const editedNames = new Set(editedAIMeds.map(m => m.name));
+    const newAIMeds = acceptedFromAI.filter(m => !editedNames.has(m.name));
+    const merged = [...editedAIMeds, ...newAIMeds, ...clinicianMeds];
+
+    // Only update if the set of meds actually changed (avoid infinite loop)
+    const key = (m: DischargeMedOverride) => `${m.name}|${m.dose}|${m.frequency}|${m.source}|${m.action}`;
+    const currentKeys = dischargeMeds.map(key).sort().join(';;');
+    const mergedKeys = merged.map(key).sort().join(';;');
+
+    if (currentKeys !== mergedKeys && (acceptedFromAI.length > 0 || dischargeMeds.some(m => m.source === 'ai'))) {
       onOverridesChange({
         ...overrides,
-        dischargeMeds: acceptedMeds,
+        dischargeMeds: merged,
         lastModified: new Date().toISOString(),
       });
     }
-  }, [treatmentOptions, overrides, dischargeMeds.length, onOverridesChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [acceptedFromAI]);
 
   const handleGenerate = async () => {
     setIsLoading(true);

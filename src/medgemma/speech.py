@@ -423,6 +423,68 @@ class MedASRClient:
         return self._model is not None
 
 
+async def transcribe_audio_gemini(
+    audio_bytes: bytes,
+    mime_type: str = "audio/webm",
+    language: str = "en",
+) -> str | None:
+    """Transcribe audio using Gemini 2.0 Flash multimodal API.
+
+    Uses the REST API directly (no SDK upgrade needed).
+    """
+    import base64
+
+    import httpx
+
+    api_key = settings.gemini_api_key
+    if not api_key:
+        logger.warning("No GEMINI_API_KEY configured, cannot transcribe")
+        return None
+
+    model = settings.gemini_model  # "gemini-2.0-flash"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+
+    lang_hint = f" The audio is in {language}." if language != "en" else ""
+    prompt = (
+        "Transcribe this audio verbatim. Output ONLY the transcript text, "
+        "nothing else — no labels, no formatting, no explanation."
+        " This is a medical context: preserve clinical terminology, "
+        "drug names, and abbreviations accurately."
+        f"{lang_hint}"
+    )
+
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "inline_data": {
+                            "mime_type": mime_type,
+                            "data": base64.b64encode(audio_bytes).decode(),
+                        }
+                    },
+                    {"text": prompt},
+                ]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.0,
+            "maxOutputTokens": 2048,
+        },
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.post(url, json=payload)
+            resp.raise_for_status()
+            result = resp.json()
+            text = result["candidates"][0]["content"]["parts"][0]["text"]
+            return text.strip() if text else None
+    except Exception as e:
+        logger.error("Gemini audio transcription failed", error=str(e))
+        return None
+
+
 # Singleton instance
 _medasr_client: MedASRClient | None = None
 

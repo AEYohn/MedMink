@@ -14,6 +14,7 @@ import { usePatientFromUrl } from '@/hooks/usePatientFromUrl';
 import { useActivePatient } from '@/contexts/ActivePatientContext';
 import { getPatient, getPatientDisplayName, getPatientAge } from '@/lib/patient-storage';
 import { getApiUrl } from '@/lib/api-url';
+import { mockStartInterview, mockRespond, mockComplete } from '@/lib/mock-interview';
 
 const API_URL = getApiUrl() || '';
 
@@ -97,6 +98,7 @@ export default function InterviewPage() {
   const [showVisitHistory, setShowVisitHistory] = useState(false);
   const [promptCough, setPromptCough] = useState(false);
   const [respiratoryResults, setRespiratoryResults] = useState<any>(null);
+  const [mockMode, setMockMode] = useState(false);
 
   // Sync active patient context into local patientId
   useEffect(() => {
@@ -135,14 +137,22 @@ export default function InterviewPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
-      }, 30000);
+      }, 10000);
       if (!res.ok) throw new Error(`Failed to start interview: ${res.status}`);
       const data = await res.json();
       setSessionId(data.session_id);
       setCurrentPhase(data.phase);
-      setMessages([{ role: 'assistant', content: data.question }]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start interview');
+      const greeting = data.question?.trim() || "Hello! I'm here to help with your intake. What brought you in today?";
+      setMessages([{ role: 'assistant', content: greeting }]);
+    } catch {
+      // Backend unavailable — fall back to mock mode
+      setMockMode(true);
+      const data = mockStartInterview();
+      setSessionId(data.session_id);
+      setCurrentPhase(data.phase);
+      const greeting = data.question?.trim() || "Hello! I'm here to help with your intake. What brought you in today?";
+      setMessages([{ role: 'assistant', content: greeting }]);
+      setError(null);
     } finally {
       setIsLoading(false);
     }
@@ -153,44 +163,53 @@ export default function InterviewPage() {
 
     const text = inputText.trim();
     setInputText('');
-    setMessages(prev => [...prev, { role: 'user', content: text }]);
+    const updatedMessages: Message[] = [...messages, { role: 'user', content: text }];
+    setMessages(updatedMessages);
     setIsLoading(true);
     setError(null);
 
     try {
-      const res = await fetchWithTimeout(`${API_URL}/api/interview/respond`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: sessionId,
-          text,
-          conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
-          phase: currentPhase,
-          patient_id: patientId,
-          language,
-        }),
-      }, 60000);
-      if (!res.ok) throw new Error(`Response failed: ${res.status}`);
-      const data = await res.json();
+      if (mockMode) {
+        await new Promise(r => setTimeout(r, 800));
+        const data = mockRespond(sessionId, text, updatedMessages, currentPhase);
+        setCurrentPhase(data.phase);
+        const aiResponse = data.question?.trim() || "I understand. Can you tell me more?";
+        setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
+        if (data.prompt_cough_recording) setPromptCough(true);
+        if (data.phase === 'review_and_triage' || data.phase === 'complete') {
+          await completeInterview();
+        }
+      } else {
+        const res = await fetchWithTimeout(`${API_URL}/api/interview/respond`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: sessionId,
+            text,
+            conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
+            phase: currentPhase,
+            patient_id: patientId,
+            language,
+          }),
+        }, 60000);
+        if (!res.ok) throw new Error(`Response failed: ${res.status}`);
+        const data = await res.json();
 
-      setCurrentPhase(data.phase);
-      setMessages(prev => [...prev, { role: 'assistant', content: data.question }]);
+        setCurrentPhase(data.phase);
+        const aiResponse = data.question?.trim() || "I understand. Can you tell me more?";
+        setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
 
-      // Check if cough recording should be prompted
-      if (data.prompt_cough_recording) {
-        setPromptCough(true);
-      }
-
-      // Auto-complete if we reached review_and_triage
-      if (data.phase === 'review_and_triage' || data.phase === 'complete') {
-        await completeInterview();
+        if (data.prompt_cough_recording) setPromptCough(true);
+        if (data.phase === 'review_and_triage' || data.phase === 'complete') {
+          await completeInterview();
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process response');
     } finally {
       setIsLoading(false);
     }
-  }, [inputText, sessionId, isLoading, messages, currentPhase, patientId, language]);
+  }, [inputText, sessionId, isLoading, messages, currentPhase, patientId, language, mockMode]);
 
   const handleStopRecording = useCallback(async () => {
     stopRecording();
@@ -234,7 +253,8 @@ export default function InterviewPage() {
             transcript: data.transcript,
           };
         }
-        return [...updated, { role: 'assistant', content: data.question }];
+        const aiResponse = data.question?.trim() || "I understand. Can you tell me more?";
+        return [...updated, { role: 'assistant', content: aiResponse }];
       });
       setCurrentPhase(data.phase);
       clearRecording();
@@ -254,25 +274,32 @@ export default function InterviewPage() {
 
     setIsLoading(true);
     try {
-      const res = await fetchWithTimeout(`${API_URL}/api/interview/${sessionId}/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
-          phase: currentPhase,
-          patient_id: patientId,
-        }),
-      }, 120000);
-      if (!res.ok) throw new Error(`Triage failed: ${res.status}`);
-      const data = await res.json();
-      setTriage(data);
-      setCurrentPhase('complete');
+      if (mockMode) {
+        await new Promise(r => setTimeout(r, 1500));
+        const data = mockComplete(sessionId, messages);
+        setTriage(data as unknown as TriageData);
+        setCurrentPhase('complete');
+      } else {
+        const res = await fetchWithTimeout(`${API_URL}/api/interview/${sessionId}/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
+            phase: currentPhase,
+            patient_id: patientId,
+          }),
+        }, 120000);
+        if (!res.ok) throw new Error(`Triage failed: ${res.status}`);
+        const data = await res.json();
+        setTriage(data);
+        setCurrentPhase('complete');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate triage');
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, messages, currentPhase, patientId]);
+  }, [sessionId, messages, currentPhase, patientId, mockMode]);
 
   // Phase progress calculation
   const currentPhaseIndex = PHASES.indexOf(currentPhase);
@@ -437,6 +464,7 @@ export default function InterviewPage() {
                     setTriage(null);
                     setCurrentPhase('greeting');
                     setError(null);
+                    setMockMode(false);
                   }}
                   className="px-4 py-2 text-sm font-medium border border-border rounded-xl hover:bg-muted transition-colors"
                 >

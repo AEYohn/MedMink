@@ -1613,29 +1613,161 @@ class ClinicalCaseAnalyzer:
                     "progress": 0.45,
                 }
 
-                # Import here to avoid circular imports
-                from src.agents.ingest_pubmed import search_pubmed_papers
+                # Shared rate-limit lock: max 2 requests per second
+                # to stay within NCBI's 3 req/s limit (with margin)
+                _pubmed_lock = asyncio.Lock()
+
+                async def _search_pubmed_direct(
+                    query: str, max_results: int = 10
+                ) -> list[dict]:
+                    """Search PubMed directly via E-utilities (no agent).
+
+                    Serialized via _pubmed_lock to avoid 429 rate-limit
+                    errors from NCBI (3 req/s without API key).
+                    """
+                    import httpx
+
+                    base = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
+                    ident = {
+                        "tool": "research-synthesizer",
+                        "email": "research-synthesizer@example.com",
+                    }
+                    headers = {"User-Agent": "research-synthesizer/1.0"}
+
+                    async with _pubmed_lock:
+                        # Step 1: esearch → PMIDs
+                        search_params = {
+                            "db": "pubmed",
+                            "term": query,
+                            "retmax": max_results,
+                            "retmode": "json",
+                            "sort": "relevance",
+                            **ident,
+                        }
+                        async with httpx.AsyncClient(
+                            timeout=30.0
+                        ) as client:
+                            resp = await client.get(
+                                f"{base}/esearch.fcgi",
+                                params=search_params,
+                                headers=headers,
+                            )
+                            resp.raise_for_status()
+
+                        pmids = (
+                            resp.json()
+                            .get("esearchresult", {})
+                            .get("idlist", [])
+                        )
+                        if not pmids:
+                            return []
+
+                        # Rate-limit pause between esearch and efetch
+                        await asyncio.sleep(0.4)
+
+                        # Step 2: efetch → paper details (XML)
+                        fetch_params = {
+                            "db": "pubmed",
+                            "id": ",".join(pmids),
+                            "rettype": "abstract",
+                            "retmode": "xml",
+                            **ident,
+                        }
+                        async with httpx.AsyncClient(
+                            timeout=60.0
+                        ) as client:
+                            resp = await client.get(
+                                f"{base}/efetch.fcgi",
+                                params=fetch_params,
+                                headers=headers,
+                            )
+                            resp.raise_for_status()
+
+                        # Rate-limit pause before next search can start
+                        await asyncio.sleep(0.4)
+
+                    # Step 3: parse XML into dicts
+                    from xml.etree import ElementTree
+
+                    papers = []
+                    try:
+                        root = ElementTree.fromstring(resp.text)
+                        for article in root.findall(".//PubmedArticle"):
+                            pmid_el = article.find(".//PMID")
+                            title_el = article.find(
+                                ".//Article/ArticleTitle"
+                            )
+                            abstract_el = article.find(
+                                ".//Article/Abstract/AbstractText"
+                            )
+                            year_el = article.find(
+                                ".//Article/Journal/JournalIssue"
+                                "/PubDate/Year"
+                            )
+                            # Authors
+                            authors = []
+                            for au in article.findall(
+                                ".//Article/AuthorList/Author"
+                            )[:3]:
+                                last = au.findtext("LastName", "")
+                                init = au.findtext("Initials", "")
+                                if last:
+                                    authors.append(
+                                        f"{last} {init}".strip()
+                                    )
+                            # MeSH terms
+                            mesh = [
+                                m.findtext("DescriptorName", "")
+                                for m in article.findall(
+                                    ".//MeshHeadingList/MeshHeading"
+                                )
+                            ]
+                            # Publication types
+                            pub_types = [
+                                pt.text or ""
+                                for pt in article.findall(
+                                    ".//Article/PublicationTypeList"
+                                    "/PublicationType"
+                                )
+                            ]
+                            papers.append(
+                                {
+                                    "pmid": pmid_el.text if pmid_el is not None else "",
+                                    "title": title_el.text if title_el is not None else "",
+                                    "abstract": abstract_el.text if abstract_el is not None else "",
+                                    "year": year_el.text if year_el is not None else "",
+                                    "authors": authors,
+                                    "publication_types": pub_types,
+                                    "mesh_terms": mesh,
+                                }
+                            )
+                    except ElementTree.ParseError as e:
+                        logger.warning(
+                            "Failed to parse PubMed XML", error=str(e)
+                        )
+                    return papers
 
                 async def _search_term(term: str) -> list[dict]:
                     """Search PubMed for a single term and filter results."""
                     results = []
                     try:
-                        found = await search_pubmed_papers(query=term, max_results=5)
-
+                        found = await _search_pubmed_direct(
+                            query=term, max_results=10
+                        )
                         logger.info(
-                            "PubMed search results",
+                            "PubMed direct search",
                             search_term=term,
-                            pmids_found=[p.id for p in found],
-                            titles=[
-                                p.title[:60] + "..." if len(p.title) > 60 else p.title
-                                for p in found
-                            ],
+                            count=len(found),
+                            pmids=[p.get("pmid") for p in found],
                         )
 
-                        term_words = [w.lower() for w in term.split() if len(w) > 3]
+                        term_words = [
+                            w.lower() for w in term.split() if len(w) > 2
+                        ]
+                        relevant = []
                         for p in found:
-                            title_text = p.title or ""
-                            abstract_text = p.abstract or ""
+                            title_text = p.get("title") or ""
+                            abstract_text = p.get("abstract") or ""
 
                             is_relevant = any(
                                 _word_matches(word, title_text)
@@ -1644,45 +1776,63 @@ class ClinicalCaseAnalyzer:
                             )
 
                             if not is_relevant:
-                                logger.warning(
-                                    "Filtered irrelevant paper",
-                                    pmid=p.id,
-                                    title=p.title[:50],
+                                logger.info(
+                                    "Paper did not match relevance filter",
+                                    pmid=p.get("pmid"),
+                                    title=title_text[:50],
                                     search_term=term,
                                 )
                                 continue
+                            relevant.append(p)
 
-                            meta = p.metadata if hasattr(p, "metadata") and p.metadata else {}
-                            paper_dict = {
-                                "pmid": p.id,
-                                "title": p.title,
-                                "abstract": p.abstract,
-                                "year": p.published.year if p.published else "",
-                                "authors": p.authors[:3],
-                                "publication_types": meta.get("publication_types", []),
-                                "mesh_terms": meta.get("mesh_terms", []),
-                            }
-
-                            if not _is_human_clinical_study(paper_dict):
-                                logger.warning(
-                                    "Filtered non-human study",
-                                    pmid=p.id,
-                                    title=p.title[:50],
-                                    pub_types=paper_dict["publication_types"],
-                                    mesh_terms=paper_dict["mesh_terms"][:5],
-                                )
-                                continue
-
-                            results.append(paper_dict)
+                        # Soft human-study filter
+                        human_only = [
+                            p
+                            for p in relevant
+                            if _is_human_clinical_study(p)
+                        ]
+                        if human_only:
+                            results = human_only
+                        elif relevant:
+                            results = relevant
+                        elif found:
+                            # Last resort: keep top PubMed results
+                            logger.info(
+                                "All filters excluded every paper, "
+                                "keeping top PubMed results",
+                                search_term=term,
+                                count=min(5, len(found)),
+                            )
+                            results = found[:5]
                     except Exception as e:
-                        logger.warning("Search failed for term", term=term, error=str(e))
+                        import traceback
+
+                        tb = traceback.format_exc()[-300:]
+                        logger.warning(
+                            "Search failed for term",
+                            term=term,
+                            error=str(e),
+                            error_type=type(e).__name__,
+                            traceback=tb,
+                        )
+                        search_errors.append(
+                            f"{term}: {type(e).__name__}: {e}"
+                        )
                     return results
 
                 # Search all terms in parallel
+                search_errors: list[str] = []
                 search_results = await asyncio.gather(
                     *(_search_term(term) for term in search_terms[:3])
                 )
                 papers = [p for batch in search_results for p in batch]
+
+                if not papers:
+                    logger.warning(
+                        "No papers found for any search term",
+                        search_terms=search_terms[:3],
+                        errors=search_errors,
+                    )
 
                 yield {
                     "type": "step",
@@ -1690,7 +1840,11 @@ class ClinicalCaseAnalyzer:
                     "status": "completed",
                     "message": f"Found {len(papers)} relevant papers",
                     "progress": 0.55,
-                    "data": {"count": len(papers)},
+                    "data": {
+                        "count": len(papers),
+                        "search_terms": search_terms[:3],
+                        "errors": search_errors if not papers else [],
+                    },
                 }
 
             # Step 4: Evaluate each treatment option

@@ -233,7 +233,10 @@ class PatientInterviewer:
 
         data = self._parse_response(response_text)
         fallback = "Hello! What brought you in today?"
-        question = data.get("next_question", fallback)
+        question = data.get("next_question") or fallback
+        question = question.strip()
+        if not question:
+            question = fallback
 
         session.conversation_history.append(
             {

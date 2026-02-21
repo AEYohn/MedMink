@@ -165,7 +165,30 @@ export function useSpeechRecognition(): UseSpeechRecognitionReturn {
       recognitionRef.current = recognition;
     }
 
+    // Auto-resume speech recognition when tab becomes visible again
+    function handleVisibilityChange() {
+      if (
+        document.visibilityState === 'visible' &&
+        isListeningRef.current &&
+        !isManualStopRef.current &&
+        recognitionRef.current
+      ) {
+        // Small delay to let the browser settle after tab switch
+        setTimeout(() => {
+          if (isListeningRef.current && !isManualStopRef.current) {
+            try {
+              recognitionRef.current?.start();
+            } catch {
+              // Already running or other error — ignore
+            }
+          }
+        }, 300);
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (restartTimeoutRef.current) {
         clearTimeout(restartTimeoutRef.current);
       }

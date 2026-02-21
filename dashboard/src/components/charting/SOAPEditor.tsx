@@ -30,6 +30,11 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { createDocument } from '@/lib/document-storage';
+import { normalizeSOAP } from '@/lib/compliance-rules';
+import type { ComplianceFlag } from '@/types/compliance';
+import { InlineComplianceMarker } from '@/components/compliance/InlineComplianceMarker';
 
 export interface SOAPData {
   subjective: {
@@ -67,7 +72,9 @@ export interface SOAPData {
 interface SOAPEditorProps {
   data: SOAPData | null;
   onChange?: (data: SOAPData) => void;
+  onSave?: () => void;
   readOnly?: boolean;
+  complianceFlags?: ComplianceFlag[];
 }
 
 const defaultSOAPData: SOAPData = {
@@ -97,7 +104,7 @@ const defaultSOAPData: SOAPData = {
   },
 };
 
-export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps) {
+export function SOAPEditor({ data, onChange, onSave, readOnly = false, complianceFlags = [] }: SOAPEditorProps) {
   const [expandedSections, setExpandedSections] = useState<string[]>([
     'subjective',
     'objective',
@@ -105,7 +112,19 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
     'plan',
   ]);
 
-  const soapData = data || defaultSOAPData;
+  const soapData = normalizeSOAP(data || defaultSOAPData);
+
+  // Helper: get compliance flags for a specific field path
+  const flagsForField = (fieldPath: string): ComplianceFlag[] =>
+    complianceFlags.filter(f => f.field === fieldPath);
+
+  // Render label with optional compliance marker
+  const FieldLabel = ({ label, fieldPath, block = false }: { label: string; fieldPath: string; block?: boolean }) => (
+    <label className={cn('text-xs font-semibold uppercase tracking-wider text-muted-foreground', block && 'mb-2 block')}>
+      {label}
+      <InlineComplianceMarker flags={flagsForField(fieldPath)} />
+    </label>
+  );
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) =>
@@ -273,9 +292,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
           <CollapsibleContent>
             <CardContent className="pt-0 space-y-4">
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Chief Complaint
-                </label>
+                <FieldLabel label="Chief Complaint" fieldPath="subjective.chief_complaint" />
                 <Textarea
                   value={soapData.subjective.chief_complaint || ''}
                   onChange={(e) =>
@@ -288,9 +305,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  History of Present Illness
-                </label>
+                <FieldLabel label="History of Present Illness" fieldPath="subjective.history_of_present_illness" />
                 <Textarea
                   value={soapData.subjective.history_of_present_illness || ''}
                   onChange={(e) =>
@@ -303,9 +318,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                  Review of Systems
-                </label>
+                <FieldLabel label="Review of Systems" fieldPath="subjective.review_of_systems" block />
                 <ArrayField
                   items={soapData.subjective.review_of_systems}
                   path="subjective.review_of_systems"
@@ -315,9 +328,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                  Patient Reported
-                </label>
+                <FieldLabel label="Patient Reported" fieldPath="subjective.patient_reported" block />
                 <ArrayField
                   items={soapData.subjective.patient_reported}
                   path="subjective.patient_reported"
@@ -343,9 +354,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
             <CardContent className="pt-0 space-y-4">
               {/* Vital Signs */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                  Vital Signs
-                </label>
+                <FieldLabel label="Vital Signs" fieldPath="objective.vital_signs" block />
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   {Object.entries(soapData.objective.vital_signs).map(([key, value]) => (
                     <div key={key}>
@@ -367,9 +376,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
               <Separator />
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                  Physical Exam Findings
-                </label>
+                <FieldLabel label="Physical Exam Findings" fieldPath="objective.physical_exam" block />
                 <ArrayField
                   items={soapData.objective.physical_exam}
                   path="objective.physical_exam"
@@ -379,9 +386,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                  Labs
-                </label>
+                <FieldLabel label="Labs" fieldPath="objective.labs" block />
                 <ArrayField
                   items={soapData.objective.labs}
                   path="objective.labs"
@@ -391,9 +396,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                  Imaging
-                </label>
+                <FieldLabel label="Imaging" fieldPath="objective.imaging" block />
                 <ArrayField
                   items={soapData.objective.imaging}
                   path="objective.imaging"
@@ -418,9 +421,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
           <CollapsibleContent>
             <CardContent className="pt-0 space-y-4">
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Primary Diagnosis
-                </label>
+                <FieldLabel label="Primary Diagnosis" fieldPath="assessment.primary_diagnosis" />
                 <Input
                   value={soapData.assessment.primary_diagnosis || ''}
                   onChange={(e) =>
@@ -433,9 +434,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                  Differential Diagnoses
-                </label>
+                <FieldLabel label="Differential Diagnoses" fieldPath="assessment.differential" block />
                 <ArrayField
                   items={soapData.assessment.differential}
                   path="assessment.differential"
@@ -445,9 +444,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Clinical Impression
-                </label>
+                <FieldLabel label="Clinical Impression" fieldPath="assessment.clinical_impression" />
                 <Textarea
                   value={soapData.assessment.clinical_impression || ''}
                   onChange={(e) =>
@@ -476,9 +473,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
             <CardContent className="pt-0 space-y-4">
               {/* Medications */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                  Medications
-                </label>
+                <FieldLabel label="Medications" fieldPath="plan.medications" block />
                 <div className="space-y-2">
                   {soapData.plan.medications.map((med, idx) => (
                     <div key={idx} className="flex items-center gap-2">
@@ -547,9 +542,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
               <Separator />
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                  Procedures
-                </label>
+                <FieldLabel label="Procedures" fieldPath="plan.procedures" block />
                 <ArrayField
                   items={soapData.plan.procedures}
                   path="plan.procedures"
@@ -559,9 +552,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                  Referrals
-                </label>
+                <FieldLabel label="Referrals" fieldPath="plan.referrals" block />
                 <ArrayField
                   items={soapData.plan.referrals}
                   path="plan.referrals"
@@ -571,9 +562,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Follow-Up
-                </label>
+                <FieldLabel label="Follow-Up" fieldPath="plan.follow_up" />
                 <Input
                   value={soapData.plan.follow_up || ''}
                   onChange={(e) => updateField('plan.follow_up', e.target.value)}
@@ -584,9 +573,7 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                  Patient Education
-                </label>
+                <FieldLabel label="Patient Education" fieldPath="plan.patient_education" block />
                 <ArrayField
                   items={soapData.plan.patient_education}
                   path="plan.patient_education"
@@ -606,7 +593,19 @@ export function SOAPEditor({ data, onChange, readOnly = false }: SOAPEditorProps
             <Printer className="w-4 h-4 mr-2" />
             Print
           </Button>
-          <Button>
+          <Button onClick={() => {
+            const sections = [
+              `SUBJECTIVE\nChief Complaint: ${soapData.subjective.chief_complaint || 'N/A'}\nHPI: ${soapData.subjective.history_of_present_illness || 'N/A'}${soapData.subjective.review_of_systems.length ? `\nROS: ${soapData.subjective.review_of_systems.join('; ')}` : ''}${soapData.subjective.patient_reported.length ? `\nPatient Reported: ${soapData.subjective.patient_reported.join('; ')}` : ''}`,
+              `OBJECTIVE\nVitals: ${Object.entries(soapData.objective.vital_signs).filter(([,v]) => v).map(([k,v]) => `${k}: ${v}`).join(', ') || 'N/A'}${soapData.objective.physical_exam.length ? `\nPhysical Exam: ${soapData.objective.physical_exam.join('; ')}` : ''}${soapData.objective.labs.length ? `\nLabs: ${soapData.objective.labs.join('; ')}` : ''}${soapData.objective.imaging.length ? `\nImaging: ${soapData.objective.imaging.join('; ')}` : ''}`,
+              `ASSESSMENT\nPrimary Diagnosis: ${soapData.assessment.primary_diagnosis || 'N/A'}${soapData.assessment.differential.length ? `\nDifferential: ${soapData.assessment.differential.join('; ')}` : ''}${soapData.assessment.clinical_impression ? `\nClinical Impression: ${soapData.assessment.clinical_impression}` : ''}`,
+              `PLAN${soapData.plan.medications.length ? `\nMedications: ${soapData.plan.medications.map(m => `${m.drug} ${m.dose} ${m.frequency}`.trim()).join('; ')}` : ''}${soapData.plan.procedures.length ? `\nProcedures: ${soapData.plan.procedures.join('; ')}` : ''}${soapData.plan.referrals.length ? `\nReferrals: ${soapData.plan.referrals.join('; ')}` : ''}${soapData.plan.follow_up ? `\nFollow-Up: ${soapData.plan.follow_up}` : ''}${soapData.plan.patient_education.length ? `\nPatient Education: ${soapData.plan.patient_education.join('; ')}` : ''}`,
+            ];
+            const content = sections.join('\n\n');
+            const title = `SOAP Note — ${new Date().toLocaleDateString()}`;
+            createDocument({ type: 'soap_note', title, content });
+            toast.success('Note saved');
+            onSave?.();
+          }}>
             <Save className="w-4 h-4 mr-2" />
             Save Note
           </Button>

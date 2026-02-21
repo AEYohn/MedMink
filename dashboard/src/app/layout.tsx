@@ -22,7 +22,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'MedLit Agent — Evidence-Based Clinical Decision Support',
+  title: 'MedMink — Evidence-Based Clinical Decision Support',
   description: 'AI-powered clinical decision support using MedGemma. Multi-model consensus, medical imaging, lab extraction, and evidence synthesis.',
 };
 

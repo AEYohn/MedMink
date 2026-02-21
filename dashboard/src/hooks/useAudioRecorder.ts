@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 export interface UseAudioRecorderReturn {
   isRecording: boolean;
@@ -91,10 +91,11 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
       setIsRecording(true);
       startTimeRef.current = Date.now();
 
-      // Update duration every second
+      // Update duration — runs at 250ms for smoother updates; timestamp-based so
+      // background-tab throttling only delays the UI, not the actual elapsed value
       durationIntervalRef.current = setInterval(() => {
         setAudioDuration(Math.floor((Date.now() - startTimeRef.current) / 1000));
-      }, 1000);
+      }, 250);
     } catch (err) {
       console.error('Failed to start recording:', err);
 
@@ -143,6 +144,17 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     setAudioDuration(0);
     setError(null);
     chunksRef.current = [];
+  }, []);
+
+  // Catch up duration display when tab becomes visible again
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState === 'visible' && startTimeRef.current > 0 && mediaRecorderRef.current?.state === 'recording') {
+        setAudioDuration(Math.floor((Date.now() - startTimeRef.current) / 1000));
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, []);
 
   return {

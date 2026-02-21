@@ -37,6 +37,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { getApiUrl } from '@/lib/api-url';
 import { useCaseSession } from '@/hooks/useCaseSession';
@@ -55,6 +56,8 @@ import { ReferralTab } from '@/components/case/ReferralTab';
 import { TreatmentComparisonChart } from '@/components/visualizations/TreatmentComparisonChart';
 import { EvidenceRadar } from '@/components/visualizations/EvidenceRadar';
 import { CaseTimelineD3 } from '@/components/visualizations/CaseTimelineD3';
+import { ReferencesPanel } from '@/components/case/ReferencesPanel';
+import { PatientQuestionsPanel, usePatientQuestionCount } from '@/components/case/PatientQuestionsPanel';
 
 // New interactive components
 import { CaseSummaryCard } from '@/components/case/CaseSummaryCard';
@@ -232,6 +235,7 @@ export default function CaseAnalysisPage() {
 
   // Patient ID
   const [patientId, setPatientId] = useState('');
+  const pendingPatientQuestions = usePatientQuestionCount(patientId || undefined);
 
   // Case session state
   const session = useCaseSession();
@@ -284,6 +288,7 @@ export default function CaseAnalysisPage() {
     saveReleasedSummary(summaryToSave);
     setShowSummaryPreview(false);
     setIsReleasingSummary(false);
+    toast.success(existingSummary ? 'Patient summary updated' : 'Patient summary released');
   }, [previewSummary, existingSummary]);
 
   const handlePlanChange = useCallback((plan: DischargePlanData | null) => {
@@ -291,6 +296,21 @@ export default function CaseAnalysisPage() {
   }, []);
 
   const handleOverridesChange = useCallback((newOverrides: ClinicianOverrides) => {
+    // Detect treatment verdict changes and log timeline events
+    if (session.currentSession && result) {
+      for (const [name, treatment] of Object.entries(newOverrides.treatments)) {
+        const prev = overrides.treatments[name];
+        if (treatment.verdict && treatment.verdict !== prev?.verdict) {
+          const label = treatment.verdict === 'accepted' ? 'Accepted'
+            : treatment.verdict === 'rejected' ? 'Rejected'
+            : 'Modified';
+          session.addEvent({
+            type: 'note',
+            changeSummary: `${label}: ${name}`,
+          });
+        }
+      }
+    }
     setOverrides(newOverrides);
     session.updateOverrides(newOverrides);
     setSaveStatus('saving');
@@ -299,7 +319,7 @@ export default function CaseAnalysisPage() {
       setSaveStatus('saved');
       saveTimerRef.current = setTimeout(() => setSaveStatus('idle'), 1500);
     }, 300);
-  }, [session]);
+  }, [session, result, overrides]);
 
   // Restore session state on mount
   useEffect(() => {
@@ -908,9 +928,14 @@ export default function CaseAnalysisPage() {
                     </span>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="orders" className="gap-1.5">
+                <TabsTrigger value="orders" className="gap-1.5 relative">
                   <ClipboardList className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Orders</span>
+                  {pendingPatientQuestions > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] flex items-center justify-center font-bold">
+                      {pendingPatientQuestions}
+                    </span>
+                  )}
                 </TabsTrigger>
                 <TabsTrigger value="tools" className="gap-1.5">
                   <Wrench className="w-3.5 h-3.5" />
@@ -1001,8 +1026,56 @@ export default function CaseAnalysisPage() {
                         evidence_grade: t.evidence_grade,
                       }))}
                     />
-                    <EvidenceRadar />
+                    <EvidenceRadar data={(() => {
+                      try {
+                        const treatments = result.treatment_options || [];
+                        const papers = result.papers_reviewed || [];
+                        if (treatments.length === 0) return undefined;
+
+                        // Study Quality — from evidence grades (A=1, B=0.75, C=0.5, D=0.25)
+                        const gradeMap: Record<string, number> = { A: 1, B: 0.75, C: 0.5, D: 0.25 };
+                        const grades = treatments.map(t => gradeMap[t.evidence_grade?.charAt(0)?.toUpperCase()] ?? 0.4);
+                        const studyQuality = grades.reduce((a, b) => a + b, 0) / grades.length;
+
+                        // Recency — from paper years
+                        const years = papers.map(p => parseInt(p.year || '0')).filter(y => y > 2000);
+                        const recency = years.length > 0
+                          ? Math.min(1, (years.reduce((a, b) => a + b, 0) / years.length - 2015) / 10)
+                          : 0.3;
+
+                        // Consistency — how many treatments have key evidence
+                        const withEvidence = treatments.filter(t => t.key_evidence?.length > 0).length;
+                        const consistency = treatments.length > 0 ? withEvidence / treatments.length : 0;
+
+                        // Publication Volume — based on number of papers
+                        const volume = Math.min(1, papers.length / 15);
+
+                        // Relevance — avg confidence of treatments
+                        const relevance = treatments.reduce((a, t) => a + (t.confidence || 0), 0) / treatments.length;
+
+                        // Directness — proportion of keyword-matched papers vs general
+                        const allPapers = treatments.flatMap(t => t.papers_used || []);
+                        const keywordMatched = allPapers.filter(p => p.match_type === 'keyword').length;
+                        const directness = allPapers.length > 0 ? keywordMatched / allPapers.length : 0.3;
+
+                        return [
+                          { dimension: 'Study Quality', score: studyQuality },
+                          { dimension: 'Recency', score: Math.max(0, recency) },
+                          { dimension: 'Consistency', score: consistency },
+                          { dimension: 'Volume', score: volume },
+                          { dimension: 'Relevance', score: relevance },
+                          { dimension: 'Directness', score: directness },
+                        ];
+                      } catch (e) {
+                        console.error('EvidenceRadar IIFE error:', e);
+                        return undefined;
+                      }
+                    })()} />
                   </div>
+                  <ReferencesPanel
+                    papersReviewed={result.papers_reviewed || []}
+                    treatmentOptions={result.treatment_options}
+                  />
                 </div>
               </TabsContent>
 
@@ -1087,6 +1160,10 @@ export default function CaseAnalysisPage() {
                       </div>
                     </CardContent>
                   </Card>
+                  <PatientQuestionsPanel
+                    caseSessionId={session.currentSession?.id}
+                    patientId={patientId || undefined}
+                  />
                 </div>
               </TabsContent>
 

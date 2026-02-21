@@ -395,23 +395,31 @@ async def link_visit(request: LinkVisitRequest):
 
 
 async def _transcribe_audio(audio: UploadFile, language: str = "en") -> str | None:
-    """Transcribe audio via Modal MedASR/Whisper ASR endpoint.
-
-    Prefers MedASR endpoint if configured, falls back to Whisper.
-    Passes language so non-English audio goes straight to Whisper.
-    """
+    """Transcribe audio — Gemini primary, Modal MedASR fallback."""
     from src.config import settings
+    from src.medgemma.speech import transcribe_audio_gemini
 
-    # Prefer MedASR, fall back to Whisper
-    asr_url = getattr(settings, "medasr_modal_url", "") or settings.whisper_modal_url
+    audio_data = await audio.read()
+
+    # Primary: Gemini 2.0 Flash
+    transcript = await transcribe_audio_gemini(
+        audio_data,
+        mime_type=audio.content_type or "audio/webm",
+        language=language,
+    )
+    if transcript:
+        return transcript
+
+    # Fallback: Modal MedASR / Whisper
+    asr_url = getattr(settings, "medasr_modal_url", "") or getattr(
+        settings, "whisper_modal_url", ""
+    )
     if not asr_url:
-        logger.warning("No ASR Modal URL configured, cannot transcribe audio")
+        logger.warning("No ASR backend available")
         return None
 
     try:
         import aiohttp
-
-        audio_data = await audio.read()
 
         timeout = aiohttp.ClientTimeout(total=60)
         async with aiohttp.ClientSession(timeout=timeout) as http_session:
@@ -423,19 +431,15 @@ async def _transcribe_audio(audio: UploadFile, language: str = "en") -> str | No
                 content_type=audio.content_type or "audio/webm",
             )
             form.add_field("language", language)
-
-            async with http_session.post(
-                f"{asr_url}/transcribe",
-                data=form,
-            ) as resp:
+            async with http_session.post(f"{asr_url}/transcribe", data=form) as resp:
                 if resp.status != 200:
                     body = await resp.text()
-                    logger.error("ASR transcription failed", status=resp.status, body=body[:200])
+                    logger.error(
+                        "ASR fallback failed", status=resp.status, body=body[:200]
+                    )
                     return None
-
                 result = await resp.json()
                 return result.get("text", "")
-
     except Exception as e:
-        logger.error("Audio transcription failed", error=str(e))
+        logger.error("ASR fallback failed", error=str(e))
         return None

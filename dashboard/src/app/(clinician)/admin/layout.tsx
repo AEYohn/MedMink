@@ -64,7 +64,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </div>
             <div>
               <h1 className="text-lg font-bold text-surface-900 dark:text-white">
-                MedLit Admin
+                MedMink Admin
               </h1>
               <p className="text-xs text-surface-500 dark:text-surface-400">
                 Practice Management

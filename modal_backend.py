@@ -40,6 +40,16 @@ backend_image = (
         "python-dateutil==2.8.2",
         # PDF parsing (labs route)
         "pymupdf==1.24.2",
+        # Retry logic (used by embeddings, gemini client)
+        "tenacity==8.2.3",
+        # Graph DB driver (imported transitively by agents.base → kg)
+        "neo4j==5.17.0",
+        # Redis (imported transitively by src.db)
+        "redis>=5.0.0",
+        # SQLAlchemy (imported transitively by src.models/db)
+        "sqlalchemy>=2.0.0",
+        # Async Postgres driver (imported transitively by src.db)
+        "asyncpg>=0.29.0",
     )
     .add_local_dir("src", remote_path="/app/src")
 )
@@ -90,6 +100,14 @@ def serve():
         _ems_import_error = f"{exc}\n{traceback.format_exc()}"
         ems_router = None
 
+    _compliance_import_error = None
+    try:
+        from src.api.routes.compliance import router as compliance_router
+    except Exception as exc:
+        import traceback
+        _compliance_import_error = f"{exc}\n{traceback.format_exc()}"
+        compliance_router = None
+
     api = FastAPI(
         title="Research Synthesizer API",
         description="Clinical case analysis powered by MedGemma 27B",
@@ -111,6 +129,8 @@ def serve():
     api.include_router(consensus_router)
     if ems_router:
         api.include_router(ems_router)
+    if compliance_router:
+        api.include_router(compliance_router)
 
     @api.get("/health")
     async def health():

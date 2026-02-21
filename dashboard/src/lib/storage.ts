@@ -247,6 +247,7 @@ export const STORAGE_KEYS = {
   RELEASED_SUMMARIES: 'released-summaries',
   REFERRAL_NOTIFICATIONS: 'referral-notifications',
   LAST_REFERRAL_CHECK: 'last-referral-check',
+  PATIENT_QUESTIONS: 'patient-questions',
 } as const;
 
 // Conversation helpers
@@ -436,4 +437,31 @@ export function getLastReferralCheck(): Record<string, string> {
 
 export function setLastReferralCheck(statuses: Record<string, string>): void {
   setItem(STORAGE_KEYS.LAST_REFERRAL_CHECK, statuses);
+}
+
+// Patient question helpers
+import type { PatientQuestion } from '@/types/patient-question';
+
+export function getPatientQuestions(): PatientQuestion[] {
+  return getItem<PatientQuestion[]>(STORAGE_KEYS.PATIENT_QUESTIONS, []);
+}
+
+export function savePatientQuestion(q: PatientQuestion): void {
+  const questions = getPatientQuestions();
+  questions.unshift(q);
+  // Keep max 100 questions
+  setItem(STORAGE_KEYS.PATIENT_QUESTIONS, questions.slice(0, 100));
+}
+
+export function getPatientQuestionsForSummary(summaryId: string): PatientQuestion[] {
+  return getPatientQuestions().filter(q => q.summaryId === summaryId);
+}
+
+export function updatePatientQuestion(id: string, updates: Partial<PatientQuestion>): void {
+  const questions = getPatientQuestions();
+  const index = questions.findIndex(q => q.id === id);
+  if (index >= 0) {
+    questions[index] = { ...questions[index], ...updates };
+    setItem(STORAGE_KEYS.PATIENT_QUESTIONS, questions);
+  }
 }

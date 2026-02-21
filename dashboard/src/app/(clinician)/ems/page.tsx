@@ -102,6 +102,36 @@ export default function EMSPage() {
         section_completeness: data.section_completeness,
       });
     } catch (e) {
+      // Retry once — handles Modal cold-start where second attempt succeeds
+      try {
+        const retryRes = await fetch(`${API_URL}/api/ems/dictate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: currentSession.sessionId,
+            text,
+            conversation_history: currentSession.messages.map(m => ({
+              role: m.role,
+              content: m.content,
+            })),
+            phase: currentSession.phase,
+            extracted_data: currentSession.extractedData,
+          }),
+        });
+        if (retryRes.ok) {
+          const data: EMSDictateResponse = await retryRes.json();
+          addMessage({ role: 'assistant', content: data.question });
+          updateFromResponse({
+            phase: data.phase,
+            extracted_data: data.extracted_data,
+            validation_flags: data.validation_flags,
+            section_completeness: data.section_completeness,
+          });
+          return;
+        }
+      } catch {
+        // Retry also failed — fall through to error
+      }
       setError(e instanceof Error ? e.message : 'Failed to process');
       addMessage({ role: 'assistant', content: 'Sorry, there was an error. Could you repeat that?' });
     } finally {
@@ -142,7 +172,29 @@ export default function EMSPage() {
         section_completeness: data.section_completeness,
       });
     } catch (e) {
+      // Retry once — handles Modal cold-start where second attempt succeeds
+      try {
+        const retryRes = await fetch(`${API_URL}/api/ems/dictate/audio`, {
+          method: 'POST',
+          body: form,
+        });
+        if (retryRes.ok) {
+          const data: EMSDictateResponse = await retryRes.json();
+          addMessage({ role: 'user', content: data.transcript || '(audio)', transcript: data.transcript });
+          addMessage({ role: 'assistant', content: data.question });
+          updateFromResponse({
+            phase: data.phase,
+            extracted_data: data.extracted_data,
+            validation_flags: data.validation_flags,
+            section_completeness: data.section_completeness,
+          });
+          return;
+        }
+      } catch {
+        // Retry also failed — fall through to error
+      }
       setError(e instanceof Error ? e.message : 'Audio failed');
+      addMessage({ role: 'assistant', content: 'Audio transcription failed. Please try again or type your response.' });
     } finally {
       setIsLoading(false);
     }

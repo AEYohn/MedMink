@@ -347,9 +347,21 @@ async def get_run(run_id: str):
 
 
 async def _transcribe_audio(audio: UploadFile) -> str | None:
-    """Transcribe audio via Modal MedASR/Whisper."""
+    """Transcribe audio — Gemini primary, Modal fallback."""
     from src.config import settings
+    from src.medgemma.speech import transcribe_audio_gemini
 
+    audio_data = await audio.read()
+
+    # Primary: Gemini
+    transcript = await transcribe_audio_gemini(
+        audio_data,
+        mime_type=audio.content_type or "audio/webm",
+    )
+    if transcript:
+        return transcript
+
+    # Fallback: Modal
     asr_url = getattr(settings, "medasr_modal_url", "") or getattr(
         settings, "whisper_modal_url", ""
     )
@@ -359,7 +371,6 @@ async def _transcribe_audio(audio: UploadFile) -> str | None:
     try:
         import aiohttp
 
-        audio_data = await audio.read()
         timeout = aiohttp.ClientTimeout(total=60)
         async with aiohttp.ClientSession(timeout=timeout) as http_session:
             form = aiohttp.FormData()

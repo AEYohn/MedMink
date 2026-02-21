@@ -149,24 +149,54 @@ class IngestPubMedAgent(BaseAgent):
             "retmax": max_results,
             "retmode": "json",
             "sort": "relevance",
+            # NCBI requires tool + email identification; cloud IPs
+            # without these are often rate-limited or blocked.
+            "tool": "research-synthesizer",
+            "email": self.email or "research-synthesizer@example.com",
         }
 
         if self.api_key:
             params["api_key"] = self.api_key
-        if self.email:
-            params["email"] = self.email
 
         if date_range:
             params["datetype"] = "pdat"
             params["mindate"] = date_range[0]
             params["maxdate"] = date_range[1]
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(PUBMED_SEARCH_URL, params=params)
-            response.raise_for_status()
+        headers = {"User-Agent": "research-synthesizer/1.0"}
+        last_error = None
+        for attempt in range(3):
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.get(
+                        PUBMED_SEARCH_URL, params=params, headers=headers
+                    )
+                    response.raise_for_status()
 
-        data = response.json()
-        return data.get("esearchresult", {}).get("idlist", [])
+                data = response.json()
+                idlist = data.get("esearchresult", {}).get("idlist", [])
+                if idlist or attempt == 2:
+                    return idlist
+                # Empty result — retry once in case of transient issue
+                self.logger.info(
+                    "PubMed returned empty, retrying",
+                    query=query[:60],
+                    attempt=attempt,
+                )
+                await asyncio.sleep(0.5)
+            except Exception as e:
+                last_error = e
+                self.logger.warning(
+                    "PubMed search attempt failed",
+                    query=query[:60],
+                    attempt=attempt,
+                    error=str(e),
+                )
+                await asyncio.sleep(1.0)
+
+        if last_error:
+            raise last_error
+        return []
 
     async def _fetch_papers(self, pmids: list[str]) -> list[Paper]:
         """Fetch paper details for a list of PMIDs."""
@@ -192,13 +222,18 @@ class IngestPubMedAgent(BaseAgent):
             "id": ",".join(pmids),
             "rettype": "abstract",
             "retmode": "xml",
+            "tool": "research-synthesizer",
+            "email": self.email or "research-synthesizer@example.com",
         }
 
         if self.api_key:
             params["api_key"] = self.api_key
 
+        headers = {"User-Agent": "research-synthesizer/1.0"}
         async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.get(PUBMED_FETCH_URL, params=params)
+            response = await client.get(
+                PUBMED_FETCH_URL, params=params, headers=headers
+            )
             response.raise_for_status()
 
         return self._parse_pubmed_xml(response.text)

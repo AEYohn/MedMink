@@ -16,6 +16,7 @@ import {
   Beaker,
   PanelLeftClose,
   PanelLeft,
+  X,
   Sparkles,
   Search,
   Stethoscope,
@@ -35,11 +36,14 @@ import { PatientBanner } from '@/components/shared/PatientBanner';
 import { useReferralNotifications } from '@/hooks/useReferralNotifications';
 
 interface SidebarProps {
-  isCollapsed: boolean;
-  onToggle: () => void;
+  isCollapsed?: boolean;
+  onToggle?: () => void;
+  isMobile?: boolean;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+export function Sidebar({ isCollapsed, onToggle, isMobile, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { history, clearHistory } = useSearch();
   const { conversations, currentConversation, startNewConversation, loadConversation, deleteConversation } = useChat();
@@ -59,6 +63,9 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   const { unreadCount: referralUnreadCount } = useReferralNotifications();
 
+  // Mobile mode: render nothing when closed
+  if (isMobile && !isOpen) return null;
+
   const mainNav = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/patients', icon: Users, label: 'Patients' },
@@ -70,13 +77,11 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const toolsNav = [
     { href: '/case', icon: Stethoscope, label: 'Case Analysis' },
     { href: '/interview', icon: ClipboardList, label: 'Interview' },
-    { href: '/imaging', icon: Camera, label: 'Imaging' },
-    { href: '/labs', icon: Beaker, label: 'Labs' },
     { href: '/chart', icon: FileText, label: 'Charting' },
     { href: '/ems', icon: Siren, label: 'EMS Report' },
   ];
 
-  if (isCollapsed) {
+  if (isCollapsed && !isMobile) {
     const toolHref = (href: string) => patientId ? `${href}?patient=${patientId}` : href;
     const isToolLink = (href: string) => toolsNav.some(t => t.href === href);
 
@@ -140,16 +145,20 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     );
   }
 
-  return (
-    <aside className="w-60 bg-card/50 border-r border-border flex flex-col overflow-hidden">
+  const handleNavClick = () => {
+    if (isMobile && onClose) onClose();
+  };
+
+  const sidebarContent = (
+    <aside className={isMobile ? 'w-72 bg-card h-full flex flex-col overflow-hidden' : 'w-60 h-full bg-card/50 border-r border-border flex flex-col overflow-hidden'}>
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-3 border-b border-border">
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Navigation</span>
         <button
-          onClick={onToggle}
+          onClick={isMobile ? onClose : onToggle}
           className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-all"
         >
-          <PanelLeftClose className="w-3.5 h-3.5" />
+          {isMobile ? <X className="w-3.5 h-3.5" /> : <PanelLeftClose className="w-3.5 h-3.5" />}
         </button>
       </div>
 
@@ -161,6 +170,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={handleNavClick}
               className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all text-[13px] ${
                 pathname === item.href
                   ? 'bg-primary/8 text-primary font-medium'
@@ -187,6 +197,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               <Link
                 key={item.href}
                 href={patientId ? `${item.href}?patient=${patientId}` : item.href}
+                onClick={handleNavClick}
                 className={`relative flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all text-[13px] ${
                   pathname === item.href
                     ? 'bg-primary/8 text-primary font-medium'
@@ -203,7 +214,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         {/* New Chat Button */}
         <div className="px-3 pb-3">
           <button
-            onClick={startNewConversation}
+            onClick={() => { startNewConversation(); handleNavClick(); }}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/15 text-primary text-[13px] font-medium rounded-lg transition-all"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -242,7 +253,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                         ? 'bg-muted'
                         : 'hover:bg-muted/50'
                     }`}
-                    onClick={() => loadConversation(conv.id)}
+                    onClick={() => { loadConversation(conv.id); handleNavClick(); }}
                   >
                     <MessageCircle className="w-3 h-3 text-muted-foreground/50 flex-shrink-0" />
                     <span className="flex-1 text-[12px] text-foreground/70 truncate">
@@ -331,6 +342,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                   <Link
                     key={bookmark.id}
                     href={`/${bookmark.entityType}/${bookmark.entityId}`}
+                    onClick={handleNavClick}
                     className="flex items-center gap-2 px-2.5 py-1.5 text-[12px] text-muted-foreground hover:bg-muted/50 rounded-md transition-colors"
                   >
                     {bookmark.entityType === 'paper' && <FileText className="w-3 h-3 text-chart-1" />}
@@ -354,4 +366,23 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       </div>
     </aside>
   );
+
+  // Mobile: render as fixed overlay with backdrop
+  if (isMobile) {
+    return (
+      <div className="fixed inset-0 z-50 flex">
+        {/* Backdrop */}
+        <div
+          className="absolute inset-0 bg-black/50"
+          onClick={onClose}
+        />
+        {/* Drawer */}
+        <div className="relative z-10 h-full">
+          {sidebarContent}
+        </div>
+      </div>
+    );
+  }
+
+  return sidebarContent;
 }

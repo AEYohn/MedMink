@@ -14,6 +14,7 @@ import {
 import { getReleasedSummaries } from '@/lib/storage';
 import { cn } from '@/lib/utils';
 import type { ReleasedVisitSummary } from '@/types/visit-summary';
+import { ExplainableText } from '@/components/patient/terms/ExplainableText';
 
 const actionBadge: Record<string, string> = {
   continue: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
@@ -87,11 +88,11 @@ function SummaryCard({
             </div>
             <div className="rounded-lg bg-teal-50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800 p-4">
               <p className="font-semibold text-surface-900 dark:text-white">
-                {summary.diagnosis}
+                <ExplainableText text={summary.diagnosis} />
               </p>
               {summary.diagnosisExplanation && (
                 <p className="text-sm text-surface-600 dark:text-surface-300 mt-1.5">
-                  {summary.diagnosisExplanation}
+                  <ExplainableText text={summary.diagnosisExplanation} />
                 </p>
               )}
             </div>
@@ -106,8 +107,8 @@ function SummaryCard({
                   Your Medications
                 </h3>
               </div>
-              <div className="rounded-lg border border-surface-200 dark:border-surface-700 overflow-hidden">
-                <table className="w-full text-sm">
+              <div className="rounded-lg border border-surface-200 dark:border-surface-700 overflow-hidden overflow-x-auto">
+                <table className="w-full text-sm min-w-[480px]">
                   <thead>
                     <tr className="bg-surface-50 dark:bg-surface-700/50 border-b border-surface-200 dark:border-surface-700">
                       <th className="text-left px-4 py-2 text-xs font-medium text-surface-500 dark:text-surface-400">
@@ -131,7 +132,7 @@ function SummaryCard({
                         className="border-b last:border-0 border-surface-100 dark:border-surface-700"
                       >
                         <td className="px-4 py-2.5 font-medium text-surface-900 dark:text-white">
-                          {med.name}
+                          <ExplainableText text={med.name} />
                         </td>
                         <td className="px-4 py-2.5 text-surface-600 dark:text-surface-300">
                           {med.dose || '—'}
@@ -178,7 +179,7 @@ function SummaryCard({
               </div>
               <div className="rounded-lg bg-surface-50 dark:bg-surface-700/30 border border-surface-200 dark:border-surface-700 p-4">
                 <p className="text-sm text-surface-700 dark:text-surface-300 whitespace-pre-wrap">
-                  {summary.dischargeInstructions}
+                  <ExplainableText text={summary.dischargeInstructions} />
                 </p>
               </div>
             </div>
@@ -229,7 +230,7 @@ function SummaryCard({
                 {summary.redFlags.map((flag, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <AlertTriangle className="w-3.5 h-3.5 mt-0.5 text-red-500 shrink-0" />
-                    <p className="text-sm text-red-800 dark:text-red-300">{flag}</p>
+                    <p className="text-sm text-red-800 dark:text-red-300"><ExplainableText text={flag} /></p>
                   </div>
                 ))}
               </div>

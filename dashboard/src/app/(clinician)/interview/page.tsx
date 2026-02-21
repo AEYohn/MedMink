@@ -233,34 +233,65 @@ export default function InterviewPage() {
       formData.append('language', language);
       if (patientId) formData.append('patient_id', patientId);
 
-      const res = await fetchWithTimeout(`${API_URL}/api/interview/respond/audio`, {
+      const res = await fetch(`${API_URL}/api/interview/respond/stream`, {
         method: 'POST',
         body: formData,
-      }, 90000);
-      if (!res.ok) throw new Error(`Audio response failed: ${res.status}`);
-      const data = await res.json();
-
-      // Replace the placeholder message with the actual transcript
-      setMessages(prev => {
-        const updated = [...prev];
-        const lastUserIdx = updated.findLastIndex(m => m.role === 'user');
-        if (lastUserIdx >= 0) {
-          updated[lastUserIdx] = {
-            role: 'user',
-            content: data.transcript || '(transcription failed)',
-            transcript: data.transcript,
-          };
-        }
-        const aiResponse = data.question?.trim() || "I understand. Can you tell me more?";
-        return [...updated, { role: 'assistant', content: aiResponse }];
       });
-      setCurrentPhase(data.phase);
-      clearRecording();
+      if (!res.ok) throw new Error(`Audio response failed: ${res.status}`);
 
-      if (data.phase === 'review_and_triage' || data.phase === 'complete') {
-        await completeInterview();
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let transcript = '';
+      let responseData: Record<string, unknown> | null = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const event = JSON.parse(line.slice(6));
+
+          if (event.type === 'transcript') {
+            transcript = event.text;
+            setMessages(prev => {
+              const updated = [...prev];
+              const idx = updated.findLastIndex(m => m.role === 'user');
+              if (idx >= 0) updated[idx] = { role: 'user', content: transcript, transcript };
+              return updated;
+            });
+          } else if (event.type === 'response') {
+            responseData = event.data;
+          } else if (event.type === 'error') {
+            throw new Error(event.message || 'Processing failed');
+          }
+        }
       }
+
+      if (responseData) {
+        const aiResponse = (responseData.question as string)?.trim() || "I understand. Can you tell me more?";
+        setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
+        setCurrentPhase(responseData.phase as string);
+        if (responseData.prompt_cough_recording) setPromptCough(true);
+        if (responseData.phase === 'review_and_triage' || responseData.phase === 'complete') {
+          await completeInterview();
+        }
+      }
+
+      clearRecording();
     } catch (err) {
+      // Remove the stuck placeholder on error
+      setMessages(prev => {
+        const lastUserIdx = prev.findLastIndex(m => m.content === '(audio recording...)');
+        if (lastUserIdx >= 0) return prev.filter((_, i) => i !== lastUserIdx);
+        return prev;
+      });
+      clearRecording();
       setError(err instanceof Error ? err.message : 'Failed to process audio');
     } finally {
       setIsLoading(false);

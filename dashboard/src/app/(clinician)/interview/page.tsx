@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ClipboardList, Phone, Loader2, ChevronRight, AlertTriangle } from 'lucide-react';
+import { ClipboardList, Phone, Loader2, ChevronRight, AlertTriangle, X } from 'lucide-react';
 import { InterviewChat } from '@/components/interview/InterviewChat';
 import { TriageResult } from '@/components/interview/TriageResult';
 import { ManagementPlanPanel } from '@/components/interview/ManagementPlanPanel';
@@ -220,6 +220,13 @@ export default function InterviewPage() {
   const sendAudio = useCallback(async () => {
     if (!sessionId || !audioBlob) return;
 
+    // Mock mode: no backend to transcribe audio — tell user to type instead
+    if (mockMode) {
+      clearRecording();
+      setError('Voice input requires the backend. Please type your response instead.');
+      return;
+    }
+
     setMessages(prev => [...prev, { role: 'user', content: '(audio recording...)', transcript: 'transcribing' }]);
     setIsLoading(true);
     setError(null);
@@ -296,7 +303,7 @@ export default function InterviewPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, audioBlob, clearRecording, messages, currentPhase, patientId, language]);
+  }, [sessionId, audioBlob, clearRecording, messages, currentPhase, patientId, language, mockMode]);
 
   useEffect(() => {
     if (pendingSendRef.current && audioBlob) {
@@ -396,8 +403,11 @@ export default function InterviewPage() {
 
       {/* Error Banner */}
       {error && (
-        <div className="mx-6 mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-700 dark:text-red-300">
-          {error}
+        <div className="mx-6 mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-700 dark:text-red-300 flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="ml-2 p-0.5 hover:bg-red-500/10 rounded">
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 

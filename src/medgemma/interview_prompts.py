@@ -104,11 +104,11 @@ Output ONLY this JSON:
     "red_flags": []
 }}"""
 
-GREETING_PROMPT = """You are starting a new patient interview. Greet the patient warmly and ask what brought them in today.
+GREETING_PROMPT = """You are starting a new patient interview. Say a brief, warm greeting (1 sentence max) and ask what brought them in today. Do NOT introduce yourself by name or explain the process.
 
 Output ONLY this JSON:
 {{
-    "next_question": "your greeting and opening question",
+    "next_question": "your brief greeting and opening question",
     "phase_complete": true,
     "extracted_data": {{}},
     "red_flags": []
@@ -119,12 +119,11 @@ GREETING_WITH_CONTEXT_PROMPT = """You are starting a new patient interview. You 
 
 {patient_context}
 
-Greet the patient by name, briefly confirm their identity, and ask what brought them in today.
-Do NOT re-ask information you already have (e.g. medications, allergies, conditions) — it's already in the chart.
+Greet the patient by name (1 sentence max) and ask what brought them in today. Do NOT introduce yourself by name, explain the process, or re-ask information already in the chart.
 
 Output ONLY this JSON:
 {{
-    "next_question": "your greeting referencing their name and opening question",
+    "next_question": "your brief greeting referencing their name and opening question",
     "phase_complete": true,
     "extracted_data": {{}},
     "red_flags": []

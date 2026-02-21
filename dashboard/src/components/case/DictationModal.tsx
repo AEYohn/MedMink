@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Mic,
-  MicOff,
+  Square,
   Loader2,
   X,
   CheckCircle2,
@@ -11,6 +11,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { getApiUrl } from '@/lib/api-url';
 
 interface DictationModalProps {
   isOpen: boolean;
@@ -19,77 +21,76 @@ interface DictationModalProps {
 }
 
 export function DictationModal({ isOpen, onClose, onTranscript }: DictationModalProps) {
-  const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [interimTranscript, setInterimTranscript] = useState('');
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recognitionRef = useRef<any>(null);
 
-  // Check browser support
-  const isSupported = typeof window !== 'undefined' && (
-    'SpeechRecognition' in window || 'webkitSpeechRecognition' in window
-  );
+  const {
+    isRecording,
+    audioBlob,
+    audioDuration,
+    error: recorderError,
+    start: startRecording,
+    stop: stopRecording,
+    clear: clearRecording,
+  } = useAudioRecorder();
 
-  const startListening = useCallback(() => {
-    if (!isSupported) {
-      setError('Speech recognition not supported in this browser. Use Chrome for best results.');
-      return;
-    }
+  // When recording stops and we have audio, send to backend for transcription
+  useEffect(() => {
+    if (!audioBlob || isRecording) return;
 
-    try {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
+    let cancelled = false;
 
-      recognition.onresult = (event: any) => {
-        let interim = '';
-        let final = '';
+    const blob = audioBlob;
 
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i];
-          if (result.isFinal) {
-            final += result[0].transcript;
-          } else {
-            interim += result[0].transcript;
-          }
-        }
-
-        if (final) {
-          setTranscript(prev => prev + ' ' + final);
-        }
-        setInterimTranscript(interim);
-      };
-
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        setError(`Error: ${event.error}`);
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      recognition.start();
-      recognitionRef.current = recognition;
-      setIsListening(true);
+    async function transcribe() {
+      setIsTranscribing(true);
       setError(null);
-    } catch (err) {
-      setError('Failed to start speech recognition');
-    }
-  }, [isSupported]);
 
-  const stopListening = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
+      try {
+        const apiUrl = getApiUrl() || '';
+        const formData = new FormData();
+        formData.append('audio', blob, 'recording.webm');
+
+        const res = await fetch(`${apiUrl}/api/chart/transcribe`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const body = await res.text();
+          throw new Error(body || `Server error: ${res.status}`);
+        }
+
+        const data = await res.json();
+        if (!cancelled) {
+          setTranscript(data.text || '');
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Transcription failed:', err);
+          setError(err instanceof Error ? err.message : 'Transcription failed');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsTranscribing(false);
+        }
+      }
     }
-    setIsListening(false);
-    setInterimTranscript('');
-  }, []);
+
+    transcribe();
+    return () => { cancelled = true; };
+  }, [audioBlob, isRecording]);
+
+  const handleToggleRecording = useCallback(async () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      setTranscript('');
+      setError(null);
+      await startRecording();
+    }
+  }, [isRecording, stopRecording, startRecording]);
 
   const handleAccept = useCallback(() => {
     const finalText = transcript.trim();
@@ -97,27 +98,27 @@ export function DictationModal({ isOpen, onClose, onTranscript }: DictationModal
       onTranscript(finalText);
     }
     setTranscript('');
-    setInterimTranscript('');
+    clearRecording();
     onClose();
-  }, [transcript, onTranscript, onClose]);
+  }, [transcript, onTranscript, onClose, clearRecording]);
 
   const handleCancel = useCallback(() => {
-    stopListening();
+    stopRecording();
+    clearRecording();
     setTranscript('');
-    setInterimTranscript('');
+    setError(null);
     onClose();
-  }, [stopListening, onClose]);
+  }, [stopRecording, clearRecording, onClose]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, []);
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   if (!isOpen) return null;
+
+  const displayError = error || recorderError;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
@@ -136,70 +137,70 @@ export function DictationModal({ isOpen, onClose, onTranscript }: DictationModal
         <CardContent className="space-y-4">
           {/* Status */}
           <div className="flex items-center justify-center gap-3">
-            {isListening ? (
+            {isRecording ? (
               <Badge variant="outline" className="gap-1.5 bg-red-500/10 text-red-500 border-red-500/30 animate-pulse">
                 <div className="w-2 h-2 bg-red-500 rounded-full" />
-                Recording...
+                Recording {formatDuration(audioDuration)}
+              </Badge>
+            ) : isTranscribing ? (
+              <Badge variant="outline" className="gap-1.5">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Transcribing...
               </Badge>
             ) : (
               <Badge variant="outline" className="gap-1.5">
-                <MicOff className="w-3 h-3" />
+                <Mic className="w-3 h-3" />
                 Ready
-              </Badge>
-            )}
-            {!isSupported && (
-              <Badge variant="destructive" className="text-xs">
-                Not Supported
               </Badge>
             )}
           </div>
 
           {/* Transcript Display */}
           <div className="min-h-[150px] max-h-[300px] overflow-y-auto p-4 bg-muted/50 rounded-lg border text-sm">
-            {transcript || interimTranscript ? (
-              <>
-                <span>{transcript}</span>
-                {interimTranscript && (
-                  <span className="text-muted-foreground/60 italic"> {interimTranscript}</span>
-                )}
-              </>
+            {transcript ? (
+              <span>{transcript}</span>
+            ) : isTranscribing ? (
+              <div className="flex items-center justify-center mt-8 gap-2 text-muted-foreground/60">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Processing audio...
+              </div>
             ) : (
               <p className="text-muted-foreground/50 text-center mt-8">
-                {isListening
+                {isRecording
                   ? 'Speak your clinical case...'
-                  : 'Press the microphone button to start dictating'
+                  : 'Press the button below to start recording'
                 }
               </p>
             )}
           </div>
 
           {/* Error */}
-          {error && (
-            <p className="text-sm text-destructive text-center">{error}</p>
+          {displayError && (
+            <p className="text-sm text-destructive text-center">{displayError}</p>
           )}
 
           {/* Controls */}
           <div className="flex items-center justify-between gap-3">
             <Button
-              variant={isListening ? 'destructive' : 'default'}
+              variant={isRecording ? 'destructive' : 'default'}
               size="lg"
-              onClick={isListening ? stopListening : startListening}
-              disabled={!isSupported}
+              onClick={handleToggleRecording}
+              disabled={isTranscribing}
               className="flex-1"
             >
-              {isListening ? (
+              {isRecording ? (
                 <>
-                  <MicOff className="w-4 h-4 mr-2" />
-                  Stop
+                  <Square className="w-4 h-4 mr-2" />
+                  Stop Recording
                 </>
               ) : (
                 <>
                   <Mic className="w-4 h-4 mr-2" />
-                  Start Dictation
+                  {transcript ? 'Record Again' : 'Start Recording'}
                 </>
               )}
             </Button>
-            {transcript.trim() && (
+            {transcript.trim() && !isRecording && !isTranscribing && (
               <Button variant="outline" size="lg" onClick={handleAccept}>
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 Use Transcript
@@ -208,7 +209,7 @@ export function DictationModal({ isOpen, onClose, onTranscript }: DictationModal
           </div>
 
           <p className="text-xs text-muted-foreground text-center">
-            Uses browser Web Speech API &bull; Works best in Chrome
+            Records audio and transcribes using MedASR
           </p>
         </CardContent>
       </Card>

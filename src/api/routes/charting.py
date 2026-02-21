@@ -214,6 +214,51 @@ async def transcribe_and_structure_generator(audio_path: str):
         yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
 
 
+@router.post("/transcribe")
+async def transcribe_audio(audio: UploadFile = File(...)):
+    """Transcribe audio to text using MedASR (no SOAP structuring).
+
+    Returns JSON: {"text": "...", "duration": 0.0}
+    """
+    content_type = audio.content_type or ""
+    if not content_type.startswith("audio/"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type: {content_type}. Expected audio file.",
+        )
+
+    try:
+        suffix = Path(audio.filename or "audio.webm").suffix
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
+            content = await audio.read()
+            tmp_file.write(content)
+            tmp_path = tmp_file.name
+
+        medasr = get_medasr_client()
+        transcription = await medasr.transcribe(
+            audio_path=tmp_path,
+            apply_corrections=True,
+        )
+
+        if transcription.get("error"):
+            raise HTTPException(status_code=500, detail=transcription["error"])
+
+        text = transcription.get("text", "")
+        if not text:
+            raise HTTPException(status_code=422, detail="No speech detected in audio")
+
+        return {
+            "text": text,
+            "duration": transcription.get("audio_duration_seconds", 0),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Transcription failed", error=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
 @router.post("/transcribe-and-structure")
 async def transcribe_and_structure(audio: UploadFile = File(...)):
     """Full pipeline for audio transcription and SOAP structuring.

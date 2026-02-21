@@ -4,7 +4,16 @@ Defines User, Patient, and Provider models for the healthcare platform.
 """
 
 from datetime import datetime
-from enum import StrEnum
+
+try:
+    from enum import StrEnum
+except ImportError:
+    import enum
+
+    class StrEnum(str, enum.Enum):
+        pass
+
+
 from typing import Any
 from uuid import uuid4
 

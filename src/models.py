@@ -1,7 +1,16 @@
 """Pydantic models for the research synthesizer platform."""
 
 from datetime import date, datetime
-from enum import StrEnum
+
+try:
+    from enum import StrEnum
+except ImportError:
+    import enum
+
+    class StrEnum(str, enum.Enum):
+        pass
+
+
 from typing import Any
 from uuid import uuid4
 
@@ -185,6 +194,7 @@ class WeeklyReport(BaseModel):
     executive_summary: str = ""
     key_developments: list[str] = Field(default_factory=list)
     emerging_trends: list[dict[str, Any]] = Field(default_factory=list)
+    notable_contradictions: list[dict[str, Any]] = Field(default_factory=list)
     papers_analyzed: int = 0
     claims_extracted: int = 0
     created_at: datetime = Field(default_factory=datetime.utcnow)

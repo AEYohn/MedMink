@@ -24,7 +24,7 @@ export const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     iconName: 'Heart',
     gradientFrom: 'from-rose-500',
     gradientTo: 'to-pink-500',
-    homePath: '/patient/visit-summary',
+    homePath: '/patient',
   },
   ems: {
     label: 'EMS',

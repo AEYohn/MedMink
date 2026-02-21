@@ -33,7 +33,7 @@ export function PostVisitOverview({
   return (
     <div className="space-y-5">
       {/* Diagnosis */}
-      <div className="rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
+      <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Stethoscope className="w-4 h-4 text-teal-600 dark:text-teal-400" />
@@ -41,7 +41,7 @@ export function PostVisitOverview({
           </div>
           <button
             onClick={() => onAskAI(`What does ${summary.diagnosis} mean?`)}
-            className="flex items-center gap-1 text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline"
+            className="flex items-center gap-1 text-[11px] text-rose-600 dark:text-rose-400 hover:underline"
           >
             <HelpCircle className="w-3 h-3" /> Ask AI about this
           </button>
@@ -60,7 +60,7 @@ export function PostVisitOverview({
 
       {/* Medications */}
       {summary.medications.length > 0 && (
-        <div className="rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
+        <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
           <div className="flex items-center gap-2 mb-3">
             <Pill className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             <h3 className="font-semibold text-sm text-surface-900 dark:text-white">Your Medications</h3>
@@ -102,7 +102,7 @@ export function PostVisitOverview({
                 </span>
                 <button
                   onClick={() => onAskAI(`Why was ${med.name} prescribed? How should I take it?`)}
-                  className="flex-shrink-0 text-indigo-600 dark:text-indigo-400 hover:underline"
+                  className="flex-shrink-0 text-rose-600 dark:text-rose-400 hover:underline"
                 >
                   <HelpCircle className="w-3 h-3" />
                 </button>
@@ -114,7 +114,7 @@ export function PostVisitOverview({
 
       {/* Medication timeline */}
       {summary.medications.filter(m => m.action !== 'discontinue').length > 0 && (
-        <div className="rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
+        <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
           <div className="flex items-center gap-2 mb-3">
             <Clock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
             <h3 className="font-semibold text-sm text-surface-900 dark:text-white">When to Take Your Medications</h3>
@@ -140,7 +140,7 @@ export function PostVisitOverview({
 
       {/* Follow-Up Appointments */}
       {summary.followUps.length > 0 && (
-        <div className="rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
+        <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
           <div className="flex items-center gap-2 mb-3">
             <Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400" />
             <h3 className="font-semibold text-sm text-surface-900 dark:text-white">Follow-Up Appointments</h3>
@@ -183,9 +183,9 @@ export function PostVisitOverview({
 
       {/* Discharge Instructions */}
       {summary.dischargeInstructions && (
-        <div className="rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
+        <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
           <div className="flex items-center gap-2 mb-3">
-            <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <FileText className="w-4 h-4 text-rose-600 dark:text-rose-400" />
             <h3 className="font-semibold text-sm text-surface-900 dark:text-white">What To Do Next</h3>
           </div>
           <div className="rounded-lg bg-surface-50 dark:bg-surface-700/30 border border-surface-200 dark:border-surface-700 p-4">
@@ -198,7 +198,7 @@ export function PostVisitOverview({
 
       {/* Restrictions */}
       {summary.restrictions.length > 0 && (
-        <div className="rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
+        <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
           <h3 className="font-semibold text-sm text-surface-900 dark:text-white mb-3">Restrictions</h3>
           <ul className="space-y-1.5">
             {summary.restrictions.map((r, i) => (

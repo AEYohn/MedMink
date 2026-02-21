@@ -117,7 +117,7 @@ export function PostVisitChat({
   const allMessages = chatMessages.length > 0 ? chatMessages : [];
   const welcomeMessage: ChatMessage = {
     role: 'assistant',
-    content: `Hello! I'm your PostVisit AI companion for your visit on ${new Date(summary.visitDate).toLocaleDateString()}.\n\nYour diagnosis was **${summary.diagnosis}**. I can help you understand your diagnosis, medications, instructions, and answer questions about your visit in plain language.\n\nI use your visit summary and medical literature to provide accurate answers. For medical decisions, I'll always recommend discussing with your doctor.`,
+    content: `Hello! I'm your Care Hub companion for your visit on ${new Date(summary.visitDate).toLocaleDateString()}.\n\nYour diagnosis was **${summary.diagnosis}**. I can help you understand your diagnosis, medications, instructions, and answer questions about your visit in plain language.\n\nI use your visit summary and medical literature to provide accurate answers. For medical decisions, I'll always recommend discussing with your doctor.`,
     timestamp: new Date().toISOString(),
   };
 
@@ -139,7 +139,7 @@ export function PostVisitChat({
             <div
               className={`max-w-[85%] ${
                 msg.role === 'user'
-                  ? 'bg-indigo-500 text-white rounded-2xl rounded-tr-md px-4 py-3'
+                  ? 'bg-rose-500 text-white rounded-2xl rounded-tr-md px-4 py-3'
                   : 'bg-surface-100 dark:bg-surface-700/50 text-surface-900 dark:text-white rounded-2xl rounded-tl-md px-4 py-3'
               }`}
             >
@@ -214,13 +214,13 @@ export function PostVisitChat({
             }}
             placeholder="Ask about your visit..."
             rows={1}
-            className="flex-1 px-3 py-2.5 bg-surface-50 dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-xl text-surface-900 dark:text-white placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none text-sm"
+            className="flex-1 px-3 py-2.5 bg-surface-50 dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-xl text-surface-900 dark:text-white placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent resize-none text-sm"
             style={{ minHeight: '44px', maxHeight: '100px' }}
           />
           <button
             type="submit"
             disabled={!input.trim() || chatLoading}
-            className="p-2.5 bg-indigo-500 hover:bg-indigo-600 disabled:bg-surface-300 dark:disabled:bg-surface-700 text-white rounded-xl transition-colors"
+            className="p-2.5 bg-rose-500 hover:bg-indigo-600 disabled:bg-surface-300 dark:disabled:bg-surface-700 text-white rounded-xl transition-colors"
           >
             {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>

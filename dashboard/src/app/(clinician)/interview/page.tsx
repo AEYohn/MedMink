@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ClipboardList, Phone, Loader2, ChevronRight, AlertTriangle } from 'lucide-react';
 import { InterviewChat } from '@/components/interview/InterviewChat';
 import { TriageResult } from '@/components/interview/TriageResult';
@@ -108,6 +108,7 @@ export default function InterviewPage() {
   }, [activePatientId, patientId]);
 
   const { isRecording, audioBlob, audioDuration, start: startRecording, stop: stopRecording, clear: clearRecording } = useAudioRecorder();
+  const pendingSendRef = useRef(false);
 
   const startInterview = useCallback(async () => {
     setIsLoading(true);
@@ -211,12 +212,9 @@ export default function InterviewPage() {
     }
   }, [inputText, sessionId, isLoading, messages, currentPhase, patientId, language, mockMode]);
 
-  const handleStopRecording = useCallback(async () => {
+  const handleStopRecording = useCallback(() => {
     stopRecording();
-    // Wait a tick for audioBlob to be set
-    setTimeout(async () => {
-      await sendAudio();
-    }, 200);
+    pendingSendRef.current = true;
   }, [stopRecording]);
 
   const sendAudio = useCallback(async () => {
@@ -268,6 +266,13 @@ export default function InterviewPage() {
       setIsLoading(false);
     }
   }, [sessionId, audioBlob, clearRecording, messages, currentPhase, patientId, language]);
+
+  useEffect(() => {
+    if (pendingSendRef.current && audioBlob) {
+      pendingSendRef.current = false;
+      sendAudio();
+    }
+  }, [audioBlob, sendAudio]);
 
   const completeInterview = useCallback(async () => {
     if (!sessionId) return;

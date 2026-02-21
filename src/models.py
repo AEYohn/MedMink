@@ -195,6 +195,11 @@ class WeeklyReport(BaseModel):
     key_developments: list[str] = Field(default_factory=list)
     emerging_trends: list[dict[str, Any]] = Field(default_factory=list)
     notable_contradictions: list[dict[str, Any]] = Field(default_factory=list)
+    new_predictions: list[dict[str, Any]] = Field(default_factory=list)
+    prediction_outcomes: list[dict[str, Any]] = Field(default_factory=list)
     papers_analyzed: int = 0
     claims_extracted: int = 0
+    contradictions_found: int = 0
+    predictions_made: int = 0
+    calibration_score: float | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)

@@ -434,9 +434,7 @@ async def _transcribe_audio(audio: UploadFile, language: str = "en") -> str | No
             async with http_session.post(f"{asr_url}/transcribe", data=form) as resp:
                 if resp.status != 200:
                     body = await resp.text()
-                    logger.error(
-                        "ASR fallback failed", status=resp.status, body=body[:200]
-                    )
+                    logger.error("ASR fallback failed", status=resp.status, body=body[:200])
                     return None
                 result = await resp.json()
                 return result.get("text", "")

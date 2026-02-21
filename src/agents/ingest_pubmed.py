@@ -168,9 +168,7 @@ class IngestPubMedAgent(BaseAgent):
         for attempt in range(3):
             try:
                 async with httpx.AsyncClient(timeout=30.0) as client:
-                    response = await client.get(
-                        PUBMED_SEARCH_URL, params=params, headers=headers
-                    )
+                    response = await client.get(PUBMED_SEARCH_URL, params=params, headers=headers)
                     response.raise_for_status()
 
                 data = response.json()
@@ -231,9 +229,7 @@ class IngestPubMedAgent(BaseAgent):
 
         headers = {"User-Agent": "research-synthesizer/1.0"}
         async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.get(
-                PUBMED_FETCH_URL, params=params, headers=headers
-            )
+            response = await client.get(PUBMED_FETCH_URL, params=params, headers=headers)
             response.raise_for_status()
 
         return self._parse_pubmed_xml(response.text)

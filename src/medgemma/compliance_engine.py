@@ -145,6 +145,105 @@ HIGH_ACUITY_KEYWORDS = [
     "hemorrhage",
 ]
 
+DX_PLAN_MAPPINGS: dict[str, list[str]] = {
+    "stemi": [
+        "aspirin",
+        "heparin",
+        "cath",
+        "pci",
+        "catheterization",
+        "anticoagul",
+        "antiplatelet",
+        "ticagrelor",
+        "clopidogrel",
+        "thrombo",
+        "nitro",
+        "morphine",
+    ],
+    "nstemi": [
+        "aspirin",
+        "heparin",
+        "anticoagul",
+        "antiplatelet",
+        "ticagrelor",
+        "clopidogrel",
+        "cath",
+        "pci",
+        "cardiology",
+    ],
+    "myocardial infarction": [
+        "aspirin",
+        "heparin",
+        "cath",
+        "pci",
+        "anticoagul",
+        "antiplatelet",
+        "thrombo",
+        "cardiology",
+    ],
+    "stroke": ["tpa", "alteplase", "tenecteplase", "thrombectomy", "neurology", "ct", "mri"],
+    "cva": ["tpa", "alteplase", "tenecteplase", "thrombectomy", "neurology"],
+    "pulmonary embolism": ["heparin", "anticoagul", "enoxaparin", "tpa", "ct angio"],
+    "sepsis": ["antibiotic", "fluid", "culture", "vasopressor", "lactate"],
+    "septic shock": [
+        "antibiotic",
+        "fluid",
+        "vasopressor",
+        "norepinephrine",
+        "culture",
+    ],
+    "aortic dissection": [
+        "labetalol",
+        "esmolol",
+        "nitroprusside",
+        "surgery",
+        "ct angio",
+        "cardiothoracic",
+    ],
+    "hemorrhage": ["transfusion", "prbc", "blood", "fluid", "surgery", "endoscopy"],
+}
+
+ADMISSION_TERMS = [
+    "admit",
+    "admission",
+    "admitted",
+    "ccu",
+    "icu",
+    "micu",
+    "sicu",
+    "inpatient",
+    "observation",
+    "telemetry",
+    "step-down",
+    "floor",
+    "ward",
+]
+
+STAT_INDICATORS = [
+    "loading",
+    "bolus",
+    "stat",
+    "once",
+    "single dose",
+    "push",
+    "chewed",
+    "one-time",
+    "prn",
+    "as needed",
+    "now",
+]
+
+
+def _is_patient_admitted(soap: dict) -> bool:
+    """Check if patient is being admitted (procedures, referrals, or follow_up mention admission)."""
+    text_pool = []
+    text_pool.extend(str(p) for p in _list_field(soap, "plan.procedures"))
+    text_pool.extend(str(r) for r in _list_field(soap, "plan.referrals"))
+    text_pool.append(_text(soap, "plan.follow_up"))
+    combined = " ".join(text_pool).lower()
+    return any(term in combined for term in ADMISSION_TERMS)
+
+
 HIGH_ACUITY_CC_KEYWORDS = [
     "chest pain",
     "shortness of breath",
@@ -168,9 +267,19 @@ def _check_missing_med_necessity(soap: dict) -> ComplianceFlag | None:
     """MISSING_MED_NECESSITY: Assessment has diagnosis but clinical_impression is empty/short."""
     dx = _text(soap, "assessment.primary_diagnosis")
     impression = _text(soap, "assessment.clinical_impression")
-    if dx and len(impression) < 20:
+    if not dx or len(impression) >= 20:
+        return None
+    # Descriptive diagnosis is self-explanatory (e.g., "Anterior STEMI with ST elevation V2-V5")
+    if len(dx) >= 30:
+        return None
+    # If impression is empty but plan is substantive, downgrade to warning
+    meds = _list_field(soap, "plan.medications")
+    med_count = sum(1 for m in meds if isinstance(m, dict) and (m.get("drug") or "").strip())
+    procs = _list_field(soap, "plan.procedures")
+    proc_count = sum(1 for p in procs if str(p).strip())
+    if med_count >= 1 and proc_count >= 1:
         return ComplianceFlag(
-            severity="error",
+            severity="warning",
             domain="claim_denial",
             section="assessment",
             field="assessment.clinical_impression",
@@ -180,7 +289,17 @@ def _check_missing_med_necessity(soap: dict) -> ComplianceFlag | None:
             suggested_fix="",
             reference="CMS LCD: Medical necessity documentation requirement",
         )
-    return None
+    return ComplianceFlag(
+        severity="error",
+        domain="claim_denial",
+        section="assessment",
+        field="assessment.clinical_impression",
+        rule_id="MISSING_MED_NECESSITY",
+        message="Clinical impression is missing or too brief — add reasoning supporting the diagnosis for medical necessity",
+        auto_fixable=True,
+        suggested_fix="",
+        reference="CMS LCD: Medical necessity documentation requirement",
+    )
 
 
 def _check_icd10_unspecified(soap: dict) -> ComplianceFlag | None:
@@ -227,7 +346,11 @@ def _check_med_incomplete(soap: dict) -> list[ComplianceFlag]:
         if not (med.get("dose") or "").strip():
             missing.append("dose")
         if not (med.get("frequency") or "").strip():
-            missing.append("frequency")
+            # Check if dose field contains stat/bolus indicators (one-time dose)
+            dose_text = (med.get("dose") or "").lower()
+            is_stat = any(ind in dose_text for ind in STAT_INDICATORS)
+            if not is_stat:
+                missing.append("frequency")
         if missing:
             flags.append(
                 ComplianceFlag(
@@ -331,15 +454,17 @@ def _check_assessment_plan_gap(soap: dict) -> ComplianceFlag | None:
     dx = _text(soap, "assessment.primary_diagnosis").lower()
     if not dx:
         return None
-    # Build plan text
+    # Build plan text (include dose fields and clinical_impression)
     plan_parts = []
     for med in _list_field(soap, "plan.medications"):
         if isinstance(med, dict):
-            plan_parts.append(med.get("drug", ""))
+            plan_parts.append(med.get("drug", "") or "")
+            plan_parts.append(med.get("dose", "") or "")
     plan_parts.extend(str(p) for p in _list_field(soap, "plan.procedures"))
     plan_parts.extend(str(r) for r in _list_field(soap, "plan.referrals"))
     plan_parts.append(_text(soap, "plan.follow_up"))
     plan_parts.extend(str(e) for e in _list_field(soap, "plan.patient_education"))
+    plan_parts.append(_text(soap, "assessment.clinical_impression"))
     plan_text = " ".join(plan_parts).lower()
 
     # Extract key diagnosis words (>3 chars, not common words)
@@ -377,9 +502,25 @@ def _check_assessment_plan_gap(soap: dict) -> ComplianceFlag | None:
 
     if not dx_words:
         return None
-    # Check if any dx keyword appears in plan
+
+    # Pass 1: Direct keyword match
     if any(w in plan_text for w in dx_words):
         return None
+
+    # Pass 2: Concept mapping — check if plan contains expected treatments for this dx
+    for key, treatments in DX_PLAN_MAPPINGS.items():
+        if key in dx:
+            if any(t in plan_text for t in treatments):
+                return None
+
+    # Pass 3: Substantive plan — high-acuity dx with multiple meds + procedure
+    if any(kw in dx for kw in HIGH_ACUITY_KEYWORDS):
+        meds = _list_field(soap, "plan.medications")
+        med_count = sum(1 for m in meds if isinstance(m, dict) and (m.get("drug") or "").strip())
+        procs = _list_field(soap, "plan.procedures")
+        proc_count = sum(1 for p in procs if str(p).strip())
+        if med_count >= 2 and proc_count >= 1:
+            return None
 
     return ComplianceFlag(
         severity="error",
@@ -394,20 +535,46 @@ def _check_assessment_plan_gap(soap: dict) -> ComplianceFlag | None:
 
 
 def _check_no_followup(soap: dict) -> ComplianceFlag | None:
-    """NO_FOLLOWUP: plan.follow_up is null/empty."""
+    """NO_FOLLOWUP: plan.follow_up is null/empty and no disposition in procedures/referrals."""
     fu = _text(soap, "plan.follow_up")
-    if not fu:
-        return ComplianceFlag(
-            severity="warning",
-            domain="malpractice",
-            section="plan",
-            field="plan.follow_up",
-            rule_id="NO_FOLLOWUP",
-            message="No follow-up plan documented — specify follow-up timing and provider",
-            auto_fixable=True,
-            reference="Continuity of care documentation standard",
-        )
-    return None
+    if fu:
+        return None
+
+    # Check procedures and referrals for disposition terms (admission = implicit follow-up)
+    disposition_terms = [
+        "admit",
+        "admission",
+        "discharge",
+        "follow-up",
+        "follow up",
+        "appointment",
+        "outpatient",
+        "clinic",
+        "pcp",
+        "ccu",
+        "icu",
+        "observation",
+        "transfer",
+        "post-procedure",
+        "cath lab",
+    ]
+    text_pool = []
+    text_pool.extend(str(p) for p in _list_field(soap, "plan.procedures"))
+    text_pool.extend(str(r) for r in _list_field(soap, "plan.referrals"))
+    combined = " ".join(text_pool).lower()
+    if any(term in combined for term in disposition_terms):
+        return None
+
+    return ComplianceFlag(
+        severity="warning",
+        domain="malpractice",
+        section="plan",
+        field="plan.follow_up",
+        rule_id="NO_FOLLOWUP",
+        message="No follow-up plan documented — specify follow-up timing and provider",
+        auto_fixable=True,
+        reference="Continuity of care documentation standard",
+    )
 
 
 def _check_no_red_flags(soap: dict) -> ComplianceFlag | None:
@@ -417,6 +584,10 @@ def _check_no_red_flags(soap: dict) -> ComplianceFlag | None:
     all_dx = dx + " " + " ".join(diff)
 
     if not any(kw in all_dx for kw in HIGH_ACUITY_KEYWORDS):
+        return None
+
+    # Return precautions are for discharge patients — admitted patients don't need them
+    if _is_patient_admitted(soap):
         return None
 
     education = [str(e).lower() for e in _list_field(soap, "plan.patient_education")]

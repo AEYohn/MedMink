@@ -1617,9 +1617,7 @@ class ClinicalCaseAnalyzer:
                 # to stay within NCBI's 3 req/s limit (with margin)
                 _pubmed_lock = asyncio.Lock()
 
-                async def _search_pubmed_direct(
-                    query: str, max_results: int = 10
-                ) -> list[dict]:
+                async def _search_pubmed_direct(query: str, max_results: int = 10) -> list[dict]:
                     """Search PubMed directly via E-utilities (no agent).
 
                     Serialized via _pubmed_lock to avoid 429 rate-limit
@@ -1644,9 +1642,7 @@ class ClinicalCaseAnalyzer:
                             "sort": "relevance",
                             **ident,
                         }
-                        async with httpx.AsyncClient(
-                            timeout=30.0
-                        ) as client:
+                        async with httpx.AsyncClient(timeout=30.0) as client:
                             resp = await client.get(
                                 f"{base}/esearch.fcgi",
                                 params=search_params,
@@ -1654,11 +1650,7 @@ class ClinicalCaseAnalyzer:
                             )
                             resp.raise_for_status()
 
-                        pmids = (
-                            resp.json()
-                            .get("esearchresult", {})
-                            .get("idlist", [])
-                        )
+                        pmids = resp.json().get("esearchresult", {}).get("idlist", [])
                         if not pmids:
                             return []
 
@@ -1673,9 +1665,7 @@ class ClinicalCaseAnalyzer:
                             "retmode": "xml",
                             **ident,
                         }
-                        async with httpx.AsyncClient(
-                            timeout=60.0
-                        ) as client:
+                        async with httpx.AsyncClient(timeout=60.0) as client:
                             resp = await client.get(
                                 f"{base}/efetch.fcgi",
                                 params=fetch_params,
@@ -1694,40 +1684,28 @@ class ClinicalCaseAnalyzer:
                         root = ElementTree.fromstring(resp.text)
                         for article in root.findall(".//PubmedArticle"):
                             pmid_el = article.find(".//PMID")
-                            title_el = article.find(
-                                ".//Article/ArticleTitle"
-                            )
-                            abstract_el = article.find(
-                                ".//Article/Abstract/AbstractText"
-                            )
+                            title_el = article.find(".//Article/ArticleTitle")
+                            abstract_el = article.find(".//Article/Abstract/AbstractText")
                             year_el = article.find(
-                                ".//Article/Journal/JournalIssue"
-                                "/PubDate/Year"
+                                ".//Article/Journal/JournalIssue" "/PubDate/Year"
                             )
                             # Authors
                             authors = []
-                            for au in article.findall(
-                                ".//Article/AuthorList/Author"
-                            )[:3]:
+                            for au in article.findall(".//Article/AuthorList/Author")[:3]:
                                 last = au.findtext("LastName", "")
                                 init = au.findtext("Initials", "")
                                 if last:
-                                    authors.append(
-                                        f"{last} {init}".strip()
-                                    )
+                                    authors.append(f"{last} {init}".strip())
                             # MeSH terms
                             mesh = [
                                 m.findtext("DescriptorName", "")
-                                for m in article.findall(
-                                    ".//MeshHeadingList/MeshHeading"
-                                )
+                                for m in article.findall(".//MeshHeadingList/MeshHeading")
                             ]
                             # Publication types
                             pub_types = [
                                 pt.text or ""
                                 for pt in article.findall(
-                                    ".//Article/PublicationTypeList"
-                                    "/PublicationType"
+                                    ".//Article/PublicationTypeList" "/PublicationType"
                                 )
                             ]
                             papers.append(
@@ -1742,18 +1720,14 @@ class ClinicalCaseAnalyzer:
                                 }
                             )
                     except ElementTree.ParseError as e:
-                        logger.warning(
-                            "Failed to parse PubMed XML", error=str(e)
-                        )
+                        logger.warning("Failed to parse PubMed XML", error=str(e))
                     return papers
 
                 async def _search_term(term: str) -> list[dict]:
                     """Search PubMed for a single term and filter results."""
                     results = []
                     try:
-                        found = await _search_pubmed_direct(
-                            query=term, max_results=10
-                        )
+                        found = await _search_pubmed_direct(query=term, max_results=10)
                         logger.info(
                             "PubMed direct search",
                             search_term=term,
@@ -1761,9 +1735,7 @@ class ClinicalCaseAnalyzer:
                             pmids=[p.get("pmid") for p in found],
                         )
 
-                        term_words = [
-                            w.lower() for w in term.split() if len(w) > 2
-                        ]
+                        term_words = [w.lower() for w in term.split() if len(w) > 2]
                         relevant = []
                         for p in found:
                             title_text = p.get("title") or ""
@@ -1786,11 +1758,7 @@ class ClinicalCaseAnalyzer:
                             relevant.append(p)
 
                         # Soft human-study filter
-                        human_only = [
-                            p
-                            for p in relevant
-                            if _is_human_clinical_study(p)
-                        ]
+                        human_only = [p for p in relevant if _is_human_clinical_study(p)]
                         if human_only:
                             results = human_only
                         elif relevant:
@@ -1798,8 +1766,7 @@ class ClinicalCaseAnalyzer:
                         elif found:
                             # Last resort: keep top PubMed results
                             logger.info(
-                                "All filters excluded every paper, "
-                                "keeping top PubMed results",
+                                "All filters excluded every paper, " "keeping top PubMed results",
                                 search_term=term,
                                 count=min(5, len(found)),
                             )
@@ -1815,9 +1782,7 @@ class ClinicalCaseAnalyzer:
                             error_type=type(e).__name__,
                             traceback=tb,
                         )
-                        search_errors.append(
-                            f"{term}: {type(e).__name__}: {e}"
-                        )
+                        search_errors.append(f"{term}: {type(e).__name__}: {e}")
                     return results
 
                 # Search all terms in parallel

@@ -51,14 +51,16 @@ class VectorStore:
         async with AsyncSessionLocal() as session:
             # Upsert the embedding
             await session.execute(
-                text("""
+                text(
+                    """
                     INSERT INTO paper_embeddings (paper_id, embedding, title, abstract_preview, created_at)
                     VALUES (:paper_id, :embedding, :title, :abstract_preview, NOW())
                     ON CONFLICT (paper_id) DO UPDATE SET
                         embedding = :embedding,
                         title = :title,
                         abstract_preview = :abstract_preview
-                """),
+                """
+                ),
                 {
                     "paper_id": paper_id,
                     "embedding": str(embedding),
@@ -84,7 +86,8 @@ class VectorStore:
 
         async with AsyncSessionLocal() as session:
             await session.execute(
-                text("""
+                text(
+                    """
                     INSERT INTO claim_embeddings (claim_id, paper_id, embedding, statement, category, created_at)
                     VALUES (:claim_id, :paper_id, :embedding, :statement, :category, NOW())
                     ON CONFLICT (claim_id) DO UPDATE SET
@@ -92,7 +95,8 @@ class VectorStore:
                         statement = :statement,
                         category = :category,
                         paper_id = :paper_id
-                """),
+                """
+                ),
                 {
                     "claim_id": claim_id,
                     "paper_id": paper_id,
@@ -119,7 +123,8 @@ class VectorStore:
 
         async with AsyncSessionLocal() as session:
             await session.execute(
-                text("""
+                text(
+                    """
                     INSERT INTO technique_embeddings (technique_id, embedding, name, description, formula, created_at)
                     VALUES (:technique_id, :embedding, :name, :description, :formula, NOW())
                     ON CONFLICT (technique_id) DO UPDATE SET
@@ -127,7 +132,8 @@ class VectorStore:
                         name = :name,
                         description = :description,
                         formula = :formula
-                """),
+                """
+                ),
                 {
                     "technique_id": technique_id,
                     "embedding": str(embedding),
@@ -150,7 +156,8 @@ class VectorStore:
         async with AsyncSessionLocal() as session:
             # Use cosine distance (<=>), convert to similarity (1 - distance)
             result = await session.execute(
-                text("""
+                text(
+                    """
                     SELECT
                         paper_id,
                         title,
@@ -160,7 +167,8 @@ class VectorStore:
                     WHERE 1 - (embedding <=> :query_embedding) >= :threshold
                     ORDER BY embedding <=> :query_embedding
                     LIMIT :limit
-                """),
+                """
+                ),
                 {
                     "query_embedding": str(query_embedding),
                     "threshold": threshold,
@@ -240,7 +248,8 @@ class VectorStore:
         """Search for similar techniques using cosine similarity."""
         async with AsyncSessionLocal() as session:
             result = await session.execute(
-                text("""
+                text(
+                    """
                     SELECT
                         technique_id,
                         name,
@@ -251,7 +260,8 @@ class VectorStore:
                     WHERE 1 - (embedding <=> :query_embedding) >= :threshold
                     ORDER BY embedding <=> :query_embedding
                     LIMIT :limit
-                """),
+                """
+                ),
                 {
                     "query_embedding": str(query_embedding),
                     "threshold": threshold,
@@ -333,7 +343,8 @@ class VectorStore:
 
             # Search excluding the source paper
             result = await session.execute(
-                text("""
+                text(
+                    """
                     SELECT
                         paper_id,
                         title,
@@ -344,7 +355,8 @@ class VectorStore:
                         AND 1 - (embedding <=> :query_embedding) >= :threshold
                     ORDER BY embedding <=> :query_embedding
                     LIMIT :limit
-                """),
+                """
+                ),
                 {
                     "query_embedding": str(embedding),
                     "source_paper_id": paper_id,

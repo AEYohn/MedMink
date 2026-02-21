@@ -521,10 +521,12 @@ class KnowledgeGraph:
         driver = await self._get_driver()
         async with driver.session() as session:
             # Get counts before deletion
-            stats_result = await session.run("""
+            stats_result = await session.run(
+                """
                 MATCH (n)
                 RETURN labels(n)[0] as label, count(n) as count
-            """)
+            """
+            )
             counts_before = {r["label"]: r["count"] for r in await stats_result.data()}
 
             # Delete all relationships first

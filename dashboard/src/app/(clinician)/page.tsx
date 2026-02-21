@@ -19,11 +19,14 @@ import {
   Clock,
   Shield,
   Activity,
+  Mail,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { getCaseSessions, CaseSession } from '@/lib/storage';
+import { getCaseSessions, CaseSession, getReleasedSummaries } from '@/lib/storage';
 import { getPatients, Patient, searchPatients, getPatientDisplayName } from '@/lib/patient-storage';
+import { PatientMessageQueue } from '@/components/postvisit/PatientMessageQueue';
+import { VitalAlertsFeed } from '@/components/postvisit/VitalAlertsFeed';
 
 export default function DashboardPage() {
   const [recentCases, setRecentCases] = useState<CaseSession[]>([]);
@@ -297,6 +300,16 @@ export default function DashboardPage() {
 
         {/* Right Column — 2/5 */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Patient Messages */}
+          <PatientMessageQueue
+            messages={[]}
+            onSendReply={async () => {}}
+            onGenerateDraft={async () => ''}
+          />
+
+          {/* Vital Alerts */}
+          <VitalAlertsFeed alerts={[]} />
+
           {/* Patient Search */}
           <div>
             <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-3 flex items-center gap-2">

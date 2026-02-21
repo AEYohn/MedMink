@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   X,
   Send,
@@ -9,17 +10,20 @@ import {
   Stethoscope,
   FileText,
   Info,
+  Sparkles,
+  Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { ReleasedVisitSummary } from '@/types/visit-summary';
+import type { CompanionConfig } from '@/types/postvisit';
 
 interface PatientSummaryPreviewProps {
   isOpen: boolean;
   onClose: () => void;
-  onRelease: () => void;
+  onRelease: (companionConfig?: CompanionConfig) => void;
   summary: ReleasedVisitSummary | null;
   isReleasing?: boolean;
   hasDischargePlan: boolean;
@@ -45,6 +49,10 @@ export function PatientSummaryPreview({
   isReleasing,
   hasDischargePlan,
 }: PatientSummaryPreviewProps) {
+  const [blockedTopics, setBlockedTopics] = useState('');
+  const [clinicianNotes, setClinicianNotes] = useState('');
+  const [evidenceEnabled, setEvidenceEnabled] = useState(true);
+
   if (!isOpen || !summary) return null;
 
   return (
@@ -233,13 +241,69 @@ export function PatientSummaryPreview({
             </Card>
           )}
 
+          {/* PostVisit AI Companion Config */}
+          <Card className="border-indigo-200 dark:border-indigo-800">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2 text-indigo-700 dark:text-indigo-400">
+                <Sparkles className="w-4 h-4" />
+                PostVisit AI Companion Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Blocked Topics (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  value={blockedTopics}
+                  onChange={(e) => setBlockedTopics(e.target.value)}
+                  placeholder="e.g., prognosis, surgery options"
+                  className="w-full px-3 py-1.5 bg-background border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  AI will redirect patients to discuss these topics with you directly
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  <Shield className="w-3 h-3 inline mr-1" />
+                  Private Notes to AI
+                </label>
+                <textarea
+                  value={clinicianNotes}
+                  onChange={(e) => setClinicianNotes(e.target.value)}
+                  placeholder="e.g., Patient is anxious about diagnosis, be extra reassuring"
+                  rows={2}
+                  className="w-full px-3 py-1.5 bg-background border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                />
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Only the AI sees these — helps it tailor responses (never shown to patient)
+                </p>
+              </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={evidenceEnabled}
+                  onChange={(e) => setEvidenceEnabled(e.target.checked)}
+                  className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                Enable PubMed evidence search in companion responses
+              </label>
+            </CardContent>
+          </Card>
+
           {/* Footer */}
           <div className="flex justify-end gap-3 pt-2 border-t">
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <Button
-              onClick={onRelease}
+              onClick={() => onRelease({
+                blockedTopics: blockedTopics ? blockedTopics.split(',').map(t => t.trim()).filter(Boolean) : undefined,
+                clinicianNotesToAi: clinicianNotes || undefined,
+                evidenceSearchEnabled: evidenceEnabled,
+              })}
               disabled={isReleasing}
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >

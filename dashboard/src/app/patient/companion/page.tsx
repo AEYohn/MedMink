@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, FormEvent, useCallback, useMemo } from 'react';
+import Link from 'next/link';
 import {
   MessageCircle,
   Send,
@@ -14,6 +15,7 @@ import {
   UserRound,
   Stethoscope,
   HelpCircle,
+  ArrowRight,
 } from 'lucide-react';
 import { getReleasedSummaries, savePatientQuestion, getPatientQuestionsForSummary } from '@/lib/storage';
 import { ExplainableText } from '@/components/patient/terms/ExplainableText';
@@ -368,6 +370,20 @@ export default function CompanionPage() {
     <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-8rem)]">
       {/* Left panel: Chat */}
       <div className="flex flex-col flex-1 min-w-0">
+        {/* PostVisit AI upgrade banner */}
+        {summary && (
+          <Link
+            href={`/patient/postvisit/${summary.id}`}
+            className="flex items-center justify-between px-4 py-3 mb-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 transition-all shadow-sm"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              <span className="text-sm font-medium">Try PostVisit AI — enhanced companion with vitals tracking & evidence</span>
+            </div>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        )}
+
         {/* Header */}
         <div className="rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 p-4 mb-3">
           <div className="flex items-start gap-3">

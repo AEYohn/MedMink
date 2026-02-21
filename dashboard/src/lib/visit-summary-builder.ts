@@ -1,6 +1,7 @@
 import type { ReleasedVisitSummary, PatientMedication, PatientFollowUp } from '@/types/visit-summary';
 import type { CaseAnalysisData } from '@/types/case';
 import type { ClinicianOverrides, DischargeMedOverride } from '@/lib/storage';
+import type { CompanionConfig } from '@/types/postvisit';
 
 export interface DischargePlanSnapshot {
   follow_up?: Array<{ timeframe: string; provider: string; reason: string }>;
@@ -16,6 +17,7 @@ interface BuildVisitSummaryParams {
   dischargePlan: DischargePlanSnapshot | null;
   visitDate: string;
   releasedBy?: string;
+  companionConfig?: CompanionConfig;
 }
 
 function buildPlainLanguage(med: DischargeMedOverride): string {
@@ -64,6 +66,7 @@ export function buildVisitSummary({
   dischargePlan,
   visitDate,
   releasedBy = 'Clinician',
+  companionConfig,
 }: BuildVisitSummaryParams): ReleasedVisitSummary {
   return {
     id: `vs-${Date.now()}`,
@@ -80,5 +83,6 @@ export function buildVisitSummary({
     releasedBy,
     visitDate,
     status: 'released',
+    companionConfig,
   };
 }

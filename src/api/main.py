@@ -29,6 +29,7 @@ from src.api.routes import (
     patient,
     patients_crud,
     patterns,
+    postvisit,
     projects,
     review,
     search,
@@ -132,6 +133,7 @@ app.include_router(encounters.router)
 app.include_router(documents.router)
 app.include_router(ems.router)
 app.include_router(compliance.router)
+app.include_router(postvisit.router)
 
 
 # WebSocket connection manager

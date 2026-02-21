@@ -386,6 +386,10 @@ export function getReleasedSummaryBySession(sessionId: string): ReleasedVisitSum
   return getReleasedSummaries().find(s => s.caseSessionId === sessionId);
 }
 
+export function getReleasedSummaryById(id: string): ReleasedVisitSummary | undefined {
+  return getReleasedSummaries().find(s => s.id === id);
+}
+
 export function revokeReleasedSummary(id: string): void {
   const summaries = getReleasedSummaries();
   const index = summaries.findIndex(s => s.id === id);

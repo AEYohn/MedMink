@@ -177,14 +177,12 @@ async def get_conversation(conversation_id: str) -> ConversationResponse:
 
             # Get messages
             result = await session.execute(
-                text(
-                    """
+                text("""
                     SELECT id, role, content, sources, created_at
                     FROM chat_messages
                     WHERE conversation_id = :conversation_id
                     ORDER BY created_at ASC
-                """
-                ),
+                """),
                 {"conversation_id": conversation_id},
             )
             rows = result.fetchall()
@@ -243,15 +241,13 @@ async def _get_conversation_history(
     try:
         async with AsyncSessionLocal() as session:
             result = await session.execute(
-                text(
-                    """
+                text("""
                     SELECT role, content
                     FROM chat_messages
                     WHERE conversation_id = :conversation_id
                     ORDER BY created_at DESC
                     LIMIT :limit
-                """
-                ),
+                """),
                 {"conversation_id": conversation_id, "limit": limit},
             )
             rows = result.fetchall()
@@ -274,13 +270,11 @@ async def _store_message(
         async with AsyncSessionLocal() as session:
             # Ensure conversation exists
             await session.execute(
-                text(
-                    """
+                text("""
                     INSERT INTO chat_conversations (id, created_at, updated_at)
                     VALUES (:id, NOW(), NOW())
                     ON CONFLICT (id) DO UPDATE SET updated_at = NOW()
-                """
-                ),
+                """),
                 {"id": conversation_id},
             )
 
@@ -288,12 +282,10 @@ async def _store_message(
             import json
 
             await session.execute(
-                text(
-                    """
+                text("""
                     INSERT INTO chat_messages (id, conversation_id, role, content, sources, created_at)
                     VALUES (:id, :conversation_id, :role, :content, :sources, NOW())
-                """
-                ),
+                """),
                 {
                     "id": message_id,
                     "conversation_id": conversation_id,

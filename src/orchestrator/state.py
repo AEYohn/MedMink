@@ -65,13 +65,11 @@ class OrchestratorState:
     async def _create_initial_state(self, session: AsyncSession) -> None:
         """Create initial state record."""
         await session.execute(
-            text(
-                """
+            text("""
                 INSERT INTO orchestrator_state (id, state, last_heartbeat)
                 VALUES (:id, :state, NOW())
                 ON CONFLICT (id) DO UPDATE SET state = :state
-            """
-            ),
+            """),
             {"id": self.state_id, "state": json_dumps(self._state)},
         )
         await session.commit()
@@ -80,13 +78,11 @@ class OrchestratorState:
         """Save state to database."""
         async with AsyncSessionLocal() as session:
             await session.execute(
-                text(
-                    """
+                text("""
                     UPDATE orchestrator_state
                     SET state = :state, last_heartbeat = NOW()
                     WHERE id = :id
-                """
-                ),
+                """),
                 {"id": self.state_id, "state": json_dumps(self._state)},
             )
             await session.commit()
@@ -96,13 +92,11 @@ class OrchestratorState:
         """Update heartbeat timestamp."""
         async with AsyncSessionLocal() as session:
             await session.execute(
-                text(
-                    """
+                text("""
                     UPDATE orchestrator_state
                     SET last_heartbeat = NOW()
                     WHERE id = :id
-                """
-                ),
+                """),
                 {"id": self.state_id},
             )
             await session.commit()
@@ -129,12 +123,10 @@ class TaskQueue:
         """Add a task to the queue."""
         async with AsyncSessionLocal() as session:
             await session.execute(
-                text(
-                    """
+                text("""
                     INSERT INTO tasks (id, type, status, priority, payload, created_at)
                     VALUES (:id, :type, :status, :priority, :payload, NOW())
-                """
-                ),
+                """),
                 {
                     "id": task.id,
                     "type": task.type.value,
@@ -151,18 +143,14 @@ class TaskQueue:
     async def get_next(self) -> Task | None:
         """Get the next task to execute (highest priority, oldest first)."""
         async with AsyncSessionLocal() as session:
-            result = await session.execute(
-                text(
-                    """
+            result = await session.execute(text("""
                     SELECT id, type, status, priority, payload, created_at, retry_count
                     FROM tasks
                     WHERE status = 'pending'
                     ORDER BY priority DESC, created_at ASC
                     LIMIT 1
                     FOR UPDATE SKIP LOCKED
-                """
-                )
-            )
+                """))
             row = result.fetchone()
 
             if not row:
@@ -170,13 +158,11 @@ class TaskQueue:
 
             # Mark as in progress
             await session.execute(
-                text(
-                    """
+                text("""
                     UPDATE tasks
                     SET status = 'in_progress', started_at = NOW()
                     WHERE id = :id
-                """
-                ),
+                """),
                 {"id": row[0]},
             )
             await session.commit()
@@ -197,13 +183,11 @@ class TaskQueue:
         """Mark a task as completed."""
         async with AsyncSessionLocal() as session:
             await session.execute(
-                text(
-                    """
+                text("""
                     UPDATE tasks
                     SET status = 'completed', result = :result, completed_at = NOW()
                     WHERE id = :id
-                """
-                ),
+                """),
                 {"id": task_id, "result": json_dumps(result)},
             )
             await session.commit()
@@ -225,13 +209,11 @@ class TaskQueue:
                 if retry_count < 3:
                     # Re-queue the task
                     await session.execute(
-                        text(
-                            """
+                        text("""
                             UPDATE tasks
                             SET status = 'pending', error = :error, retry_count = retry_count + 1
                             WHERE id = :id
-                        """
-                        ),
+                        """),
                         {"id": task_id, "error": error},
                     )
                     logger.info(
@@ -240,25 +222,21 @@ class TaskQueue:
                 else:
                     # Max retries reached
                     await session.execute(
-                        text(
-                            """
+                        text("""
                             UPDATE tasks
                             SET status = 'failed', error = :error, completed_at = NOW()
                             WHERE id = :id
-                        """
-                        ),
+                        """),
                         {"id": task_id, "error": error},
                     )
                     logger.warning("Task failed after max retries", task_id=task_id)
             else:
                 await session.execute(
-                    text(
-                        """
+                    text("""
                         UPDATE tasks
                         SET status = 'failed', error = :error, completed_at = NOW()
                         WHERE id = :id
-                    """
-                    ),
+                    """),
                     {"id": task_id, "error": error},
                 )
                 logger.warning("Task failed", task_id=task_id)
@@ -284,18 +262,14 @@ class TaskQueue:
     async def get_stats(self) -> dict[str, Any]:
         """Get task queue statistics."""
         async with AsyncSessionLocal() as session:
-            result = await session.execute(
-                text(
-                    """
+            result = await session.execute(text("""
                     SELECT
                         status,
                         COUNT(*) as count
                     FROM tasks
                     WHERE created_at > NOW() - INTERVAL '24 hours'
                     GROUP BY status
-                """
-                )
-            )
+                """))
             rows = result.fetchall()
 
             stats = {"pending": 0, "in_progress": 0, "completed": 0, "failed": 0}
@@ -312,16 +286,14 @@ class ThoughtSignatureStore:
         """Save a thought signature."""
         async with AsyncSessionLocal() as session:
             await session.execute(
-                text(
-                    """
+                text("""
                     INSERT INTO thought_signatures
                     (id, agent_name, task_id, context_summary, decision_made,
                      reasoning, confidence, assumptions, expected_outcomes, created_at)
                     VALUES
                     (:id, :agent_name, :task_id, :context_summary, :decision_made,
                      :reasoning, :confidence, :assumptions, :expected_outcomes, NOW())
-                """
-                ),
+                """),
                 {
                     "id": signature.id,
                     "agent_name": signature.agent_name,
@@ -346,25 +318,21 @@ class ThoughtSignatureStore:
         async with AsyncSessionLocal() as session:
             if agent_name:
                 result = await session.execute(
-                    text(
-                        """
+                    text("""
                         SELECT * FROM thought_signatures
                         WHERE agent_name = :agent_name
                         ORDER BY created_at DESC
                         LIMIT :limit
-                    """
-                    ),
+                    """),
                     {"agent_name": agent_name, "limit": limit},
                 )
             else:
                 result = await session.execute(
-                    text(
-                        """
+                    text("""
                         SELECT * FROM thought_signatures
                         ORDER BY created_at DESC
                         LIMIT :limit
-                    """
-                    ),
+                    """),
                     {"limit": limit},
                 )
 
@@ -391,13 +359,11 @@ class ThoughtSignatureStore:
         """Update actual outcomes for a thought signature."""
         async with AsyncSessionLocal() as session:
             await session.execute(
-                text(
-                    """
+                text("""
                     UPDATE thought_signatures
                     SET actual_outcomes = :outcomes
                     WHERE id = :id
-                """
-                ),
+                """),
                 {"id": signature_id, "outcomes": json_dumps(outcomes)},
             )
             await session.commit()

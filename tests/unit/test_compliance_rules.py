@@ -38,7 +38,6 @@ from src.medgemma.compliance_engine import (  # noqa: E402
     run_deterministic_validation,
 )
 
-
 # ---------- Fixtures ----------
 
 FIXTURE_DIR = Path(__file__).resolve().parent.parent.parent / "demo" / "fixtures" / "charting"

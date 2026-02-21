@@ -6,6 +6,7 @@ from datetime import datetime
 from sqlalchemy import (
     Column,
     DateTime,
+    Float,
     ForeignKey,
     Integer,
     String,
@@ -143,3 +144,49 @@ class LabResult(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     encounter = relationship("Encounter", back_populates="labs")
+
+
+# ---------------------------------------------------------------------------
+# PostVisit AI models
+# ---------------------------------------------------------------------------
+
+
+class VitalReading(Base):
+    __tablename__ = "vital_readings"
+
+    id = Column(Uuid, primary_key=True, default=uuid.uuid4)
+    patient_id = Column(Uuid, ForeignKey("patients.id"), index=True)
+    vital_type = Column(String(50), nullable=False)
+    value = Column(Float, nullable=False)
+    unit = Column(String(20))
+    recorded_at = Column(DateTime, nullable=False)
+    source = Column(String(20), default="manual")
+    notes = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class PostVisitMessage(Base):
+    __tablename__ = "postvisit_messages"
+
+    id = Column(Uuid, primary_key=True, default=uuid.uuid4)
+    summary_id = Column(String(100), nullable=False, index=True)
+    patient_id = Column(Uuid, ForeignKey("patients.id"), index=True)
+    sender = Column(String(20), nullable=False)  # patient, clinician, system
+    content = Column(Text, nullable=False)
+    ai_draft = Column(Text)
+    status = Column(String(20), default="sent")  # sent, read, replied
+    evidence_refs = Column(JSONB, default=list)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    read_at = Column(DateTime)
+    replied_at = Column(DateTime)
+
+
+class PostVisitConversation(Base):
+    __tablename__ = "postvisit_conversations"
+
+    id = Column(Uuid, primary_key=True, default=uuid.uuid4)
+    summary_id = Column(String(100), nullable=False, index=True)
+    patient_id = Column(Uuid, ForeignKey("patients.id"), index=True)
+    messages = Column(JSONB, default=list)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

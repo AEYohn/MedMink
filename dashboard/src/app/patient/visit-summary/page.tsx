@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   FileText,
   Stethoscope,
@@ -10,11 +11,15 @@ import {
   ChevronDown,
   CheckCircle2,
   Clock,
+  Sparkles,
 } from 'lucide-react';
 import { getReleasedSummaries } from '@/lib/storage';
-import { cn } from '@/lib/utils';
 import type { ReleasedVisitSummary } from '@/types/visit-summary';
 import { ExplainableText } from '@/components/patient/terms/ExplainableText';
+
+function cn(...classes: (string | undefined | false)[]) {
+  return classes.filter(Boolean).join(' ');
+}
 
 const actionBadge: Record<string, string> = {
   continue: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
@@ -257,11 +262,18 @@ function SummaryCard({
           )}
 
           {/* Approved by */}
-          <div className="pt-2 border-t border-surface-100 dark:border-surface-700">
+          <div className="pt-2 border-t border-surface-100 dark:border-surface-700 flex items-center justify-between">
             <p className="text-xs text-surface-500 dark:text-surface-400">
               Approved by {summary.releasedBy} on{' '}
               {new Date(summary.releasedAt).toLocaleString()}
             </p>
+            <Link
+              href={`/patient/postvisit/${summary.id}`}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg text-xs font-medium transition-all shadow-sm"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Open PostVisit AI
+            </Link>
           </div>
         </div>
       )}

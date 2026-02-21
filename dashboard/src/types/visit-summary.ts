@@ -1,5 +1,7 @@
 // Types for patient-facing visit summaries released by clinicians
 
+import type { CompanionConfig } from './postvisit';
+
 export interface PatientMedication {
   name: string;
   dose: string;
@@ -29,4 +31,5 @@ export interface ReleasedVisitSummary {
   releasedBy: string;
   visitDate: string;
   status: 'released' | 'revoked';
+  companionConfig?: CompanionConfig;
 }

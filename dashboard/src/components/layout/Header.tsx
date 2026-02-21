@@ -13,8 +13,10 @@ import {
   Eye,
   MessageCircle,
   Menu,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { useReferralNotifications } from '@/hooks/useReferralNotifications';
+import { useRole } from '@/contexts/RoleContext';
 
 interface HeaderProps {
   onOpenCommandPalette: () => void;
@@ -27,6 +29,7 @@ export function Header({ onOpenCommandPalette, onMobileMenuToggle }: HeaderProps
   const router = useRouter();
 
   const { notifications, unreadCount, markAsRead } = useReferralNotifications();
+  const { roleConfig, clearRole } = useRole();
 
   // Close notifications on outside click — no viewport-blocking overlay
   useEffect(() => {
@@ -78,6 +81,13 @@ export function Header({ onOpenCommandPalette, onMobileMenuToggle }: HeaderProps
           <p className="text-2xs text-muted-foreground -mt-0.5 tracking-wide uppercase">Clinical Intelligence</p>
         </div>
       </Link>
+
+      {/* Role Badge */}
+      {roleConfig && (
+        <span className="hidden lg:inline-flex px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-semibold uppercase tracking-wider">
+          {roleConfig.label}
+        </span>
+      )}
 
       {/* Command Bar */}
       <button
@@ -176,12 +186,13 @@ export function Header({ onOpenCommandPalette, onMobileMenuToggle }: HeaderProps
           <Settings className="w-4 h-4" />
         </Link>
 
-        {/* User Avatar */}
-        <button className="flex items-center gap-1.5 p-1 pl-1 pr-2.5 hover:bg-muted rounded-lg transition-colors ml-1">
-          <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground text-xs font-semibold shadow-sm">
-            R
-          </div>
-          <ChevronDown className="w-3 h-3 text-muted-foreground" />
+        {/* Switch Role */}
+        <button
+          onClick={clearRole}
+          className="flex items-center gap-1.5 p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+          title="Switch Role"
+        >
+          <ArrowLeftRight className="w-4 h-4" />
         </button>
       </div>
     </header>

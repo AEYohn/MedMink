@@ -195,36 +195,6 @@ export default function DashboardPage() {
                   <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/20 group-hover:text-primary/40 group-hover:translate-x-0.5 transition-all" />
                 </div>
               </Link>
-
-              <Link href="/imaging" className="group">
-                <div className="relative rounded-xl border border-border bg-card p-4 hover:border-primary/30 hover:shadow-sm transition-all overflow-hidden">
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-chart-3/10 flex items-center justify-center flex-shrink-0">
-                      <Camera className="w-4 h-4 text-chart-3" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Medical Imaging</p>
-                      <p className="text-[11px] text-muted-foreground/60 mt-0.5">Upload & classify</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/20 group-hover:text-primary/40 group-hover:translate-x-0.5 transition-all" />
-                </div>
-              </Link>
-
-              <Link href="/labs" className="group">
-                <div className="relative rounded-xl border border-border bg-card p-4 hover:border-primary/30 hover:shadow-sm transition-all overflow-hidden">
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-chart-4/10 flex items-center justify-center flex-shrink-0">
-                      <Beaker className="w-4 h-4 text-chart-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Lab Reports</p>
-                      <p className="text-[11px] text-muted-foreground/60 mt-0.5">Extract & analyze</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/20 group-hover:text-primary/40 group-hover:translate-x-0.5 transition-all" />
-                </div>
-              </Link>
             </div>
           </div>
 
@@ -360,38 +330,6 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-3">Quick Links</h2>
-            <div className="space-y-1.5">
-              <Link href="/patients/new" className="group">
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-card hover:border-primary/20 transition-all">
-                  <div className="w-8 h-8 rounded-md bg-primary/8 flex items-center justify-center">
-                    <Plus className="w-3.5 h-3.5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium group-hover:text-primary transition-colors">Add New Patient</p>
-                    <p className="text-[11px] text-muted-foreground/50">Register a new patient</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/20" />
-                </div>
-              </Link>
-
-              <Link href="/documents" className="group">
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-card hover:border-primary/20 transition-all">
-                  <div className="w-8 h-8 rounded-md bg-chart-4/10 flex items-center justify-center">
-                    <FileText className="w-3.5 h-3.5 text-chart-4" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium group-hover:text-primary transition-colors">Documents</p>
-                    <p className="text-[11px] text-muted-foreground/50">Clinical documents & notes</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground/20" />
-                </div>
-              </Link>
             </div>
           </div>
 

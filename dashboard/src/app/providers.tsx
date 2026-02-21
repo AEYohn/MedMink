@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 import { ThemeProvider } from 'next-themes';
+import { RoleProvider } from '@/contexts/RoleContext';
 import { SearchProvider } from '@/contexts/SearchContext';
 import { ChatProvider } from '@/contexts/ChatContext';
 import { ProgressProvider } from '@/contexts/ProgressContext';
@@ -13,13 +14,15 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <SearchProvider>
-        <ChatProvider>
-          <ProgressProvider>
-            {children}
-          </ProgressProvider>
-        </ChatProvider>
-      </SearchProvider>
+      <RoleProvider>
+        <SearchProvider>
+          <ChatProvider>
+            <ProgressProvider>
+              {children}
+            </ProgressProvider>
+          </ChatProvider>
+        </SearchProvider>
+      </RoleProvider>
     </ThemeProvider>
   );
 }

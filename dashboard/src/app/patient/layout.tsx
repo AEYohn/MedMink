@@ -1,27 +1,23 @@
 'use client';
 
-import { ReactNode, useState, useRef, useEffect } from 'react';
+import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Heart,
   Stethoscope,
   Pill,
-  Calendar,
   FileText,
-  Home,
   Menu,
   X,
-  User,
   ChevronRight,
-  Mic,
   MessageCircle,
-  Activity,
-  BookOpen,
-  ChevronDown,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { HealthContextProvider } from '@/components/patient/HealthContextProvider';
 import { MedicalTermProvider } from '@/components/patient/terms/MedicalTermProvider';
+import { RoleGate } from '@/components/shared/RoleGate';
+import { useRole } from '@/contexts/RoleContext';
 
 interface PatientLayoutProps {
   children: ReactNode;
@@ -29,16 +25,10 @@ interface PatientLayoutProps {
 
 const primaryNav = [
   {
-    href: '/patient/symptoms',
-    label: 'Symptoms',
-    icon: Stethoscope,
-    description: 'AI-powered symptom analysis',
-  },
-  {
-    href: '/patient/scribe',
-    label: 'Visit Scribe',
-    icon: Mic,
-    description: 'Record & understand your visit',
+    href: '/patient/visit-summary',
+    label: 'Visit Summary',
+    icon: FileText,
+    description: 'Doctor-approved visit notes',
   },
   {
     href: '/patient/companion',
@@ -47,63 +37,26 @@ const primaryNav = [
     description: 'Ask about your health',
   },
   {
-    href: '/patient/visit-summary',
-    label: 'Visit Summary',
-    icon: FileText,
-    description: 'Doctor-approved visit notes',
+    href: '/patient/symptoms',
+    label: 'Symptom Check',
+    icon: Stethoscope,
+    description: 'AI-powered symptom analysis',
   },
-];
-
-const moreNav = [
   {
     href: '/patient/medications',
     label: 'Medications',
     icon: Pill,
     description: 'Track medications & interactions',
   },
-  {
-    href: '/patient/labs',
-    label: 'Labs & Vitals',
-    icon: Activity,
-    description: 'View results & trends',
-  },
-  {
-    href: '/patient/appointments',
-    label: 'Appointments',
-    icon: Calendar,
-    description: 'Book & manage visits',
-  },
-  {
-    href: '/patient/guidelines',
-    label: 'Guidelines',
-    icon: BookOpen,
-    description: 'Evidence-based health info',
-  },
 ];
-
-const allNav = [...primaryNav, ...moreNav];
 
 export default function PatientLayout({ children }: PatientLayoutProps) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMoreOpen, setIsMoreOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement>(null);
-
-  // Close "More" dropdown on outside click
-  useEffect(() => {
-    if (!isMoreOpen) return;
-    function handleClick(e: MouseEvent) {
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
-        setIsMoreOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [isMoreOpen]);
-
-  const isMoreActive = moreNav.some((item) => pathname === item.href);
+  const { clearRole } = useRole();
 
   return (
+    <RoleGate allowedRoles={['patient']}>
     <HealthContextProvider>
       <MedicalTermProvider>
         <div className="min-h-screen bg-surface-50 dark:bg-surface-900">
@@ -112,7 +65,7 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between h-16">
                 {/* Logo */}
-                <Link href="/patient/symptoms" className="flex items-center gap-3">
+                <Link href="/patient/visit-summary" className="flex items-center gap-3">
                   <div className="p-2 bg-gradient-to-br from-rose-500 to-pink-500 rounded-xl">
                     <Heart className="w-6 h-6 text-white" />
                   </div>
@@ -145,63 +98,16 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
                       </Link>
                     );
                   })}
-
-                  {/* More dropdown */}
-                  <div ref={moreRef} className="relative">
-                    <button
-                      onClick={() => setIsMoreOpen(!isMoreOpen)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isMoreActive
-                          ? 'bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400'
-                          : 'text-surface-600 hover:text-surface-900 hover:bg-surface-100 dark:text-surface-400 dark:hover:text-white dark:hover:bg-surface-700'
-                      }`}
-                    >
-                      More
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 transition-transform ${isMoreOpen ? 'rotate-180' : ''}`}
-                      />
-                    </button>
-                    {isMoreOpen && (
-                      <div className="absolute right-0 mt-1 w-56 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 shadow-lg py-1 z-50">
-                        {moreNav.map((item) => {
-                          const isActive = pathname === item.href;
-                          return (
-                            <Link
-                              key={item.href}
-                              href={item.href}
-                              onClick={() => setIsMoreOpen(false)}
-                              className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                                isActive
-                                  ? 'bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400'
-                                  : 'text-surface-700 hover:bg-surface-50 dark:text-surface-300 dark:hover:bg-surface-700'
-                              }`}
-                            >
-                              <item.icon className="w-4 h-4" />
-                              <div>
-                                <p className="font-medium">{item.label}</p>
-                                <p className="text-xs text-surface-500 dark:text-surface-400">
-                                  {item.description}
-                                </p>
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
                 </nav>
 
                 {/* Right side */}
                 <div className="flex items-center gap-3">
-                  <Link
-                    href="/"
-                    className="hidden sm:flex items-center gap-1 text-sm text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
+                  <button
+                    onClick={clearRole}
+                    className="hidden sm:flex items-center gap-1.5 text-sm text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200 transition-colors"
                   >
-                    <Home className="w-4 h-4" />
-                    Dashboard
-                  </Link>
-                  <button className="p-2 text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-lg">
-                    <User className="w-5 h-5" />
+                    <ArrowLeftRight className="w-4 h-4" />
+                    Switch Role
                   </button>
 
                   {/* Mobile menu button */}
@@ -219,11 +125,11 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
               </div>
             </div>
 
-            {/* Mobile Navigation — all 8 items flat */}
+            {/* Mobile Navigation */}
             {isMobileMenuOpen && (
               <div className="md:hidden border-t border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800">
                 <nav className="px-4 py-3 space-y-1">
-                  {allNav.map((item) => {
+                  {primaryNav.map((item) => {
                     const isActive = pathname === item.href;
                     return (
                       <Link
@@ -271,6 +177,17 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
                       </Link>
                     );
                   })}
+
+                  {/* Switch Role in mobile menu */}
+                  <button
+                    onClick={() => { clearRole(); setIsMobileMenuOpen(false); }}
+                    className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-surface-50 dark:hover:bg-surface-700 transition-colors"
+                  >
+                    <div className="p-2 rounded-lg bg-surface-100 dark:bg-surface-700">
+                      <ArrowLeftRight className="w-5 h-5 text-surface-500 dark:text-surface-400" />
+                    </div>
+                    <p className="font-medium text-surface-900 dark:text-white">Switch Role</p>
+                  </button>
                 </nav>
               </div>
             )}
@@ -292,5 +209,6 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
         </div>
       </MedicalTermProvider>
     </HealthContextProvider>
+    </RoleGate>
   );
 }

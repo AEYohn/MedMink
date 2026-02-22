@@ -1,0 +1,108 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Pill, Activity, Calendar, ChevronDown, ChevronUp, ClipboardCheck, HeartPulse } from 'lucide-react';
+import { useSelectedSummaryContext } from '@/contexts/SelectedSummaryContext';
+import { usePostVisitContext } from '@/contexts/PostVisitContext';
+import { CareHubMedications } from '@/components/care-hub/CareHubMedications';
+import { CareHubLabs } from '@/components/care-hub/CareHubLabs';
+import { CareHubAppointments } from '@/components/care-hub/CareHubAppointments';
+import { useRouter } from 'next/navigation';
+
+function Section({
+  icon: Icon,
+  title,
+  defaultOpen = true,
+  children,
+}: {
+  icon: typeof Pill;
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <Icon className="w-5 h-5 text-teal-600" />
+          <span className="text-sm font-semibold text-slate-900">{title}</span>
+        </div>
+        {open ? (
+          <ChevronUp className="w-4 h-4 text-slate-400" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-slate-400" />
+        )}
+      </button>
+      {open && (
+        <div className="border-t border-slate-100 p-4">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function MyHealthPage() {
+  const { selectedSummary } = useSelectedSummaryContext();
+  const postVisit = usePostVisitContext();
+  const router = useRouter();
+
+  // Trigger vitals loading when page mounts
+  useEffect(() => {
+    postVisit.setActiveTab('tracker');
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!selectedSummary) {
+    return (
+      <div className="text-center py-16">
+        <HeartPulse className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+        <h2 className="text-lg font-semibold text-slate-900 mb-2">No Health Data Yet</h2>
+        <p className="text-sm text-slate-500 mb-6">
+          Complete a check-in and visit to see your health information.
+        </p>
+        <Link
+          href="/patient/checkin"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white font-medium rounded-xl hover:bg-teal-700 transition-colors"
+        >
+          <ClipboardCheck className="w-5 h-5" />
+          Start Check-in
+        </Link>
+      </div>
+    );
+  }
+
+  const handleAskAI = (question: string) => {
+    router.push('/patient/messages');
+  };
+
+  return (
+    <div className="space-y-4">
+      <Section icon={Pill} title="Medications" defaultOpen={true}>
+        <CareHubMedications summary={selectedSummary} onAskAI={handleAskAI} />
+      </Section>
+
+      <Section icon={Activity} title="Labs & Vitals" defaultOpen={true}>
+        <CareHubLabs
+          summary={selectedSummary}
+          vitals={postVisit.vitals}
+          vitalTrends={postVisit.vitalTrends}
+          vitalAnalysis={postVisit.vitalAnalysis}
+          onLogVital={postVisit.logVital}
+          onImport={postVisit.importVitals}
+          onAnalyze={postVisit.analyzeVitals}
+          vitalsLoading={postVisit.vitalsLoading}
+        />
+      </Section>
+
+      <Section icon={Calendar} title="Appointments" defaultOpen={false}>
+        <CareHubAppointments summary={selectedSummary} />
+      </Section>
+    </div>
+  );
+}

@@ -73,7 +73,13 @@ const LANGUAGES = [
   { code: 'ar', label: 'العربية (Arabic)', bcp47: 'ar-SA' },
 ];
 
-export function CareHubIntake() {
+export function CareHubIntake({
+  onComplete,
+  onBack,
+}: {
+  onComplete?: () => void;
+  onBack?: () => void;
+} = {}) {
   const router = useRouter();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -161,6 +167,7 @@ export function CareHubIntake() {
         conversationSummary: triage.chief_complaint || 'Patient intake completed',
         source: 'patient-intake',
       });
+      onComplete?.();
     }
   }, [triage, sessionId, saved]);
 

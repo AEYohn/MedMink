@@ -1,261 +1,258 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import {
-  Home,
-  FileText,
+  ClipboardCheck,
   Pill,
   Activity,
-  Calendar,
   MessageCircle,
-  Mail,
-  Mic,
-  ChevronDown,
-  Heart,
   Sparkles,
-  ClipboardList,
+  AlertTriangle,
+  Calendar,
+  ArrowRight,
+  CheckCircle2,
 } from 'lucide-react';
-import { getReleasedSummaries, getReleasedSummariesForPatient } from '@/lib/storage';
-import { getPatient } from '@/lib/patient-storage';
-import { usePatientView } from '@/contexts/PatientViewContext';
-import { usePostVisit } from '@/hooks/usePostVisit';
-import { CareHubHome } from '@/components/care-hub/CareHubHome';
-import { PostVisitOverview } from '@/components/postvisit/PostVisitOverview';
-import { PostVisitChat } from '@/components/postvisit/PostVisitChat';
-import { PostVisitMessages } from '@/components/postvisit/PostVisitMessages';
-import { VitalsTracker } from '@/components/postvisit/VitalsTracker';
-import { CareHubMedications } from '@/components/care-hub/CareHubMedications';
-import { CareHubLabs } from '@/components/care-hub/CareHubLabs';
-import { CareHubAppointments } from '@/components/care-hub/CareHubAppointments';
-import { CareHubScribe } from '@/components/care-hub/CareHubScribe';
-import { CareHubIntake } from '@/components/care-hub/CareHubIntake';
-import type { ReleasedVisitSummary } from '@/types/visit-summary';
+import { useSelectedSummaryContext } from '@/contexts/SelectedSummaryContext';
+import { usePostVisitContext } from '@/contexts/PostVisitContext';
+import { CarePlanChecklist } from '@/components/care-hub/CarePlanChecklist';
+import { VisitPicker } from '@/components/care-hub/VisitPicker';
+import { ExplainableText } from '@/components/patient/terms/ExplainableText';
+import { useCarePlan } from '@/hooks/useCarePlan';
+import { getIntakeResults } from '@/lib/storage';
+import type { IntakeTriageResult } from '@/types/intake';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
-type CareHubTab = 'home' | 'intake' | 'visit' | 'medications' | 'labs' | 'appointments' | 'chat' | 'messages' | 'scribe';
-
-const tabs: { id: CareHubTab; label: string; icon: typeof Home }[] = [
-  { id: 'home', label: 'Home', icon: Home },
-  { id: 'intake', label: 'Intake', icon: ClipboardList },
-  { id: 'visit', label: 'Visit', icon: FileText },
-  { id: 'medications', label: 'Meds', icon: Pill },
-  { id: 'labs', label: 'Labs', icon: Activity },
-  { id: 'appointments', label: 'Appts', icon: Calendar },
-  { id: 'chat', label: 'Chat', icon: MessageCircle },
-  { id: 'messages', label: 'Messages', icon: Mail },
-  { id: 'scribe', label: 'Scribe', icon: Mic },
-];
-
-export default function CareHubPage() {
-  const { patientId: viewAsPatientId } = usePatientView();
-  const [allSummaries, setAllSummaries] = useState<ReleasedVisitSummary[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<CareHubTab>('home');
-  const [askAIQuestion, setAskAIQuestion] = useState<string | undefined>();
-  const [pickerOpen, setPickerOpen] = useState(false);
-
-  // Load released summaries — filtered by selected patient if set
-  useEffect(() => {
-    const summaries = viewAsPatientId
-      ? getReleasedSummariesForPatient(viewAsPatientId)
-      : getReleasedSummaries().filter(s => s.status === 'released');
-    setAllSummaries(summaries);
-    if (summaries.length > 0) {
-      setSelectedId(summaries[0].id);
-    } else {
-      setSelectedId(null);
-    }
-  }, [viewAsPatientId]);
-
-  const selectedSummary = useMemo(
-    () => allSummaries.find(s => s.id === selectedId) ?? null,
-    [allSummaries, selectedId],
+function ESIBadge({ level }: { level: number }) {
+  const colors: Record<number, string> = {
+    1: 'bg-red-100 text-red-700',
+    2: 'bg-orange-100 text-orange-700',
+    3: 'bg-amber-100 text-amber-700',
+    4: 'bg-green-100 text-green-700',
+    5: 'bg-emerald-100 text-emerald-700',
+  };
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[level] ?? 'bg-slate-100 text-slate-600'}`}>
+      ESI {level}
+    </span>
   );
+}
 
-  const patient = useMemo(() => {
-    if (!selectedSummary) return null;
-    // Try summary's own patientId first, fall back to the active patient view
-    // (covers legacy summaries released with patientId='unknown')
-    return getPatient(selectedSummary.patientId) ?? (viewAsPatientId ? getPatient(viewAsPatientId) : null);
-  }, [selectedSummary, viewAsPatientId]);
+export default function CareHubHomePage() {
+  const { allSummaries, selectedSummary, patient } = useSelectedSummaryContext();
+  const postVisit = usePostVisitContext();
+  const router = useRouter();
+  const [latestIntake, setLatestIntake] = useState<IntakeTriageResult | null>(null);
 
-  // PostVisit hook for chat, vitals, messages
-  const postVisit = usePostVisit(selectedId ?? '');
-
-  // Sync parent tab state into usePostVisit so lazy-load effects trigger
   useEffect(() => {
-    if (activeTab === 'labs') {
-      postVisit.setActiveTab('tracker');
-    } else if (activeTab === 'messages') {
-      postVisit.setActiveTab('messages');
-    }
-  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+    const results = getIntakeResults();
+    if (results.length > 0) setLatestIntake(results[0]);
+  }, []);
 
-  const handleAskAI = (question: string) => {
-    setAskAIQuestion(question);
-    setActiveTab('chat');
-  };
-
-  const handleEscalate = (question: string) => {
-    postVisit.sendMessage(`[Escalated from AI Chat] ${question}`);
-    setActiveTab('messages');
-  };
-
-  const handleNavigate = (tab: string) => {
-    setActiveTab(tab as CareHubTab);
-  };
-
-  // No summaries at all
+  // No summaries — empty state
   if (allSummaries.length === 0) {
     return (
-      <div className="text-center py-16">
-        <div className="mx-auto w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-5">
-          <Heart className="w-10 h-10 text-primary" />
+      <div className="space-y-8 py-4">
+        {/* Greeting */}
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-slate-900">
+            {patient ? `Hi, ${patient.firstName}` : 'Welcome'}
+          </h2>
+          <p className="text-slate-500 mt-1">How are you feeling today?</p>
         </div>
-        <h2 className="text-xl font-bold text-foreground mb-2">
-          Welcome to MedMink Care Hub
-        </h2>
-        <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          Your visit summaries will appear here once your healthcare provider releases them.
-          Check back after your next visit.
-        </p>
+
+        {/* Hero CTA */}
+        <Link
+          href="/patient/checkin"
+          className="flex items-center justify-center gap-3 w-full py-4 bg-gradient-to-r from-teal-500 to-teal-600 text-white font-semibold text-lg rounded-2xl shadow-lg shadow-teal-500/25 hover:shadow-xl hover:shadow-teal-500/30 transition-all active:scale-[0.98]"
+        >
+          <ClipboardCheck className="w-6 h-6" />
+          Start Your Check-in
+        </Link>
+
+        {/* How it works */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide text-center">
+            How it works
+          </h3>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { step: '1', label: 'Answer questions', icon: MessageCircle },
+              { step: '2', label: 'Get assessed', icon: CheckCircle2 },
+              { step: '3', label: 'Share with doctor', icon: ArrowRight },
+            ].map(item => (
+              <div key={item.step} className="flex flex-col items-center text-center gap-2 p-3 rounded-xl bg-white border border-slate-100">
+                <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center">
+                  <item.icon className="w-4 h-4 text-teal-600" />
+                </div>
+                <p className="text-xs font-medium text-slate-600">{item.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Past check-ins */}
+        {latestIntake && (
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-slate-500">Past Check-ins</h3>
+            <div className="p-4 rounded-xl bg-white border border-slate-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-900">
+                    {latestIntake.triageData.chief_complaint || 'Check-in completed'}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {new Date(latestIntake.completedAt).toLocaleDateString('en-US', {
+                      month: 'short', day: 'numeric', year: 'numeric',
+                    })}
+                  </p>
+                </div>
+                {latestIntake.triageData.esi_level && (
+                  <ESIBadge level={latestIntake.triageData.esi_level} />
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
+  // With data — dashboard state
+  return <CareHubDashboard />;
+}
+
+function CareHubDashboard() {
+  const { selectedSummary, patient } = useSelectedSummaryContext();
+  const postVisit = usePostVisitContext();
+  const router = useRouter();
+
   if (!selectedSummary) return null;
 
-  const visitDate = new Date(selectedSummary.visitDate).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+  return <CareHubDashboardInner />;
+}
+
+function CareHubDashboardInner() {
+  const { selectedSummary, patient } = useSelectedSummaryContext();
+  const postVisit = usePostVisitContext();
+  const router = useRouter();
+
+  const summary = selectedSummary!;
+  const { items: carePlanItems, statuses: carePlanStatuses, updateStatus: updateCarePlanStatus } = useCarePlan(summary);
+
+  const activeMeds = summary.medications.filter(m => m.action !== 'discontinue');
+  const nextFollowUp = summary.followUps[0];
+  const visitDate = new Date(summary.visitDate).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
   });
 
+  const handleAskAI = useCallback((question: string) => {
+    router.push('/patient/messages');
+  }, [router]);
+
   return (
-    <div className="space-y-4">
-      {/* Visit Picker (only when multiple visits) */}
-      {allSummaries.length > 1 && (
-        <div className="relative">
-          <button
-            onClick={() => setPickerOpen(!pickerOpen)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-border bg-card text-sm font-medium text-foreground hover:shadow-sm transition-shadow w-full sm:w-auto"
-          >
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="truncate">
-              {selectedSummary.diagnosis} &middot; {visitDate}
-            </span>
-            <ChevronDown className={`w-4 h-4 text-muted-foreground ml-auto transition-transform ${pickerOpen ? 'rotate-180' : ''}`} />
-          </button>
-          {pickerOpen && (
-            <div className="absolute top-full left-0 mt-1 w-full sm:w-80 rounded-2xl border border-border bg-card shadow-lg z-50 overflow-hidden">
-              {allSummaries.map(s => {
-                const date = new Date(s.visitDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                const isSelected = s.id === selectedId;
-                return (
-                  <button
-                    key={s.id}
-                    onClick={() => { setSelectedId(s.id); setPickerOpen(false); setActiveTab('home'); }}
-                    className={`w-full text-left px-4 py-3 hover:bg-muted transition-colors ${
-                      isSelected ? 'bg-primary/8' : ''
-                    }`}
-                  >
-                    <p className="text-sm font-medium text-foreground">{s.diagnosis}</p>
-                    <p className="text-xs text-muted-foreground">{date} &middot; {s.releasedBy}</p>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+    <div className="space-y-5">
+      {/* Greeting */}
+      <div className="rounded-2xl bg-gradient-to-br from-teal-50 to-white border border-teal-100 p-5">
+        <h2 className="text-xl font-bold text-slate-900">
+          {patient ? `Welcome back, ${patient.firstName}` : 'Welcome back'}
+        </h2>
+        <p className="text-sm text-slate-500 mt-0.5">
+          Visit on {visitDate}
+        </p>
+      </div>
+
+      {/* Visit picker */}
+      <VisitPicker />
+
+      {/* Action cards */}
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          href="/patient/checkin"
+          className="p-4 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-sm hover:shadow-md transition-shadow"
+        >
+          <ClipboardCheck className="w-5 h-5 mb-2" />
+          <p className="text-sm font-semibold">New Check-in</p>
+          <p className="text-xs text-teal-100 mt-0.5">Start an intake</p>
+        </Link>
+        {nextFollowUp ? (
+          <div className="p-4 rounded-xl bg-white border border-slate-200">
+            <Calendar className="w-5 h-5 text-slate-400 mb-2" />
+            <p className="text-sm font-semibold text-slate-900">Next Appointment</p>
+            <p className="text-xs text-slate-500 mt-0.5">{nextFollowUp.timeframe} &middot; {nextFollowUp.provider}</p>
+          </div>
+        ) : (
+          <div className="p-4 rounded-xl bg-white border border-slate-200">
+            <Calendar className="w-5 h-5 text-slate-400 mb-2" />
+            <p className="text-sm font-semibold text-slate-900">No Upcoming</p>
+            <p className="text-xs text-slate-500 mt-0.5">appointments</p>
+          </div>
+        )}
+      </div>
+
+      {/* Care Plan */}
+      {carePlanItems.length > 0 && (
+        <CarePlanChecklist
+          items={carePlanItems}
+          statuses={carePlanStatuses}
+          onStatusChange={updateCarePlanStatus}
+          onAskAI={handleAskAI}
+        />
+      )}
+
+      {/* Warning Signs */}
+      {summary.redFlags.length > 0 && (
+        <div className="rounded-2xl border-2 border-red-200 bg-red-50 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="w-5 h-5 text-red-600" />
+            <h3 className="font-semibold text-red-700">Warning Signs</h3>
+          </div>
+          <div className="space-y-2">
+            {summary.redFlags.map((flag, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 mt-0.5 text-red-400 shrink-0" />
+                <p className="text-sm text-red-700">
+                  <ExplainableText text={flag} />
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Tab Bar */}
-      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div className="flex gap-1 p-1 rounded-2xl bg-muted/50 border border-border min-w-max">
-          {tabs.map(tab => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  if (tab.id !== 'chat') setAskAIQuestion(undefined);
-                  setActiveTab(tab.id);
-                }}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-                  isActive
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                }`}
-                title={tab.label}
-              >
-                <Icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+      {/* Quick actions */}
+      <div className="grid grid-cols-2 gap-3">
+        <Link href="/patient/health" className="p-4 rounded-xl bg-white border border-slate-200 hover:shadow-sm transition-shadow">
+          <Pill className="w-5 h-5 text-teal-600 mb-1.5" />
+          <p className="text-sm font-medium text-slate-900">Medications</p>
+          <p className="text-xs text-slate-400">{activeMeds.length} active</p>
+        </Link>
+        <Link href="/patient/health" className="p-4 rounded-xl bg-white border border-slate-200 hover:shadow-sm transition-shadow">
+          <Activity className="w-5 h-5 text-teal-600 mb-1.5" />
+          <p className="text-sm font-medium text-slate-900">Labs & Vitals</p>
+          <p className="text-xs text-slate-400">View results</p>
+        </Link>
+        <Link href="/patient/messages" className="p-4 rounded-xl bg-white border border-slate-200 hover:shadow-sm transition-shadow">
+          <Sparkles className="w-5 h-5 text-teal-600 mb-1.5" />
+          <p className="text-sm font-medium text-slate-900">Ask AI</p>
+          <p className="text-xs text-slate-400">About your visit</p>
+        </Link>
+        <Link href="/patient/messages?tab=doctor" className="p-4 rounded-xl bg-white border border-slate-200 hover:shadow-sm transition-shadow">
+          <MessageCircle className="w-5 h-5 text-teal-600 mb-1.5" />
+          <p className="text-sm font-medium text-slate-900">Message Doctor</p>
+          <p className="text-xs text-slate-400">Send a note</p>
+        </Link>
       </div>
 
-      {/* Tab Content */}
-      <div>
-        {activeTab === 'home' && (
-          <CareHubHome
-            summary={selectedSummary}
-            patient={patient}
-            onAskAI={handleAskAI}
-            onNavigate={handleNavigate}
-          />
-        )}
-
-        {activeTab === 'visit' && (
-          <PostVisitOverview summary={selectedSummary} onAskAI={handleAskAI} />
-        )}
-
-        {activeTab === 'medications' && (
-          <CareHubMedications summary={selectedSummary} onAskAI={handleAskAI} />
-        )}
-
-        {activeTab === 'labs' && (
-          <CareHubLabs
-            summary={selectedSummary}
-            vitals={postVisit.vitals}
-            vitalTrends={postVisit.vitalTrends}
-            vitalAnalysis={postVisit.vitalAnalysis}
-            onLogVital={postVisit.logVital}
-            onImport={postVisit.importVitals}
-            onAnalyze={postVisit.analyzeVitals}
-            vitalsLoading={postVisit.vitalsLoading}
-          />
-        )}
-
-        {activeTab === 'appointments' && (
-          <CareHubAppointments summary={selectedSummary} />
-        )}
-
-        {activeTab === 'chat' && (
-          <PostVisitChat
-            summary={selectedSummary}
-            chatMessages={postVisit.chatMessages}
-            chatLoading={postVisit.chatLoading}
-            onSend={postVisit.sendChatMessage}
-            onEscalate={handleEscalate}
-            initialQuestion={askAIQuestion}
-          />
-        )}
-
-        {activeTab === 'messages' && (
-          <PostVisitMessages
-            summaryId={selectedId!}
-            messages={postVisit.messages}
-            onSend={postVisit.sendMessage}
-            loading={postVisit.messagesLoading}
-          />
-        )}
-
-        {activeTab === 'scribe' && (
-          <CareHubScribe />
-        )}
-      </div>
+      {/* Ask anything prompt bar */}
+      <Link
+        href="/patient/messages"
+        className="flex items-center gap-3 px-4 py-3.5 bg-white rounded-2xl border border-slate-200 hover:shadow-sm transition-shadow"
+      >
+        <Sparkles className="w-5 h-5 text-teal-500" />
+        <span className="text-sm text-slate-400 flex-1">Ask me anything about your visit...</span>
+        <ArrowRight className="w-4 h-4 text-slate-300" />
+      </Link>
     </div>
   );
 }

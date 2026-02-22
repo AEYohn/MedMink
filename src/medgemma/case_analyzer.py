@@ -754,7 +754,7 @@ def get_category_context(category: str) -> str:
     ]
     if "acute_interventions" in cat_info:
         parts.append(
-            f"Possible acute interventions (use only if indicated): {', '.join(cat_info['acute_interventions'][:4])}"
+            f"Possible acute interventions (ONLY for moderate/high-acuity presentations — omit for low-risk): {', '.join(cat_info['acute_interventions'][:4])}"
         )
     return "\n".join(parts)
 
@@ -1352,6 +1352,10 @@ IMPORTANT:
 - Diagnostic tests (CT, labs, LP, etc.) and supportive care (O2, IV fluids, positioning) are VALID treatment options. Do NOT omit them.
 - Search terms must relate to the patient's actual condition and symptoms.
 - For low-acuity cases (simple UTI, stable chronic conditions), set disposition to discharge or outpatient follow-up, NOT ICU.
+- MATCH immediate_actions to risk_stratification severity:
+  - LOW risk: immediate_actions should be DIAGNOSTIC (e.g., chest X-ray, labs, spirometry) and CONSERVATIVE (e.g., oral meds, outpatient referral). Do NOT include intubation, high-flow O2, IV drips, or ICU-level interventions.
+  - MODERATE risk: include monitoring and targeted interventions but not emergent procedures unless specifically indicated by findings.
+  - HIGH risk: include all indicated emergent interventions.
 - Only recommend drug FORMULATIONS that exist (e.g., atorvastatin is ORAL only — no IV form). For NPO/dysphagia patients, note the constraint.
 - Output ONLY the JSON object. No preamble, no explanation, no reasoning. Start your response with {{ and end with }}."""
 

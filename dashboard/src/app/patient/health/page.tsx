@@ -9,6 +9,7 @@ import { CareHubMedications } from '@/components/care-hub/CareHubMedications';
 import { CareHubLabs } from '@/components/care-hub/CareHubLabs';
 import { CareHubAppointments } from '@/components/care-hub/CareHubAppointments';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from '@/i18n';
 
 function Section({
   icon: Icon,
@@ -52,6 +53,7 @@ export default function MyHealthPage() {
   const { selectedSummary } = useSelectedSummaryContext();
   const postVisit = usePostVisitContext();
   const router = useRouter();
+  const { t } = useTranslation();
 
   // Trigger vitals loading when page mounts
   useEffect(() => {
@@ -62,16 +64,16 @@ export default function MyHealthPage() {
     return (
       <div className="text-center py-16">
         <HeartPulse className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-        <h2 className="text-lg font-semibold text-slate-900 mb-2">No Health Data Yet</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-2">{t('health.noData')}</h2>
         <p className="text-sm text-slate-500 mb-6">
-          Complete a check-in and visit to see your health information.
+          {t('health.noDataDesc')}
         </p>
         <Link
           href="/patient/checkin"
           className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white font-medium rounded-xl hover:bg-teal-700 transition-colors"
         >
           <ClipboardCheck className="w-5 h-5" />
-          Start Check-in
+          {t('health.startCheckin')}
         </Link>
       </div>
     );
@@ -83,11 +85,11 @@ export default function MyHealthPage() {
 
   return (
     <div className="space-y-4">
-      <Section icon={Pill} title="Medications" defaultOpen={true}>
+      <Section icon={Pill} title={t('health.medications')} defaultOpen={true}>
         <CareHubMedications summary={selectedSummary} onAskAI={handleAskAI} />
       </Section>
 
-      <Section icon={Activity} title="Labs & Vitals" defaultOpen={true}>
+      <Section icon={Activity} title={t('health.labsVitals')} defaultOpen={true}>
         <CareHubLabs
           summary={selectedSummary}
           vitals={postVisit.vitals}
@@ -100,7 +102,7 @@ export default function MyHealthPage() {
         />
       </Section>
 
-      <Section icon={Calendar} title="Appointments" defaultOpen={false}>
+      <Section icon={Calendar} title={t('health.appointments')} defaultOpen={false}>
         <CareHubAppointments summary={selectedSummary} />
       </Section>
     </div>

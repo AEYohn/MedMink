@@ -14,16 +14,17 @@ import {
 import { ExplainableText } from '@/components/patient/terms/ExplainableText';
 import type { ReleasedVisitSummary } from '@/types/visit-summary';
 import { filterActualMedications } from '@/types/visit-summary';
+import { useTranslation } from '@/i18n';
 
 const actionBadge: Record<string, string> = {
   continue: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
   new: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
   discontinue: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
 };
-const actionLabel: Record<string, string> = {
-  continue: 'Continue',
-  new: 'New',
-  discontinue: 'Stop',
+const actionLabelKey: Record<string, string> = {
+  continue: 'overview.actionContinue',
+  new: 'overview.actionNew',
+  discontinue: 'overview.actionStop',
 };
 
 export function PostVisitOverview({
@@ -33,6 +34,7 @@ export function PostVisitOverview({
   summary: ReleasedVisitSummary;
   onAskAI: (question: string) => void;
 }) {
+  const { t, bcp47 } = useTranslation();
   const medications = useMemo(() => filterActualMedications(summary.medications), [summary.medications]);
 
   return (
@@ -42,13 +44,13 @@ export function PostVisitOverview({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Stethoscope className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-            <h3 className="font-semibold text-sm text-foreground">Your Diagnosis</h3>
+            <h3 className="font-semibold text-sm text-foreground">{t('overview.yourDiagnosis')}</h3>
           </div>
           <button
             onClick={() => onAskAI(`What does ${summary.diagnosis} mean?`)}
             className="flex items-center gap-1 text-[11px] text-primary hover:underline"
           >
-            <HelpCircle className="w-3 h-3" /> Ask AI about this
+            <HelpCircle className="w-3 h-3" /> {t('overview.askAIAbout')}
           </button>
         </div>
         <div className="rounded-lg bg-teal-50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800 p-4">
@@ -68,16 +70,16 @@ export function PostVisitOverview({
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <Pill className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <h3 className="font-semibold text-sm text-foreground">Your Medications</h3>
+            <h3 className="font-semibold text-sm text-foreground">{t('overview.yourMedications')}</h3>
           </div>
           <div className="rounded-lg border border-border overflow-hidden overflow-x-auto">
             <table className="w-full text-sm min-w-[480px]">
               <thead>
                 <tr className="bg-muted/50 border-b border-border">
-                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">Medication</th>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">Dose</th>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">How Often</th>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">Action</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">{t('overview.medication')}</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">{t('overview.dose')}</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">{t('overview.howOften')}</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">{t('overview.action')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -90,7 +92,7 @@ export function PostVisitOverview({
                     <td className="px-4 py-2.5 text-muted-foreground">{med.frequency || '—'}</td>
                     <td className="px-4 py-2.5">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${actionBadge[med.action] || ''}`}>
-                        {actionLabel[med.action] || med.action}
+                        {t(actionLabelKey[med.action]) || med.action}
                       </span>
                     </td>
                   </tr>
@@ -122,7 +124,7 @@ export function PostVisitOverview({
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <Clock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-            <h3 className="font-semibold text-sm text-foreground">When to Take Your Medications</h3>
+            <h3 className="font-semibold text-sm text-foreground">{t('overview.whenToTake')}</h3>
           </div>
           <div className="space-y-2">
             {medications
@@ -135,7 +137,7 @@ export function PostVisitOverview({
                     <p className="text-xs text-muted-foreground">{med.frequency}</p>
                   </div>
                   <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${actionBadge[med.action]}`}>
-                    {actionLabel[med.action]}
+                    {t(actionLabelKey[med.action]) || med.action}
                   </span>
                 </div>
               ))}
@@ -148,7 +150,7 @@ export function PostVisitOverview({
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <ClipboardList className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            <h3 className="font-semibold text-sm text-foreground">Your Plan</h3>
+            <h3 className="font-semibold text-sm text-foreground">{t('overview.yourPlan')}</h3>
           </div>
           <div className="space-y-2">
             {summary.orders!.map((order, i) => (
@@ -169,7 +171,7 @@ export function PostVisitOverview({
                   {order.scheduledDate && (
                     <p className="text-xs text-primary mt-1">
                       <Calendar className="w-3 h-3 inline mr-1" />
-                      Scheduled: {new Date(order.scheduledDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      Scheduled: {new Date(order.scheduledDate + 'T00:00:00').toLocaleDateString(bcp47, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                   )}
                 </div>
@@ -184,7 +186,7 @@ export function PostVisitOverview({
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-            <h3 className="font-semibold text-sm text-foreground">Follow-Up Appointments</h3>
+            <h3 className="font-semibold text-sm text-foreground">{t('overview.followUpAppointments')}</h3>
           </div>
           <div className="space-y-2">
             {summary.followUps.map((fu, i) => (
@@ -207,7 +209,7 @@ export function PostVisitOverview({
         <div className="rounded-xl border-2 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20 p-5">
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
-            <h3 className="font-semibold text-sm text-red-700 dark:text-red-400">Warning Signs — Return Immediately</h3>
+            <h3 className="font-semibold text-sm text-red-700 dark:text-red-400">{t('overview.warningSigns')}</h3>
           </div>
           <div className="space-y-2">
             {summary.redFlags.map((flag, i) => (
@@ -227,7 +229,7 @@ export function PostVisitOverview({
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <FileText className="w-4 h-4 text-primary" />
-            <h3 className="font-semibold text-sm text-foreground">What To Do Next</h3>
+            <h3 className="font-semibold text-sm text-foreground">{t('overview.whatToDoNext')}</h3>
           </div>
           <div className="rounded-lg bg-muted/50 border border-border p-4">
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">
@@ -240,7 +242,7 @@ export function PostVisitOverview({
       {/* Restrictions */}
       {summary.restrictions.length > 0 && (
         <div className="rounded-2xl border border-border bg-card p-5">
-          <h3 className="font-semibold text-sm text-foreground mb-3">Restrictions</h3>
+          <h3 className="font-semibold text-sm text-foreground mb-3">{t('overview.restrictions')}</h3>
           <ul className="space-y-1.5">
             {summary.restrictions.map((r, i) => (
               <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
@@ -253,7 +255,7 @@ export function PostVisitOverview({
 
       {/* Approved info */}
       <div className="text-xs text-muted-foreground text-center">
-        Approved by {summary.releasedBy} on {new Date(summary.releasedAt).toLocaleString()}
+        {t('overview.approvedBy', { name: summary.releasedBy, date: new Date(summary.releasedAt).toLocaleString(bcp47) })}
       </div>
     </div>
   );

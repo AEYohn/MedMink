@@ -11,9 +11,10 @@ import {
   Clock,
   Eye,
 } from 'lucide-react';
+import { useTranslation } from '@/i18n';
 import type { PostVisitMessage } from '@/types/postvisit';
 
-function MessageBubble({ msg }: { msg: PostVisitMessage }) {
+function MessageBubble({ msg, doctorLabel, bcp47 }: { msg: PostVisitMessage; doctorLabel: string; bcp47: string }) {
   const isPatient = msg.sender === 'patient';
   const isClinician = msg.sender === 'clinician';
   const isSystem = msg.sender === 'system';
@@ -41,19 +42,19 @@ function MessageBubble({ msg }: { msg: PostVisitMessage }) {
     <div className={`flex ${isPatient ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-[85%] ${
         isPatient
-          ? 'bg-primary text-primary-foreground rounded-2xl rounded-tr-md px-4 py-3'
-          : 'bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-emerald-500 text-foreground rounded-2xl rounded-tl-md px-4 py-3'
+          ? 'bg-primary text-primary-foreground rounded-2xl rounded-se-md px-4 py-3'
+          : 'bg-emerald-50 dark:bg-emerald-900/20 border-s-4 border-emerald-500 text-foreground rounded-2xl rounded-ss-md px-4 py-3'
       }`}>
         {isClinician && (
           <div className="flex items-center gap-1.5 mb-2 text-emerald-700 dark:text-emerald-400">
             <Stethoscope className="w-3.5 h-3.5" />
-            <span className="text-xs font-semibold">Your doctor:</span>
+            <span className="text-xs font-semibold">{doctorLabel}</span>
           </div>
         )}
         <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
         <div className="flex items-center gap-2 mt-2">
           <span className="text-[10px] opacity-50">
-            {new Date(msg.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            {new Date(msg.createdAt).toLocaleString(bcp47, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
           </span>
           {isPatient && statusIcon}
         </div>
@@ -76,6 +77,7 @@ export function PostVisitMessages({
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { t, bcp47 } = useTranslation();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -100,10 +102,10 @@ export function PostVisitMessages({
       <div className="rounded-xl border border-border bg-card p-4 mb-3">
         <div className="flex items-center gap-2">
           <Mail className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold text-sm text-foreground">Messages to Your Doctor</h3>
+          <h3 className="font-semibold text-sm text-foreground">{t('doctorMessages.title')}</h3>
         </div>
         <p className="text-xs text-muted-foreground mt-1">
-          Send questions to your care team. They will review and respond.
+          {t('doctorMessages.subtitle')}
         </p>
       </div>
 
@@ -116,11 +118,11 @@ export function PostVisitMessages({
         ) : messages.length === 0 ? (
           <div className="text-center py-12">
             <Mail className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">No messages yet</p>
-            <p className="text-xs text-muted-foreground mt-1">Send a question to start a conversation with your doctor.</p>
+            <p className="text-sm text-muted-foreground">{t('doctorMessages.noMessages')}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('doctorMessages.noMessagesDesc')}</p>
           </div>
         ) : (
-          messages.map((msg) => <MessageBubble key={msg.id} msg={msg} />)
+          messages.map((msg) => <MessageBubble key={msg.id} msg={msg} doctorLabel={t('doctorMessages.yourDoctor')} bcp47={bcp47} />)
         )}
         <div ref={messagesEndRef} />
       </div>
@@ -137,7 +139,7 @@ export function PostVisitMessages({
                 handleSubmit(e);
               }
             }}
-            placeholder="Write a message to your doctor..."
+            placeholder={t('doctorMessages.placeholder')}
             rows={1}
             className="flex-1 px-3 py-2.5 bg-muted/50 border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none text-sm"
             style={{ minHeight: '44px', maxHeight: '100px' }}
@@ -151,7 +153,7 @@ export function PostVisitMessages({
           </button>
         </div>
         <p className="text-[11px] text-muted-foreground mt-2">
-          Your doctor will be notified and can respond here.
+          {t('doctorMessages.notifyInfo')}
         </p>
       </form>
     </div>

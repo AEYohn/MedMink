@@ -8,26 +8,28 @@ import { usePostVisitContext } from '@/contexts/PostVisitContext';
 import { PostVisitOverview } from '@/components/postvisit/PostVisitOverview';
 import { CareHubScribe } from '@/components/care-hub/CareHubScribe';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from '@/i18n';
 
 export default function MyVisitPage() {
   const { selectedSummary } = useSelectedSummaryContext();
   const router = useRouter();
   const [scribeOpen, setScribeOpen] = useState(false);
+  const { t } = useTranslation();
 
   if (!selectedSummary) {
     return (
       <div className="text-center py-16">
         <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-        <h2 className="text-lg font-semibold text-slate-900 mb-2">No Visit Data Yet</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-2">{t('visit.noData')}</h2>
         <p className="text-sm text-slate-500 mb-6">
-          Complete a check-in to get started with your visit.
+          {t('visit.noDataDesc')}
         </p>
         <Link
           href="/patient/checkin"
           className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white font-medium rounded-xl hover:bg-teal-700 transition-colors"
         >
           <ClipboardCheck className="w-5 h-5" />
-          Start Check-in
+          {t('visit.startCheckin')}
         </Link>
       </div>
     );
@@ -41,7 +43,7 @@ export default function MyVisitPage() {
     <div className="space-y-5">
       {/* Diagnosis header */}
       <div className="rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 p-5 text-white">
-        <p className="text-xs font-medium text-teal-100 uppercase tracking-wide mb-1">Diagnosis</p>
+        <p className="text-xs font-medium text-teal-100 uppercase tracking-wide mb-1">{t('visit.diagnosis')}</p>
         <p className="text-lg font-semibold">{selectedSummary.diagnosis}</p>
         {selectedSummary.diagnosisExplanation && (
           <p className="text-sm text-teal-100 mt-1">{selectedSummary.diagnosisExplanation}</p>
@@ -59,7 +61,7 @@ export default function MyVisitPage() {
         >
           <div className="flex items-center gap-3">
             <Mic className="w-5 h-5 text-slate-500" />
-            <span className="text-sm font-medium text-slate-900">Record & Take Notes</span>
+            <span className="text-sm font-medium text-slate-900">{t('visit.recordNotes')}</span>
           </div>
           {scribeOpen ? (
             <ChevronUp className="w-4 h-4 text-slate-400" />

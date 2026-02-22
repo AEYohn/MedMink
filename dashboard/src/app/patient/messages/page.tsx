@@ -9,6 +9,7 @@ import { PostVisitChat } from '@/components/postvisit/PostVisitChat';
 import { PostVisitMessages } from '@/components/postvisit/PostVisitMessages';
 import Link from 'next/link';
 import { ClipboardCheck } from 'lucide-react';
+import { useTranslation } from '@/i18n';
 
 type MessageTab = 'ai' | 'doctor';
 
@@ -16,6 +17,7 @@ export default function MessagesPage() {
   const searchParams = useSearchParams();
   const { selectedSummary, selectedId } = useSelectedSummaryContext();
   const postVisit = usePostVisitContext();
+  const { t } = useTranslation();
   const [tab, setTab] = useState<MessageTab>('ai');
 
   // Initialize from URL param
@@ -41,16 +43,16 @@ export default function MessagesPage() {
     return (
       <div className="text-center py-16">
         <MessageCircle className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-        <h2 className="text-lg font-semibold text-slate-900 mb-2">No Messages Yet</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-2">{t('messages.noMessages')}</h2>
         <p className="text-sm text-slate-500 mb-6">
-          Complete a check-in and visit to start messaging.
+          {t('messages.noMessagesDesc')}
         </p>
         <Link
           href="/patient/checkin"
           className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white font-medium rounded-xl hover:bg-teal-700 transition-colors"
         >
           <ClipboardCheck className="w-5 h-5" />
-          Start Check-in
+          {t('messages.startCheckin')}
         </Link>
       </div>
     );
@@ -69,7 +71,7 @@ export default function MessagesPage() {
           }`}
         >
           <Sparkles className="w-4 h-4" />
-          AI Assistant
+          {t('messages.aiAssistant')}
         </button>
         <button
           onClick={() => setTab('doctor')}
@@ -80,7 +82,7 @@ export default function MessagesPage() {
           }`}
         >
           <Stethoscope className="w-4 h-4" />
-          Your Doctor
+          {t('messages.yourDoctor')}
         </button>
       </div>
 

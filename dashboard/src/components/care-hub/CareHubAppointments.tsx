@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useTranslation } from '@/i18n';
 import {
   Calendar,
   Clock,
@@ -45,6 +46,7 @@ interface CareHubAppointmentsProps {
 }
 
 export function CareHubAppointments({ summary }: CareHubAppointmentsProps) {
+  const { t, bcp47 } = useTranslation();
   const [currentMonth, setCurrentMonth] = useState<Date | null>(null);
   const [today, setToday] = useState<Date | null>(null);
 
@@ -75,10 +77,10 @@ export function CareHubAppointments({ summary }: CareHubAppointmentsProps) {
     ? new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay()
     : 0;
 
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ];
+  const monthKeys = [
+    'january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december',
+  ] as const;
 
   const navigateMonth = (direction: number) => {
     if (!currentMonth) return;
@@ -112,7 +114,7 @@ export function CareHubAppointments({ summary }: CareHubAppointmentsProps) {
         <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-foreground">
-              {currentMonth ? `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}` : '\u00A0'}
+              {currentMonth ? `${t(`appointments.${monthKeys[currentMonth.getMonth()]}`)} ${currentMonth.getFullYear()}` : '\u00A0'}
             </h2>
             <div className="flex items-center gap-2">
               <button onClick={() => navigateMonth(-1)} className="p-2 hover:bg-muted rounded-xl transition-colors">
@@ -125,9 +127,9 @@ export function CareHubAppointments({ summary }: CareHubAppointmentsProps) {
           </div>
 
           <div className="grid grid-cols-7 gap-1">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            {['appointments.sun', 'appointments.mon', 'appointments.tue', 'appointments.wed', 'appointments.thu', 'appointments.fri', 'appointments.sat'].map(day => (
               <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
-                {day}
+                {t(day)}
               </div>
             ))}
 
@@ -179,13 +181,13 @@ export function CareHubAppointments({ summary }: CareHubAppointmentsProps) {
         {/* Upcoming */}
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <div className="p-4 border-b border-border">
-            <h2 className="font-semibold text-foreground">Upcoming</h2>
+            <h2 className="font-semibold text-foreground">{t('appointments.upcoming')}</h2>
           </div>
 
           {upcomingAppointments.length === 0 ? (
             <div className="p-8 text-center">
               <Calendar className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
-              <p className="text-sm text-muted-foreground">No upcoming appointments</p>
+              <p className="text-sm text-muted-foreground">{t('appointments.noUpcoming')}</p>
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -194,11 +196,11 @@ export function CareHubAppointments({ summary }: CareHubAppointmentsProps) {
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-emerald-500" />
-                      <span className="text-xs font-medium text-muted-foreground uppercase">follow-up</span>
+                      <span className="text-xs font-medium text-muted-foreground uppercase">{t('appointments.followUp')}</span>
                     </div>
                     <span className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                       <AlertCircle className="w-3 h-3" />
-                      Pending
+                      {t('appointments.pending')}
                     </span>
                   </div>
                   <h3 className="font-medium text-foreground flex items-center gap-2">
@@ -209,7 +211,7 @@ export function CareHubAppointments({ summary }: CareHubAppointmentsProps) {
                   <div className="mt-3 space-y-1 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      {apt.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      {apt.date.toLocaleDateString(bcp47, { weekday: 'short', month: 'short', day: 'numeric' })}
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4" />

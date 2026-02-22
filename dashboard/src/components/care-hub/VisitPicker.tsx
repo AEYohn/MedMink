@@ -1,16 +1,18 @@
 'use client';
 
 import { useSelectedSummaryContext } from '@/contexts/SelectedSummaryContext';
+import { useTranslation } from '@/i18n';
 
 export function VisitPicker() {
   const { allSummaries, selectedId, setSelectedId } = useSelectedSummaryContext();
+  const { bcp47 } = useTranslation();
 
   if (allSummaries.length <= 1) return null;
 
   return (
     <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
       {allSummaries.map(s => {
-        const date = new Date(s.visitDate).toLocaleDateString('en-US', {
+        const date = new Date(s.visitDate).toLocaleDateString(bcp47, {
           month: 'short',
           day: 'numeric',
         });

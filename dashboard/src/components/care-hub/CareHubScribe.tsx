@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from '@/i18n';
 import {
   Mic,
   Square,
@@ -76,6 +77,7 @@ function NoteCard({
 }
 
 export function CareHubScribe() {
+  const { t } = useTranslation();
   const { transcript, interimTranscript, isListening, isSupported, start, stop } =
     useSpeechRecognition();
 
@@ -226,10 +228,10 @@ export function CareHubScribe() {
             <Mic className="w-10 h-10 text-primary" />
           </div>
           <h2 className="text-xl font-semibold text-foreground mb-2">
-            Record Your Visit
+            {t('scribe.recordVisit')}
           </h2>
           <p className="text-muted-foreground max-w-md mx-auto mb-8">
-            Tap the button below to start recording during your doctor visit. We&apos;ll turn the conversation into easy-to-understand notes.
+            {t('scribe.recordDesc')}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
@@ -238,19 +240,19 @@ export function CareHubScribe() {
               className="px-8 py-3 bg-primary hover:bg-primary/90 disabled:bg-muted text-primary-foreground rounded-2xl font-medium transition-colors flex items-center gap-2"
             >
               <Mic className="w-5 h-5" />
-              Start Recording
+              {t('scribe.startRecording')}
             </button>
             <button
               onClick={tryExample}
               className="px-6 py-3 border border-border hover:bg-muted rounded-2xl text-sm font-medium text-muted-foreground transition-colors flex items-center gap-2"
             >
               <Play className="w-4 h-4" />
-              Try an Example
+              {t('scribe.tryExample')}
             </button>
           </div>
           {!isSupported && (
             <p className="mt-4 text-sm text-amber-600 dark:text-amber-400">
-              Speech recognition is not supported in your browser. Try Chrome or Edge.
+              {t('scribe.browserNotSupported')}
             </p>
           )}
         </div>
@@ -265,13 +267,13 @@ export function CareHubScribe() {
             </div>
           </div>
           <div>
-            <p className="text-lg font-semibold text-red-600 dark:text-red-400">Recording...</p>
+            <p className="text-lg font-semibold text-red-600 dark:text-red-400">{t('scribe.recording')}</p>
             <p className="text-2xl font-mono text-foreground mt-1">{formatDuration(recordingTime)}</p>
           </div>
           <div className="max-w-2xl mx-auto rounded-2xl border border-border bg-card p-4 text-left min-h-[120px]">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Live Transcript</p>
+            <p className="text-xs font-medium text-muted-foreground mb-2">{t('scribe.liveTranscript')}</p>
             <p className="text-sm text-muted-foreground">
-              {currentTranscript || <span className="text-muted-foreground italic">Listening...</span>}
+              {currentTranscript || <span className="text-muted-foreground italic">{t('scribe.listening')}</span>}
               {interimTranscript && <span className="text-muted-foreground italic"> {interimTranscript}</span>}
             </p>
           </div>
@@ -280,7 +282,7 @@ export function CareHubScribe() {
             className="px-8 py-3 bg-foreground text-background rounded-2xl font-medium transition-colors flex items-center gap-2 mx-auto hover:bg-foreground/80"
           >
             <Square className="w-4 h-4" />
-            Stop Recording
+            {t('scribe.stopRecording')}
           </button>
         </div>
       )}
@@ -292,7 +294,7 @@ export function CareHubScribe() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-muted-foreground" />
-                <h3 className="font-semibold text-foreground">Your Recording</h3>
+                <h3 className="font-semibold text-foreground">{t('scribe.yourRecording')}</h3>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Clock className="w-3.5 h-3.5" />
@@ -310,12 +312,12 @@ export function CareHubScribe() {
                   {isEnhancing ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Creating your notes...
+                      {t('scribe.creatingNotes')}
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      Enhance with AI
+                      {t('scribe.enhanceAI')}
                     </>
                   )}
                 </button>
@@ -324,7 +326,7 @@ export function CareHubScribe() {
                 onClick={reset}
                 className="px-4 py-2.5 border border-border text-muted-foreground hover:bg-muted rounded-2xl text-sm font-medium transition-colors"
               >
-                New Recording
+                {t('scribe.newRecording')}
               </button>
             </div>
 
@@ -339,19 +341,19 @@ export function CareHubScribe() {
             <div className="space-y-3">
               <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
-                Your Visit Notes
+                {t('scribe.visitNotes')}
               </h2>
-              <NoteCard icon={Lightbulb} title="What I Told the Doctor" color="bg-blue-500" content={enhancedNotes.whatIToldTheDoctor} />
-              <NoteCard icon={Stethoscope} title="What the Doctor Found" color="bg-teal-500" content={enhancedNotes.whatTheDoctorFound} />
-              <NoteCard icon={ClipboardList} title="My Diagnosis" color="bg-amber-500" content={enhancedNotes.myDiagnosis} />
-              <NoteCard icon={FileText} title="My Treatment Plan" color="bg-emerald-500" content={enhancedNotes.myTreatmentPlan} />
+              <NoteCard icon={Lightbulb} title={t('scribe.whatITold')} color="bg-blue-500" content={enhancedNotes.whatIToldTheDoctor} />
+              <NoteCard icon={Stethoscope} title={t('scribe.whatDoctorFound')} color="bg-teal-500" content={enhancedNotes.whatTheDoctorFound} />
+              <NoteCard icon={ClipboardList} title={t('scribe.myDiagnosis')} color="bg-amber-500" content={enhancedNotes.myDiagnosis} />
+              <NoteCard icon={FileText} title={t('scribe.myTreatmentPlan')} color="bg-emerald-500" content={enhancedNotes.myTreatmentPlan} />
 
               <div className="rounded-2xl border border-border bg-card p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="p-1.5 rounded-lg bg-purple-500">
                     <HelpCircle className="w-4 h-4 text-white" />
                   </div>
-                  <h3 className="font-semibold text-foreground">Questions I Had</h3>
+                  <h3 className="font-semibold text-foreground">{t('scribe.questionsIHad')}</h3>
                 </div>
                 <ul className="space-y-2">
                   {enhancedNotes.questionsIHad.map((q, i) => (
@@ -368,7 +370,7 @@ export function CareHubScribe() {
                   <div className="p-1.5 rounded-lg bg-destructive">
                     <BookmarkCheck className="w-4 h-4 text-white" />
                   </div>
-                  <h3 className="font-semibold text-destructive">Things to Remember</h3>
+                  <h3 className="font-semibold text-destructive">{t('scribe.thingsToRemember')}</h3>
                 </div>
                 <ul className="space-y-2">
                   {enhancedNotes.thingsToRemember.map((item, i) => (
@@ -392,7 +394,7 @@ export function CareHubScribe() {
             className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             <ChevronDown className={`w-4 h-4 transition-transform ${showHistory ? 'rotate-180' : ''}`} />
-            Past Recordings ({sessions.length})
+            {t('scribe.pastRecordings', { count: sessions.length })}
           </button>
           {showHistory && (
             <div className="mt-3 space-y-2">

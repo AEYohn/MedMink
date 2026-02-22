@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslation } from '@/i18n';
 import {
   Activity,
   Heart,
@@ -71,6 +72,7 @@ function VitalCard({
   sparkData: number[];
   color: string;
 }) {
+  const { t: tLocal } = useTranslation();
   const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
   const trendColor =
     trend === 'up'
@@ -97,7 +99,7 @@ function VitalCard({
         <span className="text-sm text-muted-foreground">{unit}</span>
       </div>
       <div className="flex items-center justify-between mt-2">
-        <span className="text-xs text-muted-foreground">Normal: {normalRange}</span>
+        <span className="text-xs text-muted-foreground">{tLocal('labs.normal')}: {normalRange}</span>
         <Sparkline data={sparkData} />
       </div>
     </div>
@@ -149,13 +151,13 @@ const statusStyle: Record<string, string> = {
 };
 
 type LabCategory = 'all' | 'metabolic' | 'cbc' | 'lipid' | 'thyroid' | 'cardiac';
-const categoryLabels: Record<LabCategory, string> = {
-  all: 'All',
-  metabolic: 'Metabolic',
-  cbc: 'CBC',
-  lipid: 'Lipid',
-  thyroid: 'Thyroid',
-  cardiac: 'Cardiac',
+const categoryLabelKeys: Record<LabCategory, string> = {
+  all: 'labs.all',
+  metabolic: 'labs.metabolic',
+  cbc: 'labs.cbc',
+  lipid: 'labs.lipid',
+  thyroid: 'labs.thyroid',
+  cardiac: 'labs.cardiac',
 };
 
 type SortField = 'testName' | 'value' | 'status' | 'date';
@@ -179,6 +181,7 @@ export function CareHubLabs({
   onAnalyze: () => Promise<void>;
   vitalsLoading: boolean;
 }) {
+  const { t, bcp47 } = useTranslation();
   const { context } = useHealthContext();
   const [category, setCategory] = useState<LabCategory>('all');
   const [sortField, setSortField] = useState<SortField>('date');
@@ -251,15 +254,15 @@ export function CareHubLabs({
       {latest && (
         <section>
           <h2 className="text-lg font-semibold text-foreground mb-3">
-            Current Vitals
+            {t('labs.currentVitals')}
           </h2>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-            <VitalCard label="Blood Pressure" value={`${latest.systolic}/${latest.diastolic}`} unit="mmHg" icon={Heart} trend={trend(sparkBP)} normalRange="<130/80" sparkData={sparkBP} color="bg-primary" />
-            <VitalCard label="Heart Rate" value={`${latest.heartRate}`} unit="bpm" icon={Activity} trend={trend(sparkHR)} normalRange="60-100" sparkData={sparkHR} color="bg-red-500" />
-            <VitalCard label="Temperature" value={`${latest.temperature}`} unit="\u00b0F" icon={Thermometer} trend={trend(sparkTemp)} normalRange="97.8-99.1" sparkData={sparkTemp} color="bg-amber-500" />
-            <VitalCard label="Weight" value={`${latest.weight}`} unit="lbs" icon={Activity} trend={trend(sparkWeight)} normalRange="\u2014" sparkData={sparkWeight} color="bg-blue-500" />
-            <VitalCard label="SpO2" value={`${latest.spO2}`} unit="%" icon={Wind} trend={trend(sparkSpO2)} normalRange="95-100" sparkData={sparkSpO2} color="bg-teal-500" />
-            <VitalCard label="Glucose" value={`${latest.glucose}`} unit="mg/dL" icon={Droplets} trend={trend(sparkGlucose)} normalRange="70-100" sparkData={sparkGlucose} color="bg-purple-500" />
+            <VitalCard label={t('labs.bloodPressure')} value={`${latest.systolic}/${latest.diastolic}`} unit="mmHg" icon={Heart} trend={trend(sparkBP)} normalRange="<130/80" sparkData={sparkBP} color="bg-primary" />
+            <VitalCard label={t('labs.heartRate')} value={`${latest.heartRate}`} unit="bpm" icon={Activity} trend={trend(sparkHR)} normalRange="60-100" sparkData={sparkHR} color="bg-red-500" />
+            <VitalCard label={t('labs.temperature')} value={`${latest.temperature}`} unit="\u00b0F" icon={Thermometer} trend={trend(sparkTemp)} normalRange="97.8-99.1" sparkData={sparkTemp} color="bg-amber-500" />
+            <VitalCard label={t('labs.weight')} value={`${latest.weight}`} unit="lbs" icon={Activity} trend={trend(sparkWeight)} normalRange="\u2014" sparkData={sparkWeight} color="bg-blue-500" />
+            <VitalCard label={t('labs.spO2')} value={`${latest.spO2}`} unit="%" icon={Wind} trend={trend(sparkSpO2)} normalRange="95-100" sparkData={sparkSpO2} color="bg-teal-500" />
+            <VitalCard label={t('labs.glucose')} value={`${latest.glucose}`} unit="mg/dL" icon={Droplets} trend={trend(sparkGlucose)} normalRange="70-100" sparkData={sparkGlucose} color="bg-purple-500" />
           </div>
         </section>
       )}
@@ -268,12 +271,12 @@ export function CareHubLabs({
       {labs.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold text-foreground mb-3">
-            Lab Results
+            {t('labs.labResults')}
           </h2>
 
           {/* Category tabs */}
           <div className="flex flex-wrap gap-2 mb-4">
-            {(Object.keys(categoryLabels) as LabCategory[]).map(cat => (
+            {(Object.keys(categoryLabelKeys) as LabCategory[]).map(cat => (
               <button
                 key={cat}
                 onClick={() => setCategory(cat)}
@@ -283,7 +286,7 @@ export function CareHubLabs({
                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 }`}
               >
-                {categoryLabels[cat]}
+                {t(categoryLabelKeys[cat])}
               </button>
             ))}
           </div>
@@ -294,19 +297,19 @@ export function CareHubLabs({
               <thead>
                 <tr className="bg-muted/50 border-b border-border">
                   <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => handleSort('testName')}>
-                    Test <SortIndicator field="testName" />
+                    {t('labs.test')} <SortIndicator field="testName" />
                   </th>
                   <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => handleSort('value')}>
-                    Result <SortIndicator field="value" />
+                    {t('labs.result')} <SortIndicator field="value" />
                   </th>
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Reference</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">{t('labs.reference')}</th>
                   <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => handleSort('status')}>
-                    Status <SortIndicator field="status" />
+                    {t('labs.status')} <SortIndicator field="status" />
                   </th>
                   <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => handleSort('date')}>
-                    Date <SortIndicator field="date" />
+                    {t('labs.date')} <SortIndicator field="date" />
                   </th>
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Trend</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">{t('labs.trend')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -330,7 +333,7 @@ export function CareHubLabs({
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-muted-foreground">
-                      {new Date(lab.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {new Date(lab.date).toLocaleDateString(bcp47, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td className="px-4 py-2.5">
                       <LabTrendChart results={latestDateLabs.get(lab.testName) ?? [lab]} />
@@ -346,7 +349,7 @@ export function CareHubLabs({
       {/* Vitals Tracker (manual entry, CSV import, AI analysis) */}
       <section>
         <h2 className="text-lg font-semibold text-foreground mb-3">
-          Track Your Vitals
+          {t('labs.trackVitals')}
         </h2>
         <VitalsTracker
           patientId={summary.patientId}

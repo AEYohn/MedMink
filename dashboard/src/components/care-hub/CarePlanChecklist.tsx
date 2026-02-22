@@ -9,6 +9,7 @@ import {
   MessageCircleQuestion,
 } from 'lucide-react';
 import { ExplainableText } from '@/components/patient/terms/ExplainableText';
+import { useTranslation } from '@/i18n';
 import type { CarePlanItem, CarePlanStatus, CarePlanItemStatus } from '@/types/care-plan';
 
 const TYPE_ICONS: Record<CarePlanItem['itemType'], React.ElementType> = {
@@ -19,22 +20,25 @@ const TYPE_ICONS: Record<CarePlanItem['itemType'], React.ElementType> = {
   supportive_care: Heart,
 };
 
-const STATUS_CONFIG: Record<CarePlanStatus, { label: string; color: string; bg: string }> = {
+const STATUS_CONFIG: Record<CarePlanStatus, { color: string; bg: string }> = {
   todo: {
-    label: 'To Do',
     color: 'text-amber-700 dark:text-amber-400',
     bg: 'bg-amber-100 dark:bg-amber-900/30',
   },
   scheduled: {
-    label: 'Scheduled',
     color: 'text-blue-700 dark:text-blue-400',
     bg: 'bg-blue-100 dark:bg-blue-900/30',
   },
   done: {
-    label: 'Done',
     color: 'text-emerald-700 dark:text-emerald-400',
     bg: 'bg-emerald-100 dark:bg-emerald-900/30',
   },
+};
+
+const STATUS_LABEL_KEYS: Record<CarePlanStatus, string> = {
+  todo: 'carePlan.statusTodo',
+  scheduled: 'carePlan.statusScheduled',
+  done: 'carePlan.statusDone',
 };
 
 const STATUS_CYCLE: CarePlanStatus[] = ['todo', 'scheduled', 'done'];
@@ -65,6 +69,7 @@ export function CarePlanChecklist({
   onStatusChange: (itemId: string, status: CarePlanStatus) => void;
   onAskAI: (question: string) => void;
 }) {
+  const { t } = useTranslation();
   const doneCount = items.filter(
     item => (statuses[item.id]?.status ?? 'todo') === 'done',
   ).length;
@@ -82,9 +87,9 @@ export function CarePlanChecklist({
       {/* Header + Progress */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-foreground">Your Care Plan</h3>
+          <h3 className="text-sm font-semibold text-foreground">{t('carePlan.title')}</h3>
           <span className="text-xs text-muted-foreground">
-            {doneCount} of {totalCount} done
+            {t('carePlan.doneOf', { done: doneCount, total: totalCount })}
           </span>
         </div>
         <div className="h-1.5 rounded-full bg-muted overflow-hidden">
@@ -135,7 +140,7 @@ export function CarePlanChecklist({
                     className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1"
                   >
                     <MessageCircleQuestion className="w-3 h-3" />
-                    Ask AI
+                    {t('carePlan.askAI')}
                   </button>
                 </div>
               </div>
@@ -145,7 +150,7 @@ export function CarePlanChecklist({
                 onClick={() => cycleStatus(item.id)}
                 className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium ${cfg.bg} ${cfg.color} hover:opacity-80 transition-opacity`}
               >
-                {cfg.label}
+                {t(STATUS_LABEL_KEYS[status])}
               </button>
             </div>
           );

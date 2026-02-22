@@ -108,6 +108,14 @@ def serve():
         _compliance_import_error = f"{exc}\n{traceback.format_exc()}"
         compliance_router = None
 
+    _agent_import_error = None
+    try:
+        from src.api.routes.agent import router as agent_router
+    except Exception as exc:
+        import traceback
+        _agent_import_error = f"{exc}\n{traceback.format_exc()}"
+        agent_router = None
+
     api = FastAPI(
         title="Research Synthesizer API",
         description="Clinical case analysis powered by MedGemma 27B",
@@ -131,9 +139,11 @@ def serve():
         api.include_router(ems_router)
     if compliance_router:
         api.include_router(compliance_router)
+    if agent_router:
+        api.include_router(agent_router)
 
     @api.get("/health")
     async def health():
-        return {"status": "ok", "environment": "modal", "version": "2.1", "ems_loaded": ems_router is not None, "ems_error": _ems_import_error}
+        return {"status": "ok", "environment": "modal", "version": "2.2", "ems_loaded": ems_router is not None, "ems_error": _ems_import_error, "agent_loaded": agent_router is not None, "agent_error": _agent_import_error}
 
     return api

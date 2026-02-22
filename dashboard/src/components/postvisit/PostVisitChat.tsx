@@ -12,6 +12,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { ExplainableText } from '@/components/patient/terms/ExplainableText';
+import { useTranslation } from '@/i18n';
 import type { ReleasedVisitSummary } from '@/types/visit-summary';
 import type { ChatMessage, EvidenceCitation } from '@/types/postvisit';
 
@@ -34,7 +35,7 @@ function CitationBadge({ citation }: { citation: EvidenceCitation }) {
   const Icon = icons[citation.type] || BookOpen;
 
   return (
-    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium mr-1 mb-1" >
+    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium me-1 mb-1" >
       <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ${styles[citation.type] || styles.pubmed}`}>
         <Icon className="w-2.5 h-2.5" />
         {labels[citation.type] || 'Source'}
@@ -48,7 +49,7 @@ function CitationBadge({ citation }: { citation: EvidenceCitation }) {
           title={citation.title}
         >
           {citation.title}
-          <ExternalLink className="w-2.5 h-2.5 inline ml-0.5" />
+          <ExternalLink className="w-2.5 h-2.5 inline ms-0.5" />
         </a>
       ) : (
         <span className="text-muted-foreground truncate max-w-[200px]" title={citation.title}>
@@ -77,6 +78,7 @@ export function PostVisitChat({
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasHandledInitial = useRef(false);
+  const { t, bcp47 } = useTranslation();
 
   // Handle initial question from Overview tab "Ask AI" button
   useEffect(() => {
@@ -117,7 +119,10 @@ export function PostVisitChat({
   const allMessages = chatMessages.length > 0 ? chatMessages : [];
   const welcomeMessage: ChatMessage = {
     role: 'assistant',
-    content: `Hello! I'm your Care Hub companion for your visit on ${new Date(summary.visitDate).toLocaleDateString()}.\n\nYour diagnosis was **${summary.diagnosis}**. I can help you understand your diagnosis, medications, instructions, and answer questions about your visit in plain language.\n\nI use your visit summary and medical literature to provide accurate answers. For medical decisions, I'll always recommend discussing with your doctor.`,
+    content: t('chat.welcome', {
+      date: new Date(summary.visitDate).toLocaleDateString(bcp47),
+      diagnosis: summary.diagnosis,
+    }),
     timestamp: new Date().toISOString(),
   };
 
@@ -127,7 +132,7 @@ export function PostVisitChat({
       <div className="flex-1 overflow-y-auto rounded-xl border border-border bg-card p-4 mb-3 space-y-3">
         {/* Welcome message */}
         <div className="flex justify-start">
-          <div className="max-w-[85%] bg-muted text-foreground rounded-2xl rounded-tl-md px-4 py-3">
+          <div className="max-w-[85%] bg-muted text-foreground rounded-2xl rounded-ss-md px-4 py-3">
             <div className="whitespace-pre-wrap text-sm leading-relaxed">
               <ExplainableText text={welcomeMessage.content} />
             </div>
@@ -139,8 +144,8 @@ export function PostVisitChat({
             <div
               className={`max-w-[85%] ${
                 msg.role === 'user'
-                  ? 'bg-primary text-primary-foreground rounded-2xl rounded-tr-md px-4 py-3'
-                  : 'bg-muted text-foreground rounded-2xl rounded-tl-md px-4 py-3'
+                  ? 'bg-primary text-primary-foreground rounded-2xl rounded-se-md px-4 py-3'
+                  : 'bg-muted text-foreground rounded-2xl rounded-ss-md px-4 py-3'
               }`}
             >
               <div className="whitespace-pre-wrap text-sm leading-relaxed">
@@ -150,7 +155,7 @@ export function PostVisitChat({
               {/* Citations */}
               {msg.citations && msg.citations.length > 0 && (
                 <div className="mt-2 pt-2 border-t border-border">
-                  <p className="text-[10px] font-medium text-muted-foreground mb-1">Sources:</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mb-1">{t('chat.sources')}</p>
                   <div className="flex flex-wrap">
                     {msg.citations.map((c, j) => (
                       <CitationBadge key={j} citation={c} />
@@ -160,7 +165,7 @@ export function PostVisitChat({
               )}
 
               <span className="block mt-2 text-[10px] opacity-50">
-                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {new Date(msg.timestamp).toLocaleTimeString(bcp47, { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
           </div>
@@ -168,10 +173,10 @@ export function PostVisitChat({
 
         {chatLoading && (
           <div className="flex justify-start">
-            <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
+            <div className="bg-muted rounded-2xl rounded-ss-md px-4 py-3">
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
-                <span className="text-sm text-muted-foreground">Reviewing your records...</span>
+                <span className="text-sm text-muted-foreground">{t('chat.reviewingRecords')}</span>
               </div>
             </div>
           </div>
@@ -183,7 +188,7 @@ export function PostVisitChat({
       {/* Suggested questions */}
       {suggestedQuestions.length > 0 && (
         <div className="mb-2">
-          <p className="text-xs text-muted-foreground mb-1.5">Suggested questions:</p>
+          <p className="text-xs text-muted-foreground mb-1.5">{t('chat.suggestedQuestions')}</p>
           <div className="flex flex-wrap gap-1.5">
             {suggestedQuestions.map((q, i) => (
               <button
@@ -212,7 +217,7 @@ export function PostVisitChat({
                 handleSubmit(e);
               }
             }}
-            placeholder="Ask about your visit..."
+            placeholder={t('chat.placeholder')}
             rows={1}
             className="flex-1 px-3 py-2.5 bg-muted/50 border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none text-sm"
             style={{ minHeight: '44px', maxHeight: '100px' }}
@@ -228,7 +233,7 @@ export function PostVisitChat({
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Sparkles className="w-3 h-3" />
-            <span>AI answers with evidence citations — always verify with your doctor</span>
+            <span>{t('chat.disclaimer')}</span>
           </div>
           {onEscalate && chatMessages.length > 1 && (
             <button
@@ -240,7 +245,7 @@ export function PostVisitChat({
               className="flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 transition-colors"
             >
               <UserRound className="w-3 h-3" />
-              Send to my doctor
+              {t('chat.sendToDoctor')}
             </button>
           )}
         </div>

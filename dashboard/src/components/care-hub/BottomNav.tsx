@@ -9,24 +9,26 @@ import {
   HeartPulse,
   MessageCircle,
 } from 'lucide-react';
+import { useTranslation } from '@/i18n';
 
 interface NavItem {
   href: string;
-  label: string;
+  labelKey: string;
   icon: typeof Home;
   accent?: boolean;
 }
 
 const navItems: NavItem[] = [
-  { href: '/patient', label: 'Home', icon: Home },
-  { href: '/patient/checkin', label: 'Check-in', icon: ClipboardCheck, accent: true },
-  { href: '/patient/visit', label: 'My Visit', icon: FileText },
-  { href: '/patient/health', label: 'My Health', icon: HeartPulse },
-  { href: '/patient/messages', label: 'Messages', icon: MessageCircle },
+  { href: '/patient', labelKey: 'nav.home', icon: Home },
+  { href: '/patient/checkin', labelKey: 'nav.checkin', icon: ClipboardCheck, accent: true },
+  { href: '/patient/visit', labelKey: 'nav.visit', icon: FileText },
+  { href: '/patient/health', labelKey: 'nav.health', icon: HeartPulse },
+  { href: '/patient/messages', labelKey: 'nav.messages', icon: MessageCircle },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   const isActive = (href: string) => {
     if (href === '/patient') return pathname === '/patient';
@@ -58,7 +60,7 @@ export function BottomNav() {
               <span className={`text-[10px] leading-tight ${
                 active ? 'text-teal-600 font-medium' : 'text-gray-400'
               } ${item.accent ? '-mt-0.5' : ''}`}>
-                {item.label}
+                {t(item.labelKey)}
               </span>
             </Link>
           );
@@ -81,7 +83,7 @@ export function BottomNav() {
               }`}
             >
               <Icon className="w-4 h-4" />
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           );
         })}

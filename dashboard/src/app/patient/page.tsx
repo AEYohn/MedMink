@@ -22,6 +22,7 @@ import { getIntakeResults } from '@/lib/storage';
 import type { IntakeTriageResult } from '@/types/intake';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from '@/i18n';
 
 function ESIBadge({ level }: { level: number }) {
   const colors: Record<number, string> = {
@@ -42,6 +43,7 @@ export default function CareHubHomePage() {
   const { allSummaries, selectedSummary, patient } = useSelectedSummaryContext();
   const postVisit = usePostVisitContext();
   const router = useRouter();
+  const { t, bcp47 } = useTranslation();
   const [latestIntake, setLatestIntake] = useState<IntakeTriageResult | null>(null);
 
   useEffect(() => {
@@ -56,9 +58,9 @@ export default function CareHubHomePage() {
         {/* Greeting */}
         <div className="text-center">
           <h2 className="text-2xl font-bold text-slate-900">
-            {patient ? `Hi, ${patient.firstName}` : 'Welcome'}
+            {patient ? t('home.greetingWithName', { firstName: patient.firstName }) : t('home.greeting')}
           </h2>
-          <p className="text-slate-500 mt-1">How are you feeling today?</p>
+          <p className="text-slate-500 mt-1">{t('home.howAreYou')}</p>
         </div>
 
         {/* Hero CTA */}
@@ -67,25 +69,25 @@ export default function CareHubHomePage() {
           className="flex items-center justify-center gap-3 w-full py-4 bg-gradient-to-r from-teal-500 to-teal-600 text-white font-semibold text-lg rounded-2xl shadow-lg shadow-teal-500/25 hover:shadow-xl hover:shadow-teal-500/30 transition-all active:scale-[0.98]"
         >
           <ClipboardCheck className="w-6 h-6" />
-          Start Your Check-in
+          {t('home.startCheckin')}
         </Link>
 
         {/* How it works */}
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide text-center">
-            How it works
+            {t('home.howItWorks')}
           </h3>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { step: '1', label: 'Answer questions', icon: MessageCircle },
-              { step: '2', label: 'Get assessed', icon: CheckCircle2 },
-              { step: '3', label: 'Share with doctor', icon: ArrowRight },
+              { step: '1', labelKey: 'home.step1', icon: MessageCircle },
+              { step: '2', labelKey: 'home.step2', icon: CheckCircle2 },
+              { step: '3', labelKey: 'home.step3', icon: ArrowRight },
             ].map(item => (
               <div key={item.step} className="flex flex-col items-center text-center gap-2 p-3 rounded-xl bg-white border border-slate-100">
                 <div className="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center">
                   <item.icon className="w-4 h-4 text-teal-600" />
                 </div>
-                <p className="text-xs font-medium text-slate-600">{item.label}</p>
+                <p className="text-xs font-medium text-slate-600">{t(item.labelKey)}</p>
               </div>
             ))}
           </div>
@@ -94,15 +96,15 @@ export default function CareHubHomePage() {
         {/* Past check-ins */}
         {latestIntake && (
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-slate-500">Past Check-ins</h3>
+            <h3 className="text-sm font-semibold text-slate-500">{t('home.pastCheckins')}</h3>
             <div className="p-4 rounded-xl bg-white border border-slate-100">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-900">
-                    {latestIntake.triageData.chief_complaint || 'Check-in completed'}
+                    {latestIntake.triageData.chief_complaint || t('home.checkinCompleted')}
                   </p>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    {new Date(latestIntake.completedAt).toLocaleDateString('en-US', {
+                    {new Date(latestIntake.completedAt).toLocaleDateString(bcp47, {
                       month: 'short', day: 'numeric', year: 'numeric',
                     })}
                   </p>
@@ -136,13 +138,14 @@ function CareHubDashboardInner() {
   const { selectedSummary, patient } = useSelectedSummaryContext();
   const postVisit = usePostVisitContext();
   const router = useRouter();
+  const { t, bcp47 } = useTranslation();
 
   const summary = selectedSummary!;
   const { items: carePlanItems, statuses: carePlanStatuses, updateStatus: updateCarePlanStatus } = useCarePlan(summary);
 
   const activeMeds = summary.medications.filter(m => m.action !== 'discontinue');
   const nextFollowUp = summary.followUps[0];
-  const visitDate = new Date(summary.visitDate).toLocaleDateString('en-US', {
+  const visitDate = new Date(summary.visitDate).toLocaleDateString(bcp47, {
     month: 'short', day: 'numeric', year: 'numeric',
   });
 
@@ -155,10 +158,10 @@ function CareHubDashboardInner() {
       {/* Greeting */}
       <div className="rounded-2xl bg-gradient-to-br from-teal-50 to-white border border-teal-100 p-5">
         <h2 className="text-xl font-bold text-slate-900">
-          {patient ? `Welcome back, ${patient.firstName}` : 'Welcome back'}
+          {patient ? t('home.welcomeBackWithName', { firstName: patient.firstName }) : t('home.welcomeBack')}
         </h2>
         <p className="text-sm text-slate-500 mt-0.5">
-          Visit on {visitDate}
+          {t('home.visitOn', { date: visitDate })}
         </p>
       </div>
 
@@ -172,20 +175,20 @@ function CareHubDashboardInner() {
           className="p-4 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-sm hover:shadow-md transition-shadow"
         >
           <ClipboardCheck className="w-5 h-5 mb-2" />
-          <p className="text-sm font-semibold">New Check-in</p>
-          <p className="text-xs text-teal-100 mt-0.5">Start an intake</p>
+          <p className="text-sm font-semibold">{t('home.newCheckin')}</p>
+          <p className="text-xs text-teal-100 mt-0.5">{t('home.startIntake')}</p>
         </Link>
         {nextFollowUp ? (
           <div className="p-4 rounded-xl bg-white border border-slate-200">
             <Calendar className="w-5 h-5 text-slate-400 mb-2" />
-            <p className="text-sm font-semibold text-slate-900">Next Appointment</p>
+            <p className="text-sm font-semibold text-slate-900">{t('home.nextAppointment')}</p>
             <p className="text-xs text-slate-500 mt-0.5">{nextFollowUp.timeframe} &middot; {nextFollowUp.provider}</p>
           </div>
         ) : (
           <div className="p-4 rounded-xl bg-white border border-slate-200">
             <Calendar className="w-5 h-5 text-slate-400 mb-2" />
-            <p className="text-sm font-semibold text-slate-900">No Upcoming</p>
-            <p className="text-xs text-slate-500 mt-0.5">appointments</p>
+            <p className="text-sm font-semibold text-slate-900">{t('home.noUpcoming')}</p>
+            <p className="text-xs text-slate-500 mt-0.5">{t('home.appointments')}</p>
           </div>
         )}
       </div>
@@ -205,7 +208,7 @@ function CareHubDashboardInner() {
         <div className="rounded-2xl border-2 border-red-200 bg-red-50 p-5">
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="w-5 h-5 text-red-600" />
-            <h3 className="font-semibold text-red-700">Warning Signs</h3>
+            <h3 className="font-semibold text-red-700">{t('home.warningSigns')}</h3>
           </div>
           <div className="space-y-2">
             {summary.redFlags.map((flag, i) => (
@@ -224,23 +227,23 @@ function CareHubDashboardInner() {
       <div className="grid grid-cols-2 gap-3">
         <Link href="/patient/health" className="p-4 rounded-xl bg-white border border-slate-200 hover:shadow-sm transition-shadow">
           <Pill className="w-5 h-5 text-teal-600 mb-1.5" />
-          <p className="text-sm font-medium text-slate-900">Medications</p>
-          <p className="text-xs text-slate-400">{activeMeds.length} active</p>
+          <p className="text-sm font-medium text-slate-900">{t('home.medications')}</p>
+          <p className="text-xs text-slate-400">{t('home.activeCount', { count: activeMeds.length })}</p>
         </Link>
         <Link href="/patient/health" className="p-4 rounded-xl bg-white border border-slate-200 hover:shadow-sm transition-shadow">
           <Activity className="w-5 h-5 text-teal-600 mb-1.5" />
-          <p className="text-sm font-medium text-slate-900">Labs & Vitals</p>
-          <p className="text-xs text-slate-400">View results</p>
+          <p className="text-sm font-medium text-slate-900">{t('home.labsVitals')}</p>
+          <p className="text-xs text-slate-400">{t('home.viewResults')}</p>
         </Link>
         <Link href="/patient/messages" className="p-4 rounded-xl bg-white border border-slate-200 hover:shadow-sm transition-shadow">
           <Sparkles className="w-5 h-5 text-teal-600 mb-1.5" />
-          <p className="text-sm font-medium text-slate-900">Ask AI</p>
-          <p className="text-xs text-slate-400">About your visit</p>
+          <p className="text-sm font-medium text-slate-900">{t('home.askAI')}</p>
+          <p className="text-xs text-slate-400">{t('home.aboutYourVisit')}</p>
         </Link>
         <Link href="/patient/messages?tab=doctor" className="p-4 rounded-xl bg-white border border-slate-200 hover:shadow-sm transition-shadow">
           <MessageCircle className="w-5 h-5 text-teal-600 mb-1.5" />
-          <p className="text-sm font-medium text-slate-900">Message Doctor</p>
-          <p className="text-xs text-slate-400">Send a note</p>
+          <p className="text-sm font-medium text-slate-900">{t('home.messageDoctor')}</p>
+          <p className="text-xs text-slate-400">{t('home.sendNote')}</p>
         </Link>
       </div>
 
@@ -250,7 +253,7 @@ function CareHubDashboardInner() {
         className="flex items-center gap-3 px-4 py-3.5 bg-white rounded-2xl border border-slate-200 hover:shadow-sm transition-shadow"
       >
         <Sparkles className="w-5 h-5 text-teal-500" />
-        <span className="text-sm text-slate-400 flex-1">Ask me anything about your visit...</span>
+        <span className="text-sm text-slate-400 flex-1">{t('home.askAnything')}</span>
         <ArrowRight className="w-4 h-4 text-slate-300" />
       </Link>
     </div>

@@ -9,6 +9,7 @@ import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { getApiUrl } from '@/lib/api-url';
 import { saveIntakeResult } from '@/lib/storage';
 import { mockStartInterview, mockRespond, mockComplete } from '@/lib/mock-interview';
+import { useTranslation, LANGUAGES } from '@/i18n';
 import type { TriageData } from '@/types/intake';
 
 const API_URL = getApiUrl() || '';
@@ -40,16 +41,16 @@ interface Message {
   transcript?: string;
 }
 
-const PHASE_LABELS: Record<string, string> = {
-  greeting: 'Greeting',
-  chief_complaint: 'Chief Complaint',
-  hpi: 'History of Present Illness',
-  review_of_systems: 'Review of Systems',
-  pmh_psh_fh_sh: 'Past History',
-  medications: 'Medications',
-  allergies: 'Allergies',
-  review_and_triage: 'Review & Triage',
-  complete: 'Complete',
+const PHASE_LABEL_KEYS: Record<string, string> = {
+  greeting: 'intake.phase.greeting',
+  chief_complaint: 'intake.phase.chief_complaint',
+  hpi: 'intake.phase.hpi',
+  review_of_systems: 'intake.phase.review_of_systems',
+  pmh_psh_fh_sh: 'intake.phase.pmh_psh_fh_sh',
+  medications: 'intake.phase.medications',
+  allergies: 'intake.phase.allergies',
+  review_and_triage: 'intake.phase.review_and_triage',
+  complete: 'intake.phase.complete',
 };
 
 const PHASES = [
@@ -63,16 +64,6 @@ const PHASES = [
   'complete',
 ];
 
-const LANGUAGES = [
-  { code: 'en', label: 'English', bcp47: 'en-US' },
-  { code: 'zh', label: '中文 (Mandarin)', bcp47: 'zh-CN' },
-  { code: 'ms', label: 'Bahasa Melayu', bcp47: 'ms-MY' },
-  { code: 'ta', label: 'தமிழ் (Tamil)', bcp47: 'ta-IN' },
-  { code: 'es', label: 'Español', bcp47: 'es-US' },
-  { code: 'vi', label: 'Tiếng Việt', bcp47: 'vi-VN' },
-  { code: 'ar', label: 'العربية (Arabic)', bcp47: 'ar-SA' },
-];
-
 export function CareHubIntake({
   onComplete,
   onBack,
@@ -81,6 +72,7 @@ export function CareHubIntake({
   onBack?: () => void;
 } = {}) {
   const router = useRouter();
+  const { locale: language, setLocale: setLanguage, t } = useTranslation();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentPhase, setCurrentPhase] = useState<string>('greeting');
@@ -88,7 +80,6 @@ export function CareHubIntake({
   const [inputText, setInputText] = useState('');
   const [triage, setTriage] = useState<TriageData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [language, setLanguage] = useState('en');
   const [mockMode, setMockMode] = useState(false);
   const [saved, setSaved] = useState(false);
   const [isHandingOff, setIsHandingOff] = useState(false);
@@ -297,11 +288,9 @@ export function CareHubIntake({
             <div className="p-4 bg-primary/10 rounded-2xl w-fit mx-auto mb-4">
               <Phone className="w-10 h-10 text-primary" />
             </div>
-            <h2 className="text-xl font-semibold mb-2">Patient Intake</h2>
+            <h2 className="text-xl font-semibold mb-2">{t('intake.title')}</h2>
             <p className="text-sm text-muted-foreground">
-              Complete your medical intake before your visit. An AI assistant will
-              guide you through a structured interview to collect your symptoms,
-              history, and relevant information.
+              {t('intake.description')}
             </p>
           </div>
 
@@ -310,12 +299,9 @@ export function CareHubIntake({
             <div className="flex items-start gap-2">
               <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-red-800 dark:text-red-300">
-                <p className="font-semibold mb-1">Emergency Warning</p>
+                <p className="font-semibold mb-1">{t('intake.emergencyTitle')}</p>
                 <p>
-                  If you are experiencing a life-threatening emergency — such as chest pain,
-                  difficulty breathing, severe bleeding, or loss of consciousness —{' '}
-                  <strong>call 911 (or your local emergency number) immediately</strong>.
-                  Do not rely on this tool for emergency care.
+                  {t('intake.emergencyText')}
                 </p>
               </div>
             </div>
@@ -323,19 +309,19 @@ export function CareHubIntake({
 
           <div className="grid grid-cols-2 gap-3 text-sm max-w-sm">
             <div className="p-3 rounded-xl bg-muted/50 text-center">
-              <p className="font-medium">Voice or Text</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Use mic or keyboard</p>
+              <p className="font-medium">{t('intake.voiceOrText')}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t('intake.voiceOrTextDesc')}</p>
             </div>
             <div className="p-3 rounded-xl bg-muted/50 text-center">
-              <p className="font-medium">5-8 Questions</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Adaptive interview</p>
+              <p className="font-medium">{t('intake.questionCount')}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t('intake.questionCountDesc')}</p>
             </div>
           </div>
 
           {/* Language Selector */}
           <div className="flex flex-col items-center gap-1.5">
             <label htmlFor="intake-language" className="text-sm font-medium text-muted-foreground">
-              Language
+              {t('intake.language')}
             </label>
             <select
               id="intake-language"
@@ -361,7 +347,7 @@ export function CareHubIntake({
             ) : (
               <ClipboardList className="w-5 h-5" />
             )}
-            Start Intake
+            {t('intake.startIntake')}
           </button>
         </div>
       ) : triage ? (
@@ -374,16 +360,16 @@ export function CareHubIntake({
                 <CheckCircle2 className="w-6 h-6 text-emerald-600" />
                 <div>
                   <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
-                    Intake Complete
+                    {t('intake.intakeComplete')}
                   </p>
                   <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                    Your intake has been shared with your care team. They will review it before your visit.
+                    {t('intake.intakeShared')}
                   </p>
                 </div>
               </div>
             </div>
 
-            <h2 className="text-lg font-semibold">Your Assessment Summary</h2>
+            <h2 className="text-lg font-semibold">{t('intake.assessmentSummary')}</h2>
             <TriageResult triage={triage} />
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -423,12 +409,12 @@ export function CareHubIntake({
                 {isHandingOff ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Preparing Clinician Workspace...
+                    {t('intake.preparingClinician')}
                   </>
                 ) : (
                   <>
                     <Stethoscope className="w-4 h-4" />
-                    Prepare Case for Clinician
+                    {t('intake.prepareClinician')}
                   </>
                 )}
               </button>
@@ -444,7 +430,7 @@ export function CareHubIntake({
                 }}
                 className="px-4 py-2 text-sm font-medium border border-border rounded-xl hover:bg-muted transition-colors"
               >
-                Start New Intake
+                {t('intake.startNewIntake')}
               </button>
             </div>
           </div>
@@ -455,7 +441,7 @@ export function CareHubIntake({
           {/* Emergency Banner */}
           <div className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-950/30 border-b border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300">
             <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-            <span>If this is a medical emergency, <strong>call 911</strong> immediately.</span>
+            <span>{t('intake.emergencyBanner')}</span>
           </div>
 
           {/* Phase Progress */}
@@ -474,14 +460,14 @@ export function CareHubIntake({
             </div>
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
-                {PHASE_LABELS[currentPhase] || currentPhase}
+                {t(PHASE_LABEL_KEYS[currentPhase] || currentPhase)}
               </p>
               <button
                 onClick={completeInterview}
                 disabled={isLoading || messages.length < 4}
                 className="text-xs font-medium text-primary hover:underline disabled:opacity-50 disabled:no-underline"
               >
-                Complete & Submit
+                {t('intake.completeSubmit')}
               </button>
             </div>
           </div>
@@ -490,7 +476,7 @@ export function CareHubIntake({
           {error && (
             <div className="mx-4 mt-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-700 dark:text-red-300 flex items-center justify-between">
               <span>{error}</span>
-              <button onClick={() => setError(null)} className="ml-2 p-0.5 hover:bg-red-500/10 rounded">
+              <button onClick={() => setError(null)} className="ms-2 p-0.5 hover:bg-red-500/10 rounded">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>

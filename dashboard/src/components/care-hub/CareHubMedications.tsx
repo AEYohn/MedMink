@@ -17,6 +17,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { ExplainableText } from '@/components/patient/terms/ExplainableText';
+import { useTranslation } from '@/i18n';
 import { getApiUrl } from '@/lib/api-url';
 import type { ReleasedVisitSummary } from '@/types/visit-summary';
 import { filterActualMedications } from '@/types/visit-summary';
@@ -26,10 +27,10 @@ const actionBadge: Record<string, string> = {
   new: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   discontinue: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 };
-const actionLabel: Record<string, string> = {
-  continue: 'Continue',
-  new: 'New',
-  discontinue: 'Stop',
+const actionLabelKey: Record<string, string> = {
+  continue: 'meds.actionContinue',
+  new: 'meds.actionNew',
+  discontinue: 'meds.actionStop',
 };
 
 interface DrugInteraction {
@@ -71,6 +72,7 @@ export function CareHubMedications({
   summary: ReleasedVisitSummary;
   onAskAI: (question: string) => void;
 }) {
+  const { t } = useTranslation();
   const medications = useMemo(() => filterActualMedications(summary.medications), [summary.medications]);
 
   // Drug interaction checker state
@@ -128,16 +130,16 @@ export function CareHubMedications({
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-4">
             <Pill className="w-4 h-4 text-primary" />
-            <h3 className="font-semibold text-foreground">Your Medications</h3>
+            <h3 className="font-semibold text-foreground">{t('meds.yourMedications')}</h3>
           </div>
           <div className="rounded-xl border border-border overflow-hidden overflow-x-auto">
             <table className="w-full text-sm min-w-[480px]">
               <thead>
                 <tr className="bg-muted/50 border-b border-border">
-                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">Medication</th>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">Dose</th>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">How Often</th>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">Action</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">{t('meds.medication')}</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">{t('meds.dose')}</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">{t('meds.howOften')}</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">{t('meds.action')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -150,7 +152,7 @@ export function CareHubMedications({
                     <td className="px-4 py-2.5 text-muted-foreground">{med.frequency || '—'}</td>
                     <td className="px-4 py-2.5">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${actionBadge[med.action] || ''}`}>
-                        {actionLabel[med.action] || med.action}
+                        {actionLabelKey[med.action] ? t(actionLabelKey[med.action]) : med.action}
                       </span>
                     </td>
                   </tr>
@@ -184,7 +186,7 @@ export function CareHubMedications({
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <Clock className="w-4 h-4 text-purple-500" />
-            <h3 className="font-semibold text-sm text-foreground">When to Take Your Medications</h3>
+            <h3 className="font-semibold text-sm text-foreground">{t('meds.whenToTake')}</h3>
           </div>
           <div className="space-y-2">
             {medications
@@ -197,7 +199,7 @@ export function CareHubMedications({
                     <p className="text-xs text-muted-foreground">{med.frequency}</p>
                   </div>
                   <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${actionBadge[med.action]}`}>
-                    {actionLabel[med.action]}
+                    {t(actionLabelKey[med.action])}
                   </span>
                 </div>
               ))}
@@ -209,10 +211,10 @@ export function CareHubMedications({
       <div className="rounded-2xl border border-border bg-card p-5">
         <div className="flex items-center gap-2 mb-4">
           <Search className="w-4 h-4 text-primary" />
-          <h3 className="font-semibold text-foreground">Drug Interaction Checker</h3>
+          <h3 className="font-semibold text-foreground">{t('meds.interactionChecker')}</h3>
         </div>
         <p className="text-xs text-muted-foreground mb-3">
-          Add any other medications, supplements, or OTC drugs you take to check for interactions with your prescribed medications.
+          {t('meds.interactionDesc')}
         </p>
 
         {/* Extra meds list */}
@@ -238,7 +240,7 @@ export function CareHubMedications({
             type="text"
             value={newMedName}
             onChange={e => setNewMedName(e.target.value)}
-            placeholder="e.g., Ibuprofen, Vitamin D..."
+            placeholder={t('meds.medPlaceholder')}
             className="flex-1 px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder-muted-foreground"
           />
           <button
@@ -260,12 +262,12 @@ export function CareHubMedications({
             {isChecking ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Checking...
+                {t('meds.checking')}
               </>
             ) : (
               <>
                 <Search className="w-4 h-4" />
-                Check for Interactions
+                {t('meds.checkInteractions')}
               </>
             )}
           </button>
@@ -274,7 +276,7 @@ export function CareHubMedications({
         {allMedNames.length >= 2 && (
           <p className="text-xs text-center text-muted-foreground mt-2 flex items-center justify-center gap-1">
             <Sparkles className="w-3 h-3" />
-            Powered by AI + medical literature
+            {t('meds.poweredByAI')}
           </p>
         )}
       </div>
@@ -288,7 +290,7 @@ export function CareHubMedications({
                 <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-amber-800 dark:text-amber-200">Check Failed</h3>
+                <h3 className="font-semibold text-amber-800 dark:text-amber-200">{t('meds.checkFailed')}</h3>
                 <p className="text-sm text-amber-600 dark:text-amber-400">{checkError}</p>
               </div>
             </div>
@@ -313,8 +315,8 @@ export function CareHubMedications({
                     <Check className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-emerald-800 dark:text-emerald-200">No Major Interactions Found</h3>
-                    <p className="text-sm text-emerald-600 dark:text-emerald-400">These medications appear safe together</p>
+                    <h3 className="font-semibold text-emerald-800 dark:text-emerald-200">{t('meds.noMajorInteractions')}</h3>
+                    <p className="text-sm text-emerald-600 dark:text-emerald-400">{t('meds.safeTogetherMsg')}</p>
                   </div>
                 </>
               ) : (
@@ -323,9 +325,9 @@ export function CareHubMedications({
                     <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-amber-800 dark:text-amber-200">Potential Interactions Detected</h3>
+                    <h3 className="font-semibold text-amber-800 dark:text-amber-200">{t('meds.interactionsDetected')}</h3>
                     <p className="text-sm text-amber-600 dark:text-amber-400">
-                      {checkResult.interactions.length} interaction(s) found
+                      {t('meds.interactionCount', { count: checkResult.interactions.length })}
                     </p>
                   </div>
                 </>
@@ -363,11 +365,11 @@ export function CareHubMedications({
                     {isExpanded && (
                       <div className="mt-4 ml-10 space-y-3">
                         <div>
-                          <h4 className="text-xs font-semibold text-muted-foreground uppercase">Description</h4>
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase">{t('meds.description')}</h4>
                           <p className="text-sm text-muted-foreground mt-1">{interaction.description}</p>
                         </div>
                         <div>
-                          <h4 className="text-xs font-semibold text-muted-foreground uppercase">Recommendation</h4>
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase">{t('meds.recommendation')}</h4>
                           <p className="text-sm text-muted-foreground mt-1">{interaction.recommendation}</p>
                         </div>
                       </div>
@@ -380,7 +382,7 @@ export function CareHubMedications({
 
           {checkResult.recommendations.length > 0 && (
             <div className="p-4 border-t border-border bg-muted/50">
-              <h4 className="text-sm font-semibold text-foreground mb-2">Recommendations</h4>
+              <h4 className="text-sm font-semibold text-foreground mb-2">{t('meds.recommendations')}</h4>
               <ul className="space-y-1">
                 {checkResult.recommendations.map((rec, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">

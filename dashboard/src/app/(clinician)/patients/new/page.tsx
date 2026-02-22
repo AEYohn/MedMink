@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,6 +32,7 @@ const SECTIONS = [
 
 export default function NewPatientPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeSection, setActiveSection] = useState('demographics');
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -61,6 +62,20 @@ export default function NewPatientPage() {
   const allergies = formValues.allergies || [];
   const conditions = formValues.conditions || [];
   const medications = formValues.medications || [];
+
+  // Pre-fill form from query params (e.g. from "Create Patient from Case")
+  useEffect(() => {
+    const sex = searchParams.get('sex');
+    if (sex && ['male', 'female', 'other'].includes(sex)) {
+      setValue('sex', sex as 'male' | 'female' | 'other');
+    }
+    const dob = searchParams.get('dateOfBirth');
+    if (dob) setValue('dateOfBirth', dob);
+    const conds = searchParams.get('conditions');
+    if (conds) setValue('conditions', conds.split(',').map(c => c.trim()).filter(Boolean));
+    const meds = searchParams.get('medications');
+    if (meds) setValue('medications', meds.split(',').map(m => m.trim()).filter(Boolean));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // IntersectionObserver for scroll-based section highlighting
   useEffect(() => {

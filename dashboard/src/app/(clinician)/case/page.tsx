@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo, FormEvent } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Stethoscope,
   Loader2,
@@ -12,7 +13,6 @@ import {
   FileText,
   Lightbulb,
   Activity,
-  Pill,
   Beaker,
   ArrowLeft,
   Clipboard,
@@ -20,11 +20,13 @@ import {
   Camera,
   BarChart3,
   Save,
-  Shield,
   ClipboardList,
   Wrench,
   Send,
   Eye,
+  Pill,
+  UserPlus,
+  FileBarChart,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -70,10 +72,16 @@ import { FollowUpChatDrawer } from '@/components/case/FollowUpChatDrawer';
 import { SafetyAlertBanner } from '@/components/case/SafetyAlertBanner';
 import { PatientSummaryPreview } from '@/components/case/PatientSummaryPreview';
 import { PatientBanner } from '@/components/shared/PatientBanner';
+import { PatientSelector } from '@/components/case/PatientSelector';
+import { PatientContextCard } from '@/components/case/PatientContextCard';
+import { TriageDataBanner } from '@/components/case/TriageDataBanner';
 import { usePatientFromUrl } from '@/hooks/usePatientFromUrl';
 import { useActivePatient } from '@/contexts/ActivePatientContext';
+import { getPatient, getPatientAge } from '@/lib/patient-storage';
+import type { Patient } from '@/lib/patient-storage';
 import { buildVisitSummary } from '@/lib/visit-summary-builder';
 import { saveReleasedSummary, getReleasedSummaryBySession } from '@/lib/storage';
+import { buildSOAPFromCase } from '@/lib/case-to-soap';
 
 import type { NewFindings, ClinicianOverrides } from '@/lib/storage';
 import {
@@ -88,6 +96,15 @@ import type {
   FollowUpMessage,
   SSEEvent,
 } from '@/types/case';
+
+// Tab migration for saved sessions with old tab names
+const TAB_MIGRATION: Record<string, string> = {
+  assessment: 'review',
+  treatment: 'plan',
+  safety: 'review',
+  orders: 'plan',
+  tools: 'tools',
+};
 
 // Example cases
 const EXAMPLE_CASES: Record<string, { label: string; text: string }> = {
@@ -173,7 +190,8 @@ function Section({
 // ─── Main Page Component ────────────────────────────────────────────────────
 export default function CaseAnalysisPage() {
   usePatientFromUrl();
-  const { patientId: activePatientId } = useActivePatient();
+  const router = useRouter();
+  const { patientId: activePatientId, setActivePatient, clearActivePatient } = useActivePatient();
   const [caseText, setCaseText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<string | null>(null);
@@ -225,7 +243,7 @@ export default function CaseAnalysisPage() {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Tab & drawer state
-  const [activeTab, setActiveTab] = useState('assessment');
+  const [activeTab, setActiveTab] = useState('review');
   const [chatOpen, setChatOpen] = useState(false);
 
   // Patient visit summary release state
@@ -237,8 +255,24 @@ export default function CaseAnalysisPage() {
   const [patientId, setPatientId] = useState('');
   const pendingPatientQuestions = usePatientQuestionCount(patientId || undefined);
 
+  const linkedPatient = useMemo(() => {
+    if (!patientId) return null;
+    return getPatient(patientId);
+  }, [patientId]);
+
   // Case session state
   const session = useCaseSession();
+
+  const handlePatientSelect = useCallback((patient: Patient | null) => {
+    if (patient) {
+      setPatientId(patient.id);
+      setActivePatient(patient.id);
+      session.updatePatientId(patient.id);
+    } else {
+      setPatientId('');
+      clearActivePatient();
+    }
+  }, [session, setActivePatient, clearActivePatient]);
 
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab);
@@ -348,6 +382,7 @@ export default function CaseAnalysisPage() {
       const s = session.currentSession;
       setCaseText(s.currentCaseText);
       setPatientId(s.patientId || '');
+      if (s.patientId) setActivePatient(s.patientId);
       if (s.overrides) setOverrides(s.overrides);
       if (s.currentResult) {
         const r = s.currentResult as unknown as CaseAnalysisData;
@@ -356,7 +391,7 @@ export default function CaseAnalysisPage() {
         if (r.suggested_followups?.length) setSuggestedQuestions(r.suggested_followups);
       }
       if (s.followUpMessages?.length) setFollowUpMessages(s.followUpMessages);
-      if (s.activeTab) setActiveTab(s.activeTab);
+      if (s.activeTab) setActiveTab(TAB_MIGRATION[s.activeTab] || s.activeTab);
       if (s.chatOpen) setChatOpen(s.chatOpen);
     }
   }, [session.isLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -370,6 +405,22 @@ export default function CaseAnalysisPage() {
       session.updateFollowUpMessages(followUpMessages);
     }
   }, [followUpMessages]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-save case text to session as user types (debounced)
+  const caseTextSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!session.currentSession || !caseText || isLoading) return;
+    if (caseText === session.currentSession.currentCaseText) return;
+    if (caseTextSaveRef.current) clearTimeout(caseTextSaveRef.current);
+    caseTextSaveRef.current = setTimeout(() => {
+      session.saveSession({
+        ...session.currentSession!,
+        currentCaseText: caseText,
+        updatedAt: new Date().toISOString(),
+      });
+    }, 1000);
+    return () => { if (caseTextSaveRef.current) clearTimeout(caseTextSaveRef.current); };
+  }, [caseText]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // SSE stream helper
   const processSSEStream = useCallback(async (
@@ -448,7 +499,6 @@ export default function CaseAnalysisPage() {
     setIsFollowUpLoading(true);
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const slimSummary = {
         top_recommendation: result.top_recommendation,
         recommendation_rationale: result.recommendation_rationale,
@@ -504,15 +554,40 @@ export default function CaseAnalysisPage() {
     setIsLoading(true);
     resetAnalysisState();
     const title = caseText.trim().slice(0, 60).replace(/\n/g, ' ') + '...';
-    if (!session.currentSession) session.createSession(caseText.trim(), title);
+    if (!session.currentSession) {
+      session.createSession(caseText.trim(), title);
+    } else {
+      // Update existing session with latest text before analyzing
+      session.saveSession({
+        ...session.currentSession,
+        currentCaseText: caseText.trim(),
+        updatedAt: new Date().toISOString(),
+      });
+    }
     if (patientId.trim()) session.updatePatientId(patientId.trim());
+
+    // Enrich case text with patient medical context
+    let analysisText = caseText.trim();
+    if (linkedPatient) {
+      const ctx: string[] = [];
+      const age = getPatientAge(linkedPatient);
+      const sex = linkedPatient.sex;
+      ctx.push(`Patient: ${age}yo ${sex === 'male' ? 'male' : sex === 'female' ? 'female' : 'patient'}`);
+      if (linkedPatient.conditions.length > 0) ctx.push(`PMH: ${linkedPatient.conditions.join(', ')}`);
+      if (linkedPatient.medications.length > 0) ctx.push(`Current medications: ${linkedPatient.medications.join(', ')}`);
+      if (linkedPatient.allergies.length > 0) ctx.push(`Allergies: ${linkedPatient.allergies.join(', ')}`);
+      const contextBlock = ctx.join('. ') + '.';
+      if (!analysisText.includes(contextBlock.slice(0, 30))) {
+        analysisText = contextBlock + '\n\n' + analysisText;
+      }
+    }
+
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/analyze/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ case_text: caseText.trim() }),
+        body: JSON.stringify({ case_text: analysisText }),
       });
       if (!response.ok) throw new Error('Failed to start analysis');
       await processSSEStream(response, (resultData) => {
@@ -542,7 +617,6 @@ export default function CaseAnalysisPage() {
     setCompletedSteps(new Set());
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/reassess/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -590,6 +664,8 @@ export default function CaseAnalysisPage() {
     if (loaded) {
       setCaseText(loaded.currentCaseText);
       setPatientId(loaded.patientId || '');
+      if (loaded.patientId) setActivePatient(loaded.patientId);
+      else clearActivePatient();
       if (loaded.overrides) setOverrides(loaded.overrides);
       else setOverrides(createEmptyOverrides());
       if (loaded.currentResult) {
@@ -623,7 +699,6 @@ export default function CaseAnalysisPage() {
     setImageResult(null);
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const formData = new FormData();
       formData.append('image', file);
       formData.append('context', caseText || '');
@@ -649,7 +724,6 @@ export default function CaseAnalysisPage() {
     setLabResult(null);
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const formData = new FormData();
       formData.append('image', file);
       const response = await fetch(`${apiUrl}/api/labs/extract`, { method: 'POST', body: formData });
@@ -751,7 +825,20 @@ export default function CaseAnalysisPage() {
           </div>
         </header>
 
-        <PatientBanner className="mb-4" />
+        {linkedPatient && (
+          <PatientContextCard
+            patient={linkedPatient}
+            onUnlink={() => handlePatientSelect(null)}
+          />
+        )}
+
+        {/* Triage Data Banner — show when patient linked and no analysis yet */}
+        {linkedPatient && !result && (
+          <TriageDataBanner
+            patientId={linkedPatient.id}
+            onLoadIntoCase={(text) => setCaseText(text)}
+          />
+        )}
 
         {/* Case Sessions */}
         {session.allSessions.length > 0 && (
@@ -793,14 +880,39 @@ export default function CaseAnalysisPage() {
                   </Button>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={patientId}
-                    onChange={(e) => setPatientId(e.target.value)}
-                    placeholder="Patient ID (optional)"
-                    className="h-9 w-40 rounded-md border border-input bg-background px-2 text-xs shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  <PatientSelector
+                    selectedPatientId={patientId || null}
+                    onSelect={handlePatientSelect}
                     disabled={isLoading}
                   />
+                  {result && parsedCase && !patientId && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const params = new URLSearchParams();
+                        if (parsedCase.patient?.sex) params.set('sex', parsedCase.patient.sex);
+                        if (parsedCase.patient?.age) {
+                          const ageNum = parseInt(parsedCase.patient.age);
+                          if (!isNaN(ageNum)) {
+                            const year = new Date().getFullYear() - ageNum;
+                            params.set('dateOfBirth', `${year}-01-01`);
+                          }
+                        }
+                        if (parsedCase.patient?.relevant_history?.length) {
+                          params.set('conditions', parsedCase.patient.relevant_history.join(','));
+                        }
+                        if (parsedCase.management?.medications?.length) {
+                          params.set('medications', parsedCase.management.medications.join(','));
+                        }
+                        router.push(`/patients/new?${params.toString()}`);
+                      }}
+                    >
+                      <UserPlus className="w-4 h-4 mr-1" />
+                      Create Patient
+                    </Button>
+                  )}
                   <Button type="submit" disabled={caseText.trim().length < MIN_CASE_LENGTH || isLoading}>
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Sparkles className="w-4 h-4 mr-1" />}
                     {isLoading ? 'Analyzing...' : 'Analyze Case'}
@@ -899,38 +1011,33 @@ export default function CaseAnalysisPage() {
             ═══════════════════════════════════════════════════════════════ */}
         {result && (
           <div className="space-y-4 animate-fade-in">
+            {/* Patient banner in results view */}
+            {linkedPatient && <PatientBanner className="mb-0" />}
+
             {/* Case Summary — always visible */}
             {parsedCase && <CaseSummaryCard parsedCase={parsedCase} />}
 
             {/* Safety Alert Banner */}
             <SafetyAlertBanner
               count={unackedAlerts}
-              onReview={() => handleTabChange('safety')}
+              onReview={() => handleTabChange('review')}
             />
 
             {/* Tabbed Interface */}
             <Tabs value={activeTab} onValueChange={handleTabChange}>
               <TabsList className="w-full justify-start overflow-x-auto">
-                <TabsTrigger value="assessment" className="gap-1.5">
+                <TabsTrigger value="review" className="gap-1.5 relative">
                   <Stethoscope className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Assessment</span>
-                </TabsTrigger>
-                <TabsTrigger value="treatment" className="gap-1.5">
-                  <Pill className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Treatment</span>
-                </TabsTrigger>
-                <TabsTrigger value="safety" className="gap-1.5 relative">
-                  <Shield className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Safety</span>
+                  <span className="hidden sm:inline">Clinical Review</span>
                   {unackedAlerts > 0 && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
                       {unackedAlerts}
                     </span>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="orders" className="gap-1.5 relative">
+                <TabsTrigger value="plan" className="gap-1.5 relative">
                   <ClipboardList className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Orders</span>
+                  <span className="hidden sm:inline">Plan &amp; Orders</span>
                   {pendingPatientQuestions > 0 && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] flex items-center justify-center font-bold">
                       {pendingPatientQuestions}
@@ -943,8 +1050,8 @@ export default function CaseAnalysisPage() {
                 </TabsTrigger>
               </TabsList>
 
-              {/* ─── Assessment Tab ─── */}
-              <TabsContent value="assessment">
+              {/* ─── Clinical Review Tab (Assessment + Safety) ─── */}
+              <TabsContent value="review" forceMount className={activeTab !== 'review' ? 'hidden' : ''}>
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                   <div className="lg:col-span-3 space-y-6">
                     {hasAcuteManagement(result.acute_management) && (
@@ -955,6 +1062,33 @@ export default function CaseAnalysisPage() {
                         caseSnippet={caseText.slice(0, 300)}
                       />
                     )}
+                    <SafetyAlertsPanel
+                      medicationReview={result.medication_review}
+                      currentMedications={[
+                        ...(result.parsed_case?.management?.medications || []),
+                        ...(linkedPatient?.medications || []).filter(
+                          (med: string) => !(result.parsed_case?.management?.medications || [])
+                            .some((m: string) => m.toLowerCase().includes(med.toLowerCase()))
+                        ),
+                      ]}
+                      newMedications={
+                        result.treatment_options
+                          ?.filter((t: TreatmentOption) => t.verdict === 'recommended')
+                          .map((t: TreatmentOption) => t.name) || []
+                      }
+                      patientConditions={result.parsed_case?.patient?.relevant_history || []}
+                      allergies={linkedPatient?.allergies || []}
+                      labs={result.parsed_case?.findings?.labs || []}
+                      age={result.parsed_case?.patient?.age || ''}
+                      sex={result.parsed_case?.patient?.sex || ''}
+                      overrides={overrides}
+                      onOverridesChange={handleOverridesChange}
+                      treatmentOptions={result.treatment_options.map(t => ({
+                        name: t.name,
+                        verdict: t.verdict,
+                        cons: t.cons,
+                      }))}
+                    />
                   </div>
                   <div className="lg:col-span-2 space-y-6">
                     <RiskScoresTab
@@ -1000,9 +1134,10 @@ export default function CaseAnalysisPage() {
                 </div>
               </TabsContent>
 
-              {/* ─── Treatment Tab ─── */}
-              <TabsContent value="treatment">
+              {/* ─── Plan & Orders Tab (Treatment + Orders) ─── */}
+              <TabsContent value="plan" forceMount className={activeTab !== 'plan' ? 'hidden' : ''}>
                 <div className="space-y-6">
+                  {/* Treatment Section */}
                   <TreatmentPlanEditor
                     treatmentOptions={result.treatment_options}
                     topRecommendation={result.top_recommendation}
@@ -1032,28 +1167,21 @@ export default function CaseAnalysisPage() {
                         const papers = result.papers_reviewed || [];
                         if (treatments.length === 0) return undefined;
 
-                        // Study Quality — from evidence grades (A=1, B=0.75, C=0.5, D=0.25)
                         const gradeMap: Record<string, number> = { A: 1, B: 0.75, C: 0.5, D: 0.25 };
                         const grades = treatments.map(t => gradeMap[t.evidence_grade?.charAt(0)?.toUpperCase()] ?? 0.4);
                         const studyQuality = grades.reduce((a, b) => a + b, 0) / grades.length;
 
-                        // Recency — from paper years
                         const years = papers.map(p => parseInt(p.year || '0')).filter(y => y > 2000);
                         const recency = years.length > 0
                           ? Math.min(1, (years.reduce((a, b) => a + b, 0) / years.length - 2015) / 10)
                           : 0.3;
 
-                        // Consistency — how many treatments have key evidence
                         const withEvidence = treatments.filter(t => t.key_evidence?.length > 0).length;
                         const consistency = treatments.length > 0 ? withEvidence / treatments.length : 0;
 
-                        // Publication Volume — based on number of papers
                         const volume = Math.min(1, papers.length / 15);
-
-                        // Relevance — avg confidence of treatments
                         const relevance = treatments.reduce((a, t) => a + (t.confidence || 0), 0) / treatments.length;
 
-                        // Directness — proportion of keyword-matched papers vs general
                         const allPapers = treatments.flatMap(t => t.papers_used || []);
                         const keywordMatched = allPapers.filter(p => p.match_type === 'keyword').length;
                         const directness = allPapers.length > 0 ? keywordMatched / allPapers.length : 0.3;
@@ -1076,37 +1204,11 @@ export default function CaseAnalysisPage() {
                     papersReviewed={result.papers_reviewed || []}
                     treatmentOptions={result.treatment_options}
                   />
-                </div>
-              </TabsContent>
 
-              {/* ─── Safety Tab (forceMount to preserve state) ─── */}
-              <TabsContent value="safety" forceMount className={activeTab !== 'safety' ? 'hidden' : ''}>
-                <SafetyAlertsPanel
-                  medicationReview={result.medication_review}
-                  currentMedications={result.parsed_case?.management?.medications || []}
-                  newMedications={
-                    result.treatment_options
-                      ?.filter((t: TreatmentOption) => t.verdict === 'recommended')
-                      .map((t: TreatmentOption) => t.name) || []
-                  }
-                  patientConditions={result.parsed_case?.patient?.relevant_history || []}
-                  allergies={[]}
-                  labs={result.parsed_case?.findings?.labs || []}
-                  age={result.parsed_case?.patient?.age || ''}
-                  sex={result.parsed_case?.patient?.sex || ''}
-                  overrides={overrides}
-                  onOverridesChange={handleOverridesChange}
-                  treatmentOptions={result.treatment_options.map(t => ({
-                    name: t.name,
-                    verdict: t.verdict,
-                    cons: t.cons,
-                  }))}
-                />
-              </TabsContent>
+                  {/* Divider between treatment and orders */}
+                  <hr className="border-border" />
 
-              {/* ─── Orders Tab (forceMount to preserve state) ─── */}
-              <TabsContent value="orders" forceMount className={activeTab !== 'orders' ? 'hidden' : ''}>
-                <div className="space-y-6">
+                  {/* Orders Section */}
                   <DischargeEditor
                     parsedCase={result.parsed_case as unknown as Record<string, unknown>}
                     treatmentOptions={result.treatment_options as unknown as Array<Record<string, unknown>>}
@@ -1194,6 +1296,18 @@ export default function CaseAnalysisPage() {
                     acuteManagement={result.acute_management}
                     treatmentOptions={result.treatment_options.map(t => ({ name: t.name, verdict: t.verdict }))}
                   />
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      const soap = buildSOAPFromCase(result, caseText);
+                      sessionStorage.setItem('case-to-chart-soap', JSON.stringify(soap));
+                      router.push('/chart');
+                    }}
+                  >
+                    <FileBarChart className="w-4 h-4 mr-2" />
+                    Send to Chart
+                  </Button>
                   {session.currentSession && session.currentSession.events.length > 0 && (
                     <>
                       <Section

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Mic,
@@ -63,6 +63,18 @@ export default function ChartingPage() {
   const [processingMode, setProcessingMode] = useState<'text' | 'audio'>('text');
   const [showCompliance, setShowCompliance] = useState(true);
 
+  // Hydrate SOAP data from case analysis (via sessionStorage)
+  useEffect(() => {
+    const stored = sessionStorage.getItem('case-to-chart-soap');
+    if (stored) {
+      try {
+        const soap = JSON.parse(stored) as SOAPData;
+        setSoapData(soap);
+      } catch { /* ignore parse errors */ }
+      sessionStorage.removeItem('case-to-chart-soap');
+    }
+  }, []);
+
   // Compliance scanning hook
   const compliance = useComplianceScan(soapData);
 
@@ -88,7 +100,6 @@ export default function ChartingPage() {
 
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       let response: Response;
 
       if (audioBlob && processingMode === 'audio') {

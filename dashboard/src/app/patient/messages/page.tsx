@@ -42,14 +42,14 @@ export default function MessagesPage() {
   if (!selectedSummary || !selectedId) {
     return (
       <div className="text-center py-16">
-        <MessageCircle className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-        <h2 className="text-lg font-semibold text-slate-900 mb-2">{t('messages.noMessages')}</h2>
-        <p className="text-sm text-slate-500 mb-6">
+        <MessageCircle className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+        <h2 className="text-lg font-semibold text-foreground mb-2">{t('messages.noMessages')}</h2>
+        <p className="text-sm text-muted-foreground mb-6">
           {t('messages.noMessagesDesc')}
         </p>
         <Link
           href="/patient/checkin"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white font-medium rounded-xl hover:bg-teal-700 transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors"
         >
           <ClipboardCheck className="w-5 h-5" />
           {t('messages.startCheckin')}
@@ -61,13 +61,13 @@ export default function MessagesPage() {
   return (
     <div className="space-y-4">
       {/* Segment toggle */}
-      <div className="flex p-1 rounded-xl bg-slate-100 border border-slate-200">
+      <div className="flex p-1 rounded-xl bg-muted border border-border">
         <button
           onClick={() => setTab('ai')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
             tab === 'ai'
-              ? 'bg-white text-slate-900 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700'
+              ? 'bg-card text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Sparkles className="w-4 h-4" />
@@ -77,8 +77,8 @@ export default function MessagesPage() {
           onClick={() => setTab('doctor')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
             tab === 'doctor'
-              ? 'bg-white text-slate-900 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700'
+              ? 'bg-card text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Stethoscope className="w-4 h-4" />

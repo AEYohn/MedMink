@@ -12,16 +12,16 @@ export default function CheckInPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="fixed inset-0 z-30 bg-white flex flex-col">
+    <div className="fixed inset-0 z-30 bg-background flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 bg-white">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card">
         <button
           onClick={() => router.push('/patient')}
-          className="p-2 -ms-2 rounded-lg hover:bg-slate-100 transition-colors"
+          className="p-2 -ms-2 rounded-lg hover:bg-muted transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 text-slate-600" />
+          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
         </button>
-        <h1 className="text-lg font-semibold text-slate-900">{t('checkin.title')}</h1>
+        <h1 className="text-lg font-semibold text-foreground">{t('checkin.title')}</h1>
       </div>
 
       {/* Body */}
@@ -34,10 +34,10 @@ export default function CheckInPage() {
 
       {/* Done button when completed */}
       {completed && (
-        <div className="p-4 border-t border-slate-200 bg-white">
+        <div className="p-4 border-t border-border bg-card">
           <button
             onClick={() => router.push('/patient')}
-            className="w-full py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-colors"
+            className="w-full py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors"
           >
             {t('checkin.done')}
           </button>

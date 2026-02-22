@@ -1,9 +1,8 @@
 'use client';
 
-import { ReactNode, useEffect, useRef } from 'react';
+import { ReactNode } from 'react';
 import Link from 'next/link';
 import { Heart, ArrowLeftRight } from 'lucide-react';
-import { useTheme } from 'next-themes';
 import { HealthContextProvider } from '@/components/patient/HealthContextProvider';
 import { MedicalTermProvider } from '@/components/patient/terms/MedicalTermProvider';
 import { RoleGate } from '@/components/shared/RoleGate';
@@ -15,38 +14,21 @@ import { BottomNav } from '@/components/care-hub/BottomNav';
 import { LanguageProvider, useTranslation } from '@/i18n';
 import { LanguageSelector } from '@/components/patient/LanguageSelector';
 
-function ForceLight() {
-  const { theme, setTheme } = useTheme();
-  const previousTheme = useRef<string | undefined>();
-
-  useEffect(() => {
-    previousTheme.current = theme;
-    setTheme('light');
-    return () => {
-      if (previousTheme.current) {
-        setTheme(previousTheme.current);
-      }
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return null;
-}
-
 function PatientShell({ children }: { children: ReactNode }) {
   const { clearRole } = useRole();
   const { t, dir } = useTranslation();
 
   return (
-    <div dir={dir} className="min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-900">
-      {/* Simplified header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-14">
+    <div dir={dir} className="min-h-screen bg-background text-foreground">
+      {/* Header — matches clinician AppShell header */}
+      <header className="sticky top-0 z-40 h-14 bg-card/80 backdrop-blur-xl border-b border-border">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-full">
+          <div className="flex items-center justify-between h-full">
             <Link href="/patient" className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl">
-                <Heart className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
+                <Heart className="w-4.5 h-4.5 text-primary-foreground" />
               </div>
-              <span className="text-base font-bold text-slate-900">
+              <span className="text-base font-bold text-foreground">
                 MedMink
               </span>
             </Link>
@@ -55,7 +37,7 @@ function PatientShell({ children }: { children: ReactNode }) {
               <LanguageSelector />
               <button
                 onClick={clearRole}
-                className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ArrowLeftRight className="w-4 h-4" />
                 <span className="hidden sm:inline">{t('header.switchRole')}</span>
@@ -71,13 +53,13 @@ function PatientShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-24 sm:pb-6">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-24 sm:pb-6 animate-fade-in">
         {children}
       </main>
 
       {/* Footer disclaimer */}
       <footer className="py-4 px-4 pb-20 sm:pb-4">
-        <p className="text-center text-xs text-slate-400">
+        <p className="text-center text-xs text-muted-foreground">
           {t('footer.disclaimer')}
         </p>
       </footer>
@@ -93,7 +75,6 @@ function PatientShell({ children }: { children: ReactNode }) {
 export default function PatientLayout({ children }: { children: ReactNode }) {
   return (
     <RoleGate allowedRoles={['patient']}>
-    <ForceLight />
     <LanguageProvider>
     <PatientViewProvider>
     <HealthContextProvider>

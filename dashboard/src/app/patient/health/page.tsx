@@ -25,23 +25,23 @@ function Section({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
+        className="w-full flex items-center justify-between p-4 hover:bg-muted transition-colors"
       >
         <div className="flex items-center gap-3">
-          <Icon className="w-5 h-5 text-teal-600" />
-          <span className="text-sm font-semibold text-slate-900">{title}</span>
+          <Icon className="w-5 h-5 text-primary" />
+          <span className="text-sm font-semibold text-foreground">{title}</span>
         </div>
         {open ? (
-          <ChevronUp className="w-4 h-4 text-slate-400" />
+          <ChevronUp className="w-4 h-4 text-muted-foreground" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-slate-400" />
+          <ChevronDown className="w-4 h-4 text-muted-foreground" />
         )}
       </button>
       {open && (
-        <div className="border-t border-slate-100 p-4">
+        <div className="border-t border-border p-4">
           {children}
         </div>
       )}
@@ -63,14 +63,14 @@ export default function MyHealthPage() {
   if (!selectedSummary) {
     return (
       <div className="text-center py-16">
-        <HeartPulse className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-        <h2 className="text-lg font-semibold text-slate-900 mb-2">{t('health.noData')}</h2>
-        <p className="text-sm text-slate-500 mb-6">
+        <HeartPulse className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+        <h2 className="text-lg font-semibold text-foreground mb-2">{t('health.noData')}</h2>
+        <p className="text-sm text-muted-foreground mb-6">
           {t('health.noDataDesc')}
         </p>
         <Link
           href="/patient/checkin"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white font-medium rounded-xl hover:bg-teal-700 transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors"
         >
           <ClipboardCheck className="w-5 h-5" />
           {t('health.startCheckin')}

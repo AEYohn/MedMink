@@ -38,7 +38,7 @@ export function BottomNav() {
   return (
     <>
       {/* Mobile bottom bar */}
-      <nav className="sm:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-200 h-16 flex items-center justify-around px-2 safe-area-bottom">
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 z-50 bg-card border-t border-border h-16 flex items-center justify-around px-2 safe-area-bottom">
         {navItems.map(item => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -50,15 +50,15 @@ export function BottomNav() {
             >
               {item.accent ? (
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  active ? 'bg-teal-600' : 'bg-teal-500'
+                  active ? 'bg-primary shadow-sm' : 'bg-primary/80'
                 }`}>
-                  <Icon className="w-5 h-5 text-white" />
+                  <Icon className="w-5 h-5 text-primary-foreground" />
                 </div>
               ) : (
-                <Icon className={`w-5 h-5 ${active ? 'text-teal-600' : 'text-gray-400'}`} />
+                <Icon className={`w-5 h-5 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
               )}
               <span className={`text-[10px] leading-tight ${
-                active ? 'text-teal-600 font-medium' : 'text-gray-400'
+                active ? 'text-primary font-medium' : 'text-muted-foreground'
               } ${item.accent ? '-mt-0.5' : ''}`}>
                 {t(item.labelKey)}
               </span>
@@ -68,7 +68,7 @@ export function BottomNav() {
       </nav>
 
       {/* Desktop/tablet horizontal sub-nav */}
-      <nav className="hidden sm:flex items-center gap-1 p-1 rounded-2xl bg-slate-100 border border-slate-200 mx-auto max-w-xl">
+      <nav className="hidden sm:flex items-center gap-1 p-1 rounded-2xl bg-muted border border-border mx-auto max-w-xl">
         {navItems.map(item => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -78,8 +78,8 @@ export function BottomNav() {
               href={item.href}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
                 active
-                  ? item.accent ? 'bg-teal-600 text-white shadow-sm' : 'bg-white text-slate-900 shadow-sm'
-                  : item.accent ? 'text-teal-600 hover:bg-teal-50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/60'
+                  ? item.accent ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-card text-foreground shadow-sm'
+                  : item.accent ? 'text-primary hover:bg-primary/10' : 'text-muted-foreground hover:text-foreground hover:bg-card/60'
               }`}
             >
               <Icon className="w-4 h-4" />

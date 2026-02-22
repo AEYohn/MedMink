@@ -394,6 +394,69 @@ async def link_visit(request: LinkVisitRequest):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+class HandoffRequest(BaseModel):
+    conversation_history: list[dict[str, str]] | None = None
+    phase: str | None = None
+    patient_id: str | None = None
+
+
+class HandoffResponse(BaseModel):
+    vignette: str
+    management_plan: dict[str, Any] | None = None
+    recommended_imaging: list[str] = []
+    session_id: str
+
+
+@router.post("/{session_id}/handoff", response_model=HandoffResponse)
+async def handoff_to_case(session_id: str, body: HandoffRequest | None = None):
+    """Convert a completed interview into a clinical vignette for case analysis.
+
+    Builds a natural-language clinical vignette from the interview data,
+    retrieves the management plan's differential and investigations,
+    and returns everything needed to seed a case analysis session.
+    """
+    session = get_session(session_id)
+    if not session and body and body.conversation_history:
+        session = restore_session(
+            session_id,
+            body.conversation_history,
+            body.phase if body else None,
+            body.patient_id if body else None,
+        )
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    from src.medgemma.interview import build_clinical_vignette
+
+    vignette = build_clinical_vignette(session)
+
+    # Get management plan if available
+    management_plan = None
+    recommended_imaging: list[str] = []
+    try:
+        from src.medgemma.management_agent import get_management_agent
+
+        agent = get_management_agent()
+        plan = await agent.get_management_plan(session)
+        if plan and not plan.get("error"):
+            management_plan = plan
+            # Extract imaging recommendations
+            investigations = plan.get("recommended_investigations", [])
+            for inv in investigations:
+                test = inv.get("test", "").lower() if isinstance(inv, dict) else str(inv).lower()
+                if any(kw in test for kw in ["xray", "x-ray", "cxr", "ct", "mri", "ultrasound", "echo"]):
+                    recommended_imaging.append(inv.get("test", str(inv)) if isinstance(inv, dict) else str(inv))
+    except Exception as e:
+        logger.warning("Could not retrieve management plan for handoff", error=str(e))
+
+    return HandoffResponse(
+        vignette=vignette,
+        management_plan=management_plan,
+        recommended_imaging=recommended_imaging,
+        session_id=session_id,
+    )
+
+
 async def _transcribe_audio(audio: UploadFile, language: str = "en") -> str | None:
     """Transcribe audio — Gemini primary, Modal MedASR fallback."""
     from src.config import settings

@@ -27,6 +27,7 @@ import {
   Pill,
   UserPlus,
   FileBarChart,
+  Brain,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,6 +70,9 @@ import { DischargeEditor } from '@/components/case/DischargeEditor';
 import type { DischargePlanData } from '@/components/case/DischargeEditor';
 import { SafetyAlertsPanel } from '@/components/case/SafetyAlertsPanel';
 import { FollowUpChatDrawer } from '@/components/case/FollowUpChatDrawer';
+import { AgentReasoningTrace } from '@/components/case/AgentReasoningTrace';
+import { ConsensusPanel } from '@/components/case/ConsensusPanel';
+import type { ConsensusData } from '@/components/case/ConsensusPanel';
 import { SafetyAlertBanner } from '@/components/case/SafetyAlertBanner';
 import { PatientSummaryPreview } from '@/components/case/PatientSummaryPreview';
 import { PatientBanner } from '@/components/shared/PatientBanner';
@@ -105,6 +109,7 @@ const TAB_MIGRATION: Record<string, string> = {
   safety: 'review',
   orders: 'plan',
   tools: 'tools',
+  agent: 'agent',
 };
 
 // Example cases
@@ -373,6 +378,21 @@ export default function CaseAnalysisPage() {
       setCaseText('');
       setPatientId('');
       resetAnalysisState();
+      window.history.replaceState({}, '', '/case');
+      return;
+    }
+
+    // Interview handoff — load vignette from sessionStorage
+    if (params.get('from') === 'interview') {
+      const vignette = sessionStorage.getItem('handoff-vignette');
+      if (vignette) {
+        session.clearCurrentSession();
+        resetAnalysisState();
+        setCaseText(vignette);
+        sessionStorage.removeItem('handoff-vignette');
+        sessionStorage.removeItem('handoff-management-plan');
+        sessionStorage.removeItem('handoff-imaging');
+      }
       window.history.replaceState({}, '', '/case');
       return;
     }
@@ -1054,6 +1074,10 @@ export default function CaseAnalysisPage() {
                   <Wrench className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Tools</span>
                 </TabsTrigger>
+                <TabsTrigger value="agent" className="gap-1.5">
+                  <Brain className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Agent</span>
+                </TabsTrigger>
               </TabsList>
 
               {/* ─── Clinical Review Tab (Assessment + Safety) ─── */}
@@ -1336,6 +1360,16 @@ export default function CaseAnalysisPage() {
                       </Section>
                     </>
                   )}
+                </div>
+              </TabsContent>
+
+              {/* ─── Agent Tab ─── */}
+              <TabsContent value="agent">
+                <div className="space-y-6">
+                  <AgentReasoningTrace
+                    caseText={caseText}
+                    parsedCase={result.parsed_case as unknown as Record<string, unknown>}
+                  />
                 </div>
               </TabsContent>
             </Tabs>

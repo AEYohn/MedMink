@@ -14,6 +14,8 @@ import {
   Stethoscope,
 } from 'lucide-react';
 import { ExplainableText } from '@/components/patient/terms/ExplainableText';
+import { CarePlanChecklist } from '@/components/care-hub/CarePlanChecklist';
+import { useCarePlan } from '@/hooks/useCarePlan';
 import type { ReleasedVisitSummary } from '@/types/visit-summary';
 import type { Patient } from '@/lib/patient-storage';
 import { getPatientAge } from '@/lib/patient-storage';
@@ -29,6 +31,9 @@ export function CareHubHome({
   onAskAI: (question: string) => void;
   onNavigate: (tab: string) => void;
 }) {
+  const { items: carePlanItems, statuses: carePlanStatuses, updateStatus: updateCarePlanStatus } = useCarePlan(summary);
+  const hasCarePlan = carePlanItems.length > 0;
+
   const activeMeds = summary.medications.filter(m => m.action !== 'discontinue');
   const nextFollowUp = summary.followUps[0];
   const visitDate = new Date(summary.visitDate).toLocaleDateString('en-US', {
@@ -159,69 +164,80 @@ export function CareHubHome({
         </div>
       )}
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-3">
-        <button
-          onClick={() => onNavigate('medications')}
-          className="rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <div className="p-1.5 rounded-lg bg-primary/10">
+      {/* Care Plan or Quick Stats */}
+      {hasCarePlan ? (
+        <>
+          <CarePlanChecklist
+            items={carePlanItems}
+            statuses={carePlanStatuses}
+            onStatusChange={updateCarePlanStatus}
+            onAskAI={onAskAI}
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => onNavigate('medications')}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-border bg-card text-sm font-medium text-foreground hover:shadow-md transition-shadow"
+            >
               <Pill className="w-4 h-4 text-primary" />
-            </div>
-            <span className="text-xs font-medium text-muted-foreground">Medications</span>
-          </div>
-          <p className="text-2xl font-bold text-foreground">{activeMeds.length}</p>
-          <p className="text-xs text-muted-foreground">active prescriptions</p>
-        </button>
-
-        <button
-          onClick={() => onNavigate('visit')}
-          className="rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-              <Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-            </div>
-            <span className="text-xs font-medium text-muted-foreground">Next Follow-Up</span>
-          </div>
-          <p className="text-lg font-bold text-foreground">
-            {nextFollowUp ? nextFollowUp.timeframe : 'None'}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {nextFollowUp ? nextFollowUp.provider : 'scheduled'}
-          </p>
-        </button>
-
-        <button
-          onClick={() => onNavigate('labs')}
-          className="rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <div className="p-1.5 rounded-lg bg-teal-100 dark:bg-teal-900/30">
+              {activeMeds.length} medication{activeMeds.length !== 1 ? 's' : ''}
+            </button>
+            <button
+              onClick={() => onNavigate('labs')}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-border bg-card text-sm font-medium text-foreground hover:shadow-md transition-shadow"
+            >
               <Activity className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-            </div>
-            <span className="text-xs font-medium text-muted-foreground">Vitals</span>
+              Labs &amp; Vitals
+            </button>
           </div>
-          <p className="text-lg font-bold text-foreground">View</p>
-          <p className="text-xs text-muted-foreground">labs &amp; vitals</p>
-        </button>
+        </>
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => onNavigate('medications')}
+            className="rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-lg bg-primary/10">
+                <Pill className="w-4 h-4 text-primary" />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">Medications</span>
+            </div>
+            <p className="text-2xl font-bold text-foreground">{activeMeds.length}</p>
+            <p className="text-xs text-muted-foreground">active prescriptions</p>
+          </button>
 
-        {(summary.orders?.length ?? 0) > 0 ? (
           <button
             onClick={() => onNavigate('visit')}
             className="rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-shadow"
           >
             <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-900/30">
-                <ClipboardList className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                <Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               </div>
-              <span className="text-xs font-medium text-muted-foreground">Plan Items</span>
+              <span className="text-xs font-medium text-muted-foreground">Next Follow-Up</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{summary.orders!.length}</p>
-            <p className="text-xs text-muted-foreground">tests &amp; referrals</p>
+            <p className="text-lg font-bold text-foreground">
+              {nextFollowUp ? nextFollowUp.timeframe : 'None'}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {nextFollowUp ? nextFollowUp.provider : 'scheduled'}
+            </p>
           </button>
-        ) : (
+
+          <button
+            onClick={() => onNavigate('labs')}
+            className="rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-lg bg-teal-100 dark:bg-teal-900/30">
+                <Activity className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">Vitals</span>
+            </div>
+            <p className="text-lg font-bold text-foreground">View</p>
+            <p className="text-xs text-muted-foreground">labs &amp; vitals</p>
+          </button>
+
           <button
             onClick={() => onNavigate('visit')}
             className="rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-shadow"
@@ -235,8 +251,8 @@ export function CareHubHome({
             <p className="text-lg font-bold text-foreground">{visitDate}</p>
             <p className="text-xs text-muted-foreground">with {summary.releasedBy}</p>
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Warning Signs */}
       {summary.redFlags.length > 0 && (

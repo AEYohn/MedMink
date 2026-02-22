@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 
 from src.api.routes import (
     admin,
+    agent,
     case_analysis,
     charting,
     chat,
@@ -134,6 +135,7 @@ app.include_router(documents.router)
 app.include_router(ems.router)
 app.include_router(compliance.router)
 app.include_router(postvisit.router)
+app.include_router(agent.router)
 
 
 # WebSocket connection manager

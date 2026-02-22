@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { getApiUrl } from '@/lib/api-url';
+import { SimilarCasesSection } from './SimilarCasesSection';
 
 const API_URL = getApiUrl() || '';
 
@@ -130,6 +131,8 @@ export function PathologyClassificationCard({ imageB64, initialResults }: Pathol
             </div>
           </>
         )}
+
+        {imageB64 && <SimilarCasesSection imageB64={imageB64} modality="pathology" />}
       </CardContent>
     </Card>
   );

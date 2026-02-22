@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { ClipboardList, Phone, Loader2, ChevronRight, AlertTriangle, X, CheckCircle2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ClipboardList, Phone, Loader2, ChevronRight, AlertTriangle, X, CheckCircle2, Stethoscope } from 'lucide-react';
 import { InterviewChat } from '@/components/interview/InterviewChat';
 import { TriageResult } from '@/components/interview/TriageResult';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
@@ -73,6 +74,7 @@ const LANGUAGES = [
 ];
 
 export function CareHubIntake() {
+  const router = useRouter();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentPhase, setCurrentPhase] = useState<string>('greeting');
@@ -83,6 +85,7 @@ export function CareHubIntake() {
   const [language, setLanguage] = useState('en');
   const [mockMode, setMockMode] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isHandingOff, setIsHandingOff] = useState(false);
 
   const { isRecording, audioBlob, audioDuration, start: startRecording, stop: stopRecording, clear: clearRecording } = useAudioRecorder();
   const pendingSendRef = useRef(false);
@@ -376,7 +379,52 @@ export function CareHubIntake() {
             <h2 className="text-lg font-semibold">Your Assessment Summary</h2>
             <TriageResult triage={triage} />
 
-            <div className="mt-6">
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                onClick={async () => {
+                  if (!sessionId || isHandingOff) return;
+                  setIsHandingOff(true);
+                  try {
+                    const res = await fetchWithTimeout(`${API_URL}/api/interview/${sessionId}/handoff`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
+                        phase: currentPhase,
+                      }),
+                    }, 30000);
+                    if (!res.ok) throw new Error(`Handoff failed: ${res.status}`);
+                    const data = await res.json();
+                    // Store vignette in sessionStorage for the case page to pick up
+                    sessionStorage.setItem('handoff-vignette', data.vignette);
+                    if (data.management_plan) {
+                      sessionStorage.setItem('handoff-management-plan', JSON.stringify(data.management_plan));
+                    }
+                    if (data.recommended_imaging?.length) {
+                      sessionStorage.setItem('handoff-imaging', JSON.stringify(data.recommended_imaging));
+                    }
+                    router.push('/case?from=interview');
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : 'Handoff failed');
+                  } finally {
+                    setIsHandingOff(false);
+                  }
+                }}
+                disabled={isHandingOff}
+                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+              >
+                {isHandingOff ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Preparing Clinician Workspace...
+                  </>
+                ) : (
+                  <>
+                    <Stethoscope className="w-4 h-4" />
+                    Prepare Case for Clinician
+                  </>
+                )}
+              </button>
               <button
                 onClick={() => {
                   setSessionId(null);

@@ -500,6 +500,135 @@ class PatientInterviewer:
         }
 
 
+def build_clinical_vignette(session: InterviewSession) -> str:
+    """Convert interview extracted data into a natural language clinical vignette.
+
+    Produces a structured case summary suitable for the CaseAnalyzer,
+    mirroring the format of manually-entered clinical vignettes.
+    """
+    data = session.extracted_data
+    parts: list[str] = []
+
+    # Demographics + chief complaint
+    age = data.get("age", "")
+    sex = data.get("sex", "")
+    cc = data.get("chief_complaint", "")
+    if age or sex or cc:
+        demo = " ".join(filter(None, [f"A {age}" if age else "", f"{sex}" if sex else "", "patient"]))
+        parts.append(f"{demo} presents with {cc}." if cc else f"{demo}.")
+
+    # HPI
+    hpi = data.get("hpi", {})
+    if isinstance(hpi, dict):
+        hpi_parts = []
+        if hpi.get("onset"):
+            hpi_parts.append(f"Onset: {hpi['onset']}")
+        if hpi.get("location"):
+            hpi_parts.append(f"Location: {hpi['location']}")
+        if hpi.get("duration"):
+            hpi_parts.append(f"Duration: {hpi['duration']}")
+        if hpi.get("character"):
+            hpi_parts.append(f"Character: {hpi['character']}")
+        if hpi.get("severity"):
+            hpi_parts.append(f"Severity: {hpi['severity']}")
+        if hpi.get("aggravating_factors"):
+            hpi_parts.append(f"Aggravating factors: {hpi['aggravating_factors']}")
+        if hpi.get("relieving_factors"):
+            hpi_parts.append(f"Relieving factors: {hpi['relieving_factors']}")
+        if hpi.get("associated_symptoms"):
+            symptoms = hpi["associated_symptoms"]
+            if isinstance(symptoms, list):
+                hpi_parts.append(f"Associated symptoms: {', '.join(symptoms)}")
+            else:
+                hpi_parts.append(f"Associated symptoms: {symptoms}")
+        if hpi_parts:
+            parts.append("HPI: " + ". ".join(hpi_parts) + ".")
+    elif isinstance(hpi, str) and hpi:
+        parts.append(f"HPI: {hpi}")
+
+    # Review of systems
+    ros = data.get("review_of_systems", {})
+    if isinstance(ros, dict) and ros:
+        positives = []
+        negatives = []
+        for system, findings in ros.items():
+            if isinstance(findings, dict):
+                for finding, present in findings.items():
+                    if present:
+                        positives.append(f"{finding} ({system})")
+                    else:
+                        negatives.append(f"{finding}")
+            elif findings:
+                positives.append(f"{system}: {findings}")
+        if positives:
+            parts.append(f"Positive ROS: {', '.join(positives)}.")
+        if negatives:
+            parts.append(f"Negative ROS: {', '.join(negatives[:5])}.")  # Limit negatives
+    elif isinstance(ros, str) and ros:
+        parts.append(f"ROS: {ros}")
+
+    # Past medical / surgical / family / social history
+    pmh = data.get("past_medical_history", [])
+    if pmh:
+        if isinstance(pmh, list):
+            parts.append(f"PMH: {', '.join(pmh)}.")
+        else:
+            parts.append(f"PMH: {pmh}.")
+
+    psh = data.get("past_surgical_history", [])
+    if psh:
+        if isinstance(psh, list):
+            parts.append(f"PSH: {', '.join(psh)}.")
+        else:
+            parts.append(f"PSH: {psh}.")
+
+    fh = data.get("family_history", "")
+    if fh:
+        parts.append(f"Family history: {fh}.")
+
+    sh = data.get("social_history", "")
+    if sh:
+        parts.append(f"Social history: {sh}.")
+
+    # Medications
+    meds = data.get("medications", [])
+    if meds:
+        if isinstance(meds, list):
+            parts.append(f"Current medications: {', '.join(meds)}.")
+        else:
+            parts.append(f"Current medications: {meds}.")
+
+    # Allergies
+    allergies = data.get("allergies", [])
+    if allergies:
+        if isinstance(allergies, list):
+            parts.append(f"Allergies: {', '.join(allergies)}.")
+        else:
+            parts.append(f"Allergies: {allergies}.")
+
+    # Vitals (from extracted_data if nurse recorded any)
+    vitals = data.get("vitals", {})
+    if isinstance(vitals, dict) and vitals:
+        vital_strs = [f"{k}: {v}" for k, v in vitals.items() if v]
+        if vital_strs:
+            parts.append(f"Vitals: {', '.join(vital_strs)}.")
+
+    # Red flags
+    if session.red_flags:
+        parts.append(f"Red flags identified during intake: {', '.join(session.red_flags)}.")
+
+    # Triage result
+    if session.triage_result:
+        esi = session.triage_result.get("esi_level")
+        setting = session.triage_result.get("recommended_setting", "")
+        if esi:
+            parts.append(f"ESI triage level: {esi}.")
+        if setting:
+            parts.append(f"Recommended setting: {setting}.")
+
+    return "\n\n".join(parts) if parts else "Incomplete interview — insufficient data for clinical vignette."
+
+
 # Singleton interviewer
 _interviewer: PatientInterviewer | None = None
 

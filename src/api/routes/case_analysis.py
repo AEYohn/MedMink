@@ -35,6 +35,7 @@ from src.medgemma.referral_generator import (
     handoff_note_to_dict,
     referral_note_to_dict,
 )
+from src.medgemma.embedding_store import get_embedding_store
 from src.medgemma.referral_tracker import get_referral_tracker
 from src.medgemma.risk_scores import (
     calculate_risk_scores,
@@ -749,6 +750,72 @@ async def pathology_classify(request: PathClassifyRequest):
     except Exception as e:
         logger.error("Pathology classification failed", error=str(e))
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+# --- Similar Cases (Embedding-based Retrieval) ---
+
+
+class SimilarCasesRequest(BaseModel):
+    """Request for similar case retrieval."""
+
+    image_b64: str = Field(..., description="Base64-encoded image")
+    modality: str = Field(..., description="Image modality: cxr, derm, or pathology")
+    top_k: int = Field(default=3, ge=1, le=10, description="Number of similar cases to return")
+    exclude_case_id: str | None = Field(
+        default=None, description="Case ID to exclude from results"
+    )
+
+
+@router.post("/image/similar")
+async def find_similar_cases(request: SimilarCasesRequest):
+    """Find similar cases by computing image embedding and searching the store.
+
+    Uses the appropriate foundation model to compute an embedding,
+    then searches the embedding store for the most similar cases.
+    """
+    modality = request.modality.lower()
+
+    # Get embedding from the appropriate foundation model
+    embedding = None
+    try:
+        if modality == "cxr":
+            client = get_cxr_foundation_client()
+            if not client.is_available:
+                return {"similar_cases": [], "error": "CXR Foundation not configured"}
+            result = await client.get_embedding(request.image_b64)
+            embedding = result.get("embedding")
+        elif modality == "derm":
+            from src.medgemma.derm_foundation import get_derm_foundation_client
+
+            client = get_derm_foundation_client()
+            if not client.is_available:
+                return {"similar_cases": [], "error": "Derm Foundation not configured"}
+            result = await client.get_embedding(request.image_b64)
+            embedding = result.get("embedding")
+        elif modality == "pathology":
+            client = get_path_foundation_client()
+            if not client.is_available:
+                return {"similar_cases": [], "error": "Path Foundation not configured"}
+            result = await client.get_embedding(request.image_b64)
+            embedding = result.get("embedding")
+        else:
+            return {"similar_cases": [], "error": f"Unknown modality: {modality}"}
+    except Exception as e:
+        logger.error("Embedding computation failed", modality=modality, error=str(e))
+        return {"similar_cases": [], "error": str(e)}
+
+    if not embedding:
+        return {"similar_cases": [], "error": "Could not compute embedding"}
+
+    # Search embedding store
+    store = get_embedding_store(modality)
+    similar = store.find_similar(
+        query_embedding=embedding,
+        top_k=request.top_k,
+        exclude_case_id=request.exclude_case_id,
+    )
+
+    return {"similar_cases": similar, "modality": modality, "store_size": store.count}
 
 
 # --- TxGemma (Drug Property Prediction) ---

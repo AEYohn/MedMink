@@ -79,6 +79,7 @@ export function CareHubMedications({
   const [isChecking, setIsChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<InteractionCheckResult | null>(null);
   const [expandedInteraction, setExpandedInteraction] = useState<string | null>(null);
+  const [checkError, setCheckError] = useState<string | null>(null);
 
   const handleAddMed = (e: FormEvent) => {
     e.preventDefault();
@@ -102,6 +103,7 @@ export function CareHubMedications({
     if (allMedNames.length < 2) return;
     setIsChecking(true);
     setCheckResult(null);
+    setCheckError(null);
     try {
       const apiUrl = getApiUrl();
       const resp = await fetch(`${apiUrl}/api/patient/medications/check`, {
@@ -112,11 +114,8 @@ export function CareHubMedications({
       if (!resp.ok) throw new Error('Failed');
       setCheckResult(await resp.json());
     } catch {
-      setCheckResult({
-        safe: true,
-        interactions: [],
-        recommendations: ['Unable to check interactions. Please consult your pharmacist.'],
-      });
+      setCheckResult(null);
+      setCheckError('Unable to check interactions right now. Please try again later or consult your pharmacist.');
     } finally {
       setIsChecking(false);
     }
@@ -279,6 +278,23 @@ export function CareHubMedications({
           </p>
         )}
       </div>
+
+      {/* Error State */}
+      {checkError && (
+        <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-card overflow-hidden">
+          <div className="p-4 bg-amber-50 dark:bg-amber-900/10">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-100 dark:bg-amber-900/40 rounded-xl">
+                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-amber-800 dark:text-amber-200">Check Failed</h3>
+                <p className="text-sm text-amber-600 dark:text-amber-400">{checkError}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Interaction Results */}
       {checkResult && (

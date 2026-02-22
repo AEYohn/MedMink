@@ -16,6 +16,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import { getReleasedSummaries, getReleasedSummariesForPatient } from '@/lib/storage';
+import { getPatient } from '@/lib/patient-storage';
 import { usePatientView } from '@/contexts/PatientViewContext';
 import { usePostVisit } from '@/hooks/usePostVisit';
 import { CareHubHome } from '@/components/care-hub/CareHubHome';
@@ -68,6 +69,11 @@ export default function CareHubPage() {
   const selectedSummary = useMemo(
     () => allSummaries.find(s => s.id === selectedId) ?? null,
     [allSummaries, selectedId],
+  );
+
+  const patient = useMemo(
+    () => selectedSummary ? getPatient(selectedSummary.patientId) : null,
+    [selectedSummary],
   );
 
   // PostVisit hook for chat, vitals, messages
@@ -193,6 +199,7 @@ export default function CareHubPage() {
         {activeTab === 'home' && (
           <CareHubHome
             summary={selectedSummary}
+            patient={patient}
             onAskAI={handleAskAI}
             onNavigate={handleNavigate}
           />

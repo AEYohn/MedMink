@@ -9,16 +9,23 @@ import {
   Send,
   Sparkles,
   ClipboardList,
+  ShieldAlert,
+  Heart,
+  Stethoscope,
 } from 'lucide-react';
 import { ExplainableText } from '@/components/patient/terms/ExplainableText';
 import type { ReleasedVisitSummary } from '@/types/visit-summary';
+import type { Patient } from '@/lib/patient-storage';
+import { getPatientAge } from '@/lib/patient-storage';
 
 export function CareHubHome({
   summary,
+  patient,
   onAskAI,
   onNavigate,
 }: {
   summary: ReleasedVisitSummary;
+  patient?: Patient | null;
   onAskAI: (question: string) => void;
   onNavigate: (tab: string) => void;
 }) {
@@ -30,16 +37,44 @@ export function CareHubHome({
     year: 'numeric',
   });
 
+  const initials = patient
+    ? `${patient.firstName[0] ?? ''}${patient.lastName[0] ?? ''}`.toUpperCase()
+    : null;
+
+  const age = patient ? getPatientAge(patient) : null;
+  const sexLabel = patient
+    ? patient.sex === 'male' ? 'M' : patient.sex === 'female' ? 'F' : ''
+    : null;
+
   return (
     <div className="space-y-5">
-      {/* Welcome */}
+      {/* Welcome / Patient Profile Header */}
       <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-border p-6">
-        <h2 className="text-xl font-bold text-foreground">
-          Welcome back
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Here&apos;s a snapshot of your recent visit on {visitDate}
-        </p>
+        {patient ? (
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-primary/20 border-2 border-primary/30 flex items-center justify-center shrink-0">
+              <span className="text-lg font-bold text-primary">{initials}</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-foreground">
+                Welcome back, {patient.firstName}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {age !== null && <>{age}{sexLabel} &middot; </>}
+                Visit on {visitDate}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <h2 className="text-xl font-bold text-foreground">
+              Welcome back
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Here&apos;s a snapshot of your recent visit on {visitDate}
+            </p>
+          </>
+        )}
       </div>
 
       {/* Diagnosis Card */}
@@ -56,6 +91,73 @@ export function CareHubHome({
           </p>
         )}
       </div>
+
+      {/* Health Snapshot */}
+      {patient && (
+        <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Heart className="w-4 h-4 text-primary" />
+            Your Health Snapshot
+          </h3>
+
+          {/* Allergies */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              Allergies
+            </p>
+            {patient.allergies.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {patient.allergies.map((a, i) => (
+                  <span key={i} className="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                    {a}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">None reported</p>
+            )}
+          </div>
+
+          {/* Conditions */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
+              <Stethoscope className="w-3.5 h-3.5" />
+              Conditions
+            </p>
+            {patient.conditions.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {patient.conditions.map((c, i) => (
+                  <span key={i} className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                    {c}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">None reported</p>
+            )}
+          </div>
+
+          {/* Home Medications */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
+              <Pill className="w-3.5 h-3.5" />
+              Home Medications
+            </p>
+            {patient.medications.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {patient.medications.map((m, i) => (
+                  <span key={i} className="px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                    {m}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">None reported</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-3">

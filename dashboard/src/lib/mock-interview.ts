@@ -924,7 +924,17 @@ function buildStructuredHPI(info: ExtractedInfo): Record<string, string> {
 
 // ── Public API ──
 
-export function mockStartInterview(): {
+const GREETING_BY_LANGUAGE: Record<string, string> = {
+  en: "Hi there, welcome! What brings you in today?",
+  es: "¡Hola, bienvenido! ¿Qué lo trae por aquí hoy?",
+  zh: "您好，欢迎！今天是什么原因来就诊？",
+  ms: "Hai, selamat datang! Apa yang membawa anda ke sini hari ini?",
+  ta: "வணக்கம், வரவேற்கிறோம்! இன்று என்ன காரணமாக வந்தீர்கள்?",
+  vi: "Xin chào, chào mừng bạn! Hôm nay bạn đến vì lý do gì?",
+  ar: "مرحباً، أهلاً وسهلاً! ما الذي أتى بك اليوم؟",
+};
+
+export function mockStartInterview(language: string = 'en'): {
   session_id: string;
   phase: string;
   question: string;
@@ -932,8 +942,7 @@ export function mockStartInterview(): {
   return {
     session_id: `mock_${Date.now()}`,
     phase: 'greeting',
-    question:
-      "Hi there, welcome! What brings you in today?",
+    question: GREETING_BY_LANGUAGE[language] || GREETING_BY_LANGUAGE.en,
   };
 }
 

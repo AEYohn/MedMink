@@ -9,10 +9,10 @@
  * NEXT_PUBLIC_API_URL is used only by next.config.js for the rewrite
  * destination — it should NOT be used directly in client fetch calls.
  */
-export function getApiUrl(): string | null {
+export function getApiUrl(): string {
   // Server-side (next.config.js): return the real URL for rewrite config
   if (typeof window === 'undefined') {
-    return process.env.NEXT_PUBLIC_API_URL || null;
+    return process.env.NEXT_PUBLIC_API_URL || '';
   }
   // Client-side: always use relative paths (proxied by Next.js rewrite)
   return '';

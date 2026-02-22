@@ -1,0 +1,21 @@
+{
+  "model": "Derm Foundation",
+  "classifications": {
+    "melanoma": 0.03,
+    "basal_cell_carcinoma": 0.02,
+    "squamous_cell_carcinoma": 0.01,
+    "actinic_keratosis": 0.02,
+    "benign_nevus": 0.88,
+    "dermatofibroma": 0.02,
+    "seborrheic_keratosis": 0.01,
+    "vascular_lesion": 0.00,
+    "pigmented_benign_keratosis": 0.01
+  },
+  "top_diagnosis": "benign_nevus",
+  "overall_risk": "low",
+  "malignancy_probability": 0.06,
+  "dermoscopic_features": ["Symmetric pigment network", "Uniform globules", "Regular border"],
+  "recommendation": "Benign-appearing melanocytic nevus. Routine follow-up with serial photography if atypical features develop.",
+  "confidence": 0.91,
+  "source": "derm_foundation"
+}

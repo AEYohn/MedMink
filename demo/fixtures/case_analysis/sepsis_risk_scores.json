@@ -1,0 +1,104 @@
+{
+  "scores": [
+    {
+      "score_id": "curb65",
+      "score_name": "CURB-65",
+      "total_score": 4,
+      "max_score": 5,
+      "risk_level": "high",
+      "risk_interpretation": "Severe pneumonia (17-57% mortality)",
+      "recommendation": "Hospitalize; consider ICU if score 4-5",
+      "variables": [
+        {
+          "name": "bun",
+          "value": 42.0,
+          "source": "deterministic",
+          "points": 0,
+          "label": "BUN >19 mg/dL",
+          "criteria": "BUN >19 (or Urea >7 mmol/L) \u2192 1pt"
+        },
+        {
+          "name": "rr",
+          "value": 24.0,
+          "source": "deterministic",
+          "points": 0,
+          "label": "RR \u226530",
+          "criteria": "Respiratory rate \u226530 \u2192 1pt"
+        },
+        {
+          "name": "sbp",
+          "value": 82.0,
+          "source": "deterministic",
+          "points": 0,
+          "label": "SBP <90",
+          "criteria": "SBP <90 \u2192 1pt (part of BP criterion)"
+        },
+        {
+          "name": "dbp",
+          "value": 50.0,
+          "source": "deterministic",
+          "points": 0,
+          "label": "DBP \u226460",
+          "criteria": "DBP \u226460 \u2192 1pt (part of BP criterion)"
+        },
+        {
+          "name": "age",
+          "value": 75,
+          "source": "deterministic",
+          "points": 0,
+          "label": "Age \u226565",
+          "criteria": "Age \u226565 \u2192 1pt"
+        },
+        {
+          "name": "confusion",
+          "value": 1,
+          "source": "medgemma",
+          "points": 0,
+          "label": "Confusion",
+          "criteria": "New mental confusion \u2192 1pt"
+        }
+      ],
+      "missing_variables": [],
+      "applicable": true
+    },
+    {
+      "score_id": "qsofa",
+      "score_name": "qSOFA",
+      "total_score": 3,
+      "max_score": 3,
+      "risk_level": "high",
+      "risk_interpretation": "High risk of poor outcome (3-14x mortality)",
+      "recommendation": "Assess for organ dysfunction, consider ICU, initiate Sepsis-3 workup",
+      "variables": [
+        {
+          "name": "rr",
+          "value": 24.0,
+          "source": "deterministic",
+          "points": 0,
+          "label": "RR \u226522",
+          "criteria": "Respiratory rate \u226522 \u2192 1pt"
+        },
+        {
+          "name": "sbp",
+          "value": 82.0,
+          "source": "deterministic",
+          "points": 0,
+          "label": "SBP \u2264100",
+          "criteria": "Systolic BP \u2264100 \u2192 1pt"
+        },
+        {
+          "name": "altered_mentation",
+          "value": 1,
+          "source": "medgemma",
+          "points": 0,
+          "label": "Altered mentation",
+          "criteria": "GCS <15 or altered mental status \u2192 1pt"
+        }
+      ],
+      "missing_variables": [],
+      "applicable": true
+    }
+  ],
+  "case_category": "infectious_disease",
+  "summary": "High-risk scores identified: CURB-65 (high), qSOFA (high). Consider aggressive intervention."
+}

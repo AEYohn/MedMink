@@ -73,3 +73,16 @@ models/
 
 # Worktrees
 .worktrees/
+.next/
+
+# Demo recordings (large video/audio files)
+demo/output/
+*.mp4
+*.webm
+*.mp3
+
+# Excalidraw diagrams (binary, use exported images instead)
+*.excalidraw
+
+# Lock files (regenerated from package.json)
+dashboard/package-lock.json

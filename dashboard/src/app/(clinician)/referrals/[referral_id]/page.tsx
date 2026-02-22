@@ -65,11 +65,6 @@ export default function ReferralDetailPage() {
   useEffect(() => {
     async function load() {
       const apiUrl = getApiUrl();
-      if (!apiUrl) {
-        setError('API not configured');
-        setIsLoading(false);
-        return;
-      }
       try {
         const response = await fetch(`${apiUrl}/api/case/referral/${referralId}`);
         if (!response.ok) throw new Error('Referral not found');
@@ -91,7 +86,6 @@ export default function ReferralDetailPage() {
     setIsSubmitting(true);
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const filteredRecs = recommendations.filter(r => r.trim());
       const response = await fetch(`${apiUrl}/api/case/referral/${referralId}/respond`, {
         method: 'POST',
@@ -116,7 +110,6 @@ export default function ReferralDetailPage() {
   const handleComplete = async () => {
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/referral/${referralId}/complete`, {
         method: 'POST',
       });

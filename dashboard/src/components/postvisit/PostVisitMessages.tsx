@@ -23,7 +23,7 @@ function MessageBubble({ msg }: { msg: PostVisitMessage }) {
   ) : msg.status === 'read' ? (
     <Eye className="w-3 h-3 text-blue-500" />
   ) : (
-    <Clock className="w-3 h-3 text-surface-400" />
+    <Clock className="w-3 h-3 text-muted-foreground" />
   );
 
   if (isSystem) {
@@ -41,8 +41,8 @@ function MessageBubble({ msg }: { msg: PostVisitMessage }) {
     <div className={`flex ${isPatient ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-[85%] ${
         isPatient
-          ? 'bg-rose-500 text-white rounded-2xl rounded-tr-md px-4 py-3'
-          : 'bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-emerald-500 text-surface-900 dark:text-white rounded-2xl rounded-tl-md px-4 py-3'
+          ? 'bg-primary text-primary-foreground rounded-2xl rounded-tr-md px-4 py-3'
+          : 'bg-emerald-50 dark:bg-emerald-900/20 border-l-4 border-emerald-500 text-foreground rounded-2xl rounded-tl-md px-4 py-3'
       }`}>
         {isClinician && (
           <div className="flex items-center gap-1.5 mb-2 text-emerald-700 dark:text-emerald-400">
@@ -97,27 +97,27 @@ export function PostVisitMessages({
   return (
     <div className="flex flex-col h-[calc(100vh-16rem)]">
       {/* Header */}
-      <div className="rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 p-4 mb-3">
+      <div className="rounded-xl border border-border bg-card p-4 mb-3">
         <div className="flex items-center gap-2">
-          <Mail className="w-4 h-4 text-rose-500" />
-          <h3 className="font-semibold text-sm text-surface-900 dark:text-white">Messages to Your Doctor</h3>
+          <Mail className="w-4 h-4 text-primary" />
+          <h3 className="font-semibold text-sm text-foreground">Messages to Your Doctor</h3>
         </div>
-        <p className="text-xs text-surface-500 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Send questions to your care team. They will review and respond.
         </p>
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 p-4 mb-3 space-y-3">
+      <div className="flex-1 overflow-y-auto rounded-xl border border-border bg-card p-4 mb-3 space-y-3">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center py-12">
-            <Mail className="w-10 h-10 text-surface-300 mx-auto mb-3" />
-            <p className="text-sm text-surface-500">No messages yet</p>
-            <p className="text-xs text-surface-400 mt-1">Send a question to start a conversation with your doctor.</p>
+            <Mail className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">No messages yet</p>
+            <p className="text-xs text-muted-foreground mt-1">Send a question to start a conversation with your doctor.</p>
           </div>
         ) : (
           messages.map((msg) => <MessageBubble key={msg.id} msg={msg} />)
@@ -126,7 +126,7 @@ export function PostVisitMessages({
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 p-3">
+      <form onSubmit={handleSubmit} className="rounded-xl border border-border bg-card p-3">
         <div className="flex items-end gap-2">
           <textarea
             value={input}
@@ -139,18 +139,18 @@ export function PostVisitMessages({
             }}
             placeholder="Write a message to your doctor..."
             rows={1}
-            className="flex-1 px-3 py-2.5 bg-surface-50 dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-xl text-surface-900 dark:text-white placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent resize-none text-sm"
+            className="flex-1 px-3 py-2.5 bg-muted/50 border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none text-sm"
             style={{ minHeight: '44px', maxHeight: '100px' }}
           />
           <button
             type="submit"
             disabled={!input.trim() || sending}
-            className="p-2.5 bg-rose-500 hover:bg-indigo-600 disabled:bg-surface-300 dark:disabled:bg-surface-700 text-white rounded-xl transition-colors"
+            className="p-2.5 bg-primary hover:bg-primary/90 disabled:bg-muted text-primary-foreground rounded-xl transition-colors"
           >
             <Send className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-[11px] text-surface-400 mt-2">
+        <p className="text-[11px] text-muted-foreground mt-2">
           Your doctor will be notified and can respond here.
         </p>
       </form>

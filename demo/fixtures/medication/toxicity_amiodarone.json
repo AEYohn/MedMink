@@ -1,0 +1,57 @@
+{
+  "drug": "amiodarone",
+  "therapeutic_index": "narrow",
+  "organ_toxicities": [
+    {
+      "organ": "Pulmonary",
+      "risk": "high",
+      "manifestation": "Pulmonary fibrosis, pneumonitis, ARDS. Occurs in 5-15% of patients.",
+      "monitoring": "Annual chest X-ray and PFTs. DLCO is most sensitive marker.",
+      "management": "Discontinue amiodarone. Consider systemic corticosteroids for severe cases."
+    },
+    {
+      "organ": "Thyroid",
+      "risk": "high",
+      "manifestation": "Both hypothyroidism (6-10%) and hyperthyroidism (2-12%). Amiodarone contains 37% iodine by weight.",
+      "monitoring": "TSH and free T4 every 6 months",
+      "management": "Hypothyroidism: levothyroxine supplementation. Hyperthyroidism: may require steroids or thyroidectomy."
+    },
+    {
+      "organ": "Hepatic",
+      "risk": "moderate",
+      "manifestation": "Elevated transaminases (15-30%), hepatitis, cirrhosis (rare). Can be fatal.",
+      "monitoring": "LFTs every 6 months. Discontinue if transaminases >3x ULN.",
+      "management": "Discontinue amiodarone. Hepatotoxicity usually reversible if caught early."
+    },
+    {
+      "organ": "Ocular",
+      "risk": "moderate",
+      "manifestation": "Corneal microdeposits (>90% of patients, usually asymptomatic), optic neuropathy (rare but sight-threatening)",
+      "monitoring": "Annual ophthalmologic examination",
+      "management": "Corneal deposits: usually resolve after discontinuation. Optic neuropathy: discontinue immediately."
+    },
+    {
+      "organ": "Dermatologic",
+      "risk": "moderate",
+      "manifestation": "Photosensitivity (25-75%), blue-gray skin discoloration (4-9%) with prolonged use",
+      "monitoring": "Sun protection counseling",
+      "management": "Use high-SPF sunscreen. Discoloration may be permanent."
+    },
+    {
+      "organ": "Cardiac",
+      "risk": "moderate",
+      "manifestation": "Bradycardia, QT prolongation, torsades de pointes (rare), worsening heart failure",
+      "monitoring": "Regular ECG monitoring, especially QTc interval",
+      "management": "Dose reduction or discontinuation. Temporary pacing for severe bradycardia."
+    },
+    {
+      "organ": "Neurologic",
+      "risk": "low",
+      "manifestation": "Peripheral neuropathy, tremor, ataxia, insomnia",
+      "monitoring": "Clinical assessment for neuropathy symptoms",
+      "management": "Usually resolves with dose reduction or discontinuation"
+    }
+  ],
+  "overdose_management": "Supportive care. No specific antidote. Cholestyramine may enhance elimination. Hemodialysis is NOT effective due to high protein binding and large volume of distribution.",
+  "source": "txgemma"
+}

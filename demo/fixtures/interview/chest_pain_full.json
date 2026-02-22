@@ -1,0 +1,543 @@
+{
+  "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+  "conversation": [
+    {
+      "role": "assistant",
+      "content": "Hi there! Welcome. What brings you in today?"
+    },
+    {
+      "role": "user",
+      "content": "I've been having chest pain since this morning, it's a pressure feeling in the center of my chest"
+    },
+    {
+      "role": "assistant",
+      "content": "Can you tell me more about the pain? Does it feel sharp, dull, or something else?"
+    },
+    {
+      "role": "user",
+      "content": "It started about 3 hours ago. The pain is about 7 out of 10. It gets worse when I walk. I also feel sweaty and nauseous"
+    },
+    {
+      "role": "assistant",
+      "content": "When did this start, and how severe is it on a 0-10 scale?"
+    },
+    {
+      "role": "user",
+      "content": "No, I haven't had any fever, headache, or leg swelling"
+    },
+    {
+      "role": "assistant",
+      "content": "Does anything make the chest pain better?"
+    },
+    {
+      "role": "user",
+      "content": "I have high blood pressure and high cholesterol. My father had a heart attack at 55. I used to smoke but quit 2 years ago"
+    },
+    {
+      "role": "assistant",
+      "content": "Any other symptoms \u2014 fever, numbness, weakness, or anything else?"
+    },
+    {
+      "role": "user",
+      "content": "I take lisinopril and atorvastatin"
+    },
+    {
+      "role": "assistant",
+      "content": "Are you having any shortness of breath or difficulty breathing?"
+    },
+    {
+      "role": "user",
+      "content": "No known allergies"
+    },
+    {
+      "role": "assistant",
+      "content": "Okay, just to confirm, your main problem is chest pain that started 3 hours ago, is a 7 out of 10, gets worse with walking, and you also feel sweaty and nauseous. You have high blood pressure and high cholesterol, your father had a heart attack, you used to smoke, and you take lisinopril and atorvastatin. You have no known allergies. Is that all correct?"
+    },
+    {
+      "role": "user",
+      "content": "Yes that sounds right"
+    },
+    {
+      "role": "assistant",
+      "content": ""
+    }
+  ],
+  "turns": [
+    {
+      "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+      "question": "Hi there! Welcome. What brings you in today?",
+      "phase": "chief_complaint",
+      "extracted_data": {},
+      "language": "en"
+    },
+    {
+      "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+      "transcript": "I've been having chest pain since this morning, it's a pressure feeling in the center of my chest",
+      "question": "Can you tell me more about the pain? Does it feel sharp, dull, or something else?",
+      "phase": "chief_complaint",
+      "phase_complete": false,
+      "extracted_data": {
+        "chief_complaint": {
+          "chief_complaint": "chest pain",
+          "symptom_location": "center of chest",
+          "symptom_quality": "pressure",
+          "symptom_onset": "this morning"
+        }
+      },
+      "red_flags": [
+        "chest pain"
+      ]
+    },
+    {
+      "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+      "transcript": "It started about 3 hours ago. The pain is about 7 out of 10. It gets worse when I walk. I also feel sweaty and nauseous",
+      "question": "When did this start, and how severe is it on a 0-10 scale?",
+      "phase": "hpi",
+      "phase_complete": true,
+      "extracted_data": {
+        "chief_complaint": {
+          "chief_complaint": "chest pain",
+          "symptom_location": "center of chest",
+          "symptom_quality": "pressure",
+          "symptom_onset": "3 hours ago",
+          "symptom_severity": "7/10",
+          "aggravating_factors": "walking",
+          "associated_symptoms": "sweaty, nauseous"
+        }
+      },
+      "red_flags": [
+        "chest pain",
+        "sweaty",
+        "nauseous"
+      ]
+    },
+    {
+      "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+      "transcript": "No, I haven't had any fever, headache, or leg swelling",
+      "question": "Does anything make the chest pain better?",
+      "phase": "hpi",
+      "phase_complete": false,
+      "extracted_data": {
+        "chief_complaint": {
+          "chief_complaint": "chest pain",
+          "symptom_location": "center of chest",
+          "symptom_quality": "pressure",
+          "symptom_onset": "3 hours ago",
+          "symptom_severity": "7/10",
+          "aggravating_factors": "walking",
+          "associated_symptoms": "sweaty, nauseous"
+        },
+        "hpi": {
+          "chief_complaint": "chest pain",
+          "symptom_location": "center of chest",
+          "symptom_quality": "pressure",
+          "symptom_onset": "3 hours ago",
+          "symptom_severity": "7/10",
+          "aggravating_factors": "walking",
+          "associated_symptoms": "sweaty, nauseous",
+          "denies": "fever, headache, leg swelling"
+        }
+      },
+      "red_flags": [
+        "chest pain",
+        "associated symptoms (sweaty, nauseous)",
+        "nauseous",
+        "pressure",
+        "severity 7/10",
+        "aggravated by exertion (walking)"
+      ]
+    },
+    {
+      "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+      "transcript": "I have high blood pressure and high cholesterol. My father had a heart attack at 55. I used to smoke but quit 2 years ago",
+      "question": "Any other symptoms \u2014 fever, numbness, weakness, or anything else?",
+      "phase": "review_of_systems",
+      "phase_complete": true,
+      "extracted_data": {
+        "chief_complaint": {
+          "chief_complaint": "chest pain",
+          "symptom_location": "center of chest",
+          "symptom_quality": "pressure",
+          "symptom_onset": "3 hours ago",
+          "symptom_severity": "7/10",
+          "aggravating_factors": "walking",
+          "associated_symptoms": "sweaty, nauseous"
+        },
+        "hpi": {
+          "chief_complaint": "chest pain",
+          "symptom_location": "center of chest",
+          "symptom_quality": "pressure",
+          "symptom_onset": "3 hours ago",
+          "symptom_severity": "7/10",
+          "aggravating_factors": "walking",
+          "associated_symptoms": "sweaty, nauseous",
+          "denies": "fever, headache, leg swelling",
+          "past_medical_history": "high blood pressure, high cholesterol",
+          "family_history": "father had a heart attack at 55",
+          "social_history": "used to smoke, quit 2 years ago"
+        }
+      },
+      "red_flags": [
+        "chest pain",
+        "associated symptoms (sweaty, nauseous)",
+        "pressure sensation",
+        "severity 7/10",
+        "aggravated by exertion (walking)",
+        "onset 3 hours ago",
+        "aggravated by walking",
+        "associated symptoms: sweaty, nauseous",
+        "risk factors: high blood pressure, high cholesterol, past smoker, family history of heart attack"
+      ]
+    },
+    {
+      "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+      "transcript": "I take lisinopril and atorvastatin",
+      "question": "Are you having any shortness of breath or difficulty breathing?",
+      "phase": "review_and_triage",
+      "phase_complete": true,
+      "extracted_data": {
+        "chief_complaint": {
+          "chief_complaint": "chest pain",
+          "symptom_location": "center of chest",
+          "symptom_quality": "pressure",
+          "symptom_onset": "3 hours ago",
+          "symptom_severity": "7/10",
+          "aggravating_factors": "walking",
+          "associated_symptoms": "sweaty, nauseous"
+        },
+        "hpi": {
+          "chief_complaint": "chest pain",
+          "symptom_location": "center of chest",
+          "symptom_quality": "pressure",
+          "symptom_onset": "3 hours ago",
+          "symptom_severity": "7/10",
+          "aggravating_factors": "walking",
+          "associated_symptoms": "sweaty, nauseous",
+          "denies": "fever, headache, leg swelling",
+          "past_medical_history": "high blood pressure, high cholesterol",
+          "family_history": "father had a heart attack at 55",
+          "social_history": "used to smoke, quit 2 years ago"
+        },
+        "review_of_systems": {
+          "medications": "lisinopril, atorvastatin"
+        }
+      },
+      "red_flags": [
+        "chest pain",
+        "associated symptoms (sweaty, nauseous)",
+        "pressure sensation",
+        "severity 7/10",
+        "aggravated by exertion (walking)",
+        "onset 3 hours ago",
+        "aggravated by walking",
+        "associated symptoms: sweaty, nauseous",
+        "risk factors: high blood pressure, high cholesterol, past smoker, family history of heart attack",
+        "worsens with exertion",
+        "associated diaphoresis (sweaty)",
+        "associated nausea",
+        "past medical history of hypertension and hypercholesterolemia",
+        "family history of myocardial infarction"
+      ]
+    },
+    {
+      "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+      "transcript": "No known allergies",
+      "question": "Okay, just to confirm, your main problem is chest pain that started 3 hours ago, is a 7 out of 10, gets worse with walking, and you also feel sweaty and nauseous. You have high blood pressure and high cholesterol, your father had a heart attack, you used to smoke, and you take lisinopril and atorvastatin. You have no known allergies. Is that all correct?",
+      "phase": "complete",
+      "phase_complete": true,
+      "extracted_data": {
+        "chief_complaint": {
+          "chief_complaint": "chest pain",
+          "symptom_location": "center of chest",
+          "symptom_quality": "pressure",
+          "symptom_onset": "3 hours ago",
+          "symptom_severity": "7/10",
+          "aggravating_factors": "walking",
+          "associated_symptoms": "sweaty, nauseous"
+        },
+        "hpi": {
+          "chief_complaint": "chest pain",
+          "symptom_location": "center of chest",
+          "symptom_quality": "pressure",
+          "symptom_onset": "3 hours ago",
+          "symptom_severity": "7/10",
+          "aggravating_factors": "walking",
+          "associated_symptoms": "sweaty, nauseous",
+          "denies": "fever, headache, leg swelling",
+          "past_medical_history": "high blood pressure, high cholesterol",
+          "family_history": "father had a heart attack at 55",
+          "social_history": "used to smoke, quit 2 years ago"
+        },
+        "review_of_systems": {
+          "medications": "lisinopril, atorvastatin"
+        },
+        "review_and_triage": {
+          "chief_complaint": "chest pain",
+          "symptom_location": "center of chest",
+          "symptom_quality": "pressure",
+          "symptom_onset": "3 hours ago",
+          "symptom_severity": "7/10",
+          "aggravating_factors": "walking",
+          "associated_symptoms": "sweaty, nauseous",
+          "denies": "fever, headache, leg swelling, shortness of breath, difficulty breathing, numbness, weakness",
+          "past_medical_history": "high blood pressure, high cholesterol",
+          "family_history": "father had a heart attack at 55",
+          "social_history": "used to smoke, quit 2 years ago",
+          "medications": "lisinopril, atorvastatin",
+          "allergies": "no known allergies"
+        }
+      },
+      "red_flags": [
+        "chest pain",
+        "associated symptoms (sweaty, nauseous)",
+        "pressure sensation",
+        "severity 7/10",
+        "aggravated by exertion (walking)",
+        "onset 3 hours ago",
+        "aggravated by walking",
+        "associated symptoms: sweaty, nauseous",
+        "risk factors: high blood pressure, high cholesterol, past smoker, family history of heart attack",
+        "worsens with exertion",
+        "associated diaphoresis (sweaty)",
+        "associated nausea",
+        "past medical history of hypertension and hypercholesterolemia",
+        "family history of myocardial infarction",
+        "pain worse with exertion"
+      ]
+    },
+    {
+      "detail": "Interview already complete"
+    }
+  ],
+  "triage": {
+    "chief_complaint": "Chest pain",
+    "hpi": {
+      "onset": "3 hours ago",
+      "location": "Center of chest",
+      "duration": "3 hours",
+      "character": "Pressure",
+      "aggravating": "Walking",
+      "relieving": "Not specified",
+      "severity": "7/10"
+    },
+    "review_of_systems": {
+      "positive": [
+        "Sweaty",
+        "Nauseous"
+      ],
+      "negative": [
+        "Fever",
+        "Headache",
+        "Leg swelling",
+        "Shortness of breath",
+        "Difficulty breathing",
+        "Numbness",
+        "Weakness"
+      ]
+    },
+    "past_medical_history": [
+      "High blood pressure",
+      "High cholesterol"
+    ],
+    "medications": [
+      "Lisinopril",
+      "Atorvastatin"
+    ],
+    "allergies": [
+      "No known allergies"
+    ],
+    "esi_level": 2,
+    "esi_reasoning": "Patient presents with chest pain (pressure, 7/10 severity) radiating to the center of the chest, onset 3 hours ago, aggravated by walking, and associated with diaphoresis and nausea. Significant risk factors include history of hypertension, hypercholesterolemia, family history of MI, and past smoking history. This presentation is highly concerning for an acute coronary syndrome (ACS). ESI 2 criteria include high-risk complaints (like chest pain suggestive of ACS) and patients who are confused/lethargic or in severe pain/distress. While the patient isn't explicitly described as confused or lethargic, the severe chest pain with associated symptoms and risk factors places them in the emergent category requiring immediate evaluation.",
+    "recommended_setting": "ER",
+    "setting_reasoning": "The patient's symptoms (chest pain, pressure, severity 7/10, associated diaphoresis/nausea, aggravated by exertion) and risk factors (HTN, HLD, family history of MI, smoking history) are highly suggestive of a potential acute coronary syndrome. This requires immediate evaluation and management in an Emergency Department setting.",
+    "red_flags": [
+      "Chest pain (pressure, 7/10, center of chest, onset 3 hours ago, worse with walking)",
+      "associated symptoms (sweaty, nauseous)",
+      "pressure sensation",
+      "severity 7/10",
+      "aggravated by exertion (walking)",
+      "onset 3 hours ago",
+      "aggravated by walking",
+      "associated symptoms: sweaty, nauseous",
+      "risk factors: high blood pressure, high cholesterol, past smoker, family history of heart attack",
+      "worsens with exertion",
+      "associated diaphoresis (sweaty)",
+      "associated nausea",
+      "past medical history of hypertension and hypercholesterolemia",
+      "family history of myocardial infarction",
+      "pain worse with exertion",
+      "Associated diaphoresis and nausea",
+      "Risk factors: HTN, HLD, family history of MI, past smoker"
+    ]
+  },
+  "management_plan": {
+    "differential_diagnosis": [
+      {
+        "diagnosis": "Acute Myocardial Infarction (AMI)",
+        "likelihood": "high",
+        "key_findings_for": [
+          "Chest pain (pressure, central, 7/10)",
+          "Onset 3 hours ago",
+          "Aggravated by walking (exertion)",
+          "Associated symptoms (sweaty, nauseous)",
+          "Risk factors (HTN, HLD, past smoker, family history of MI)",
+          "Pain duration > 20 minutes"
+        ],
+        "key_findings_against": []
+      },
+      {
+        "diagnosis": "Unstable Angina",
+        "likelihood": "moderate",
+        "key_findings_for": [
+          "Chest pain (pressure, central, 7/10)",
+          "Onset 3 hours ago",
+          "Aggravated by walking (exertion)",
+          "Associated symptoms (sweaty, nauseous)",
+          "Risk factors (HTN, HLD, past smoker, family history of MI)",
+          "Pain duration > 20 minutes",
+          "New onset or worsening pattern of angina"
+        ],
+        "key_findings_against": []
+      },
+      {
+        "diagnosis": "Stable Angina",
+        "likelihood": "low",
+        "key_findings_for": [
+          "Chest pain (pressure, central)",
+          "Aggravated by walking (exertion)",
+          "Risk factors (HTN, HLD, past smoker, family history of MI)"
+        ],
+        "key_findings_against": [
+          "New onset or change in pattern (symptoms started 3 hours ago)",
+          "Severity (7/10)",
+          "Associated symptoms (sweaty, nauseous)"
+        ]
+      },
+      {
+        "diagnosis": "Gastroesophageal Reflux Disease (GERD)",
+        "likelihood": "low",
+        "key_findings_for": [
+          "Chest pain (can be pressure-like)"
+        ],
+        "key_findings_against": [
+          "Pain aggravated by exertion",
+          "Associated symptoms (sweaty, nauseous)",
+          "Lack of typical GERD symptoms (heartburn, regurgitation)"
+        ]
+      },
+      {
+        "diagnosis": "Musculoskeletal Pain",
+        "likelihood": "low",
+        "key_findings_for": [
+          "Chest pain"
+        ],
+        "key_findings_against": [
+          "Pain quality (pressure)",
+          "Pain aggravated by exertion",
+          "Associated symptoms (sweaty, nauseous)",
+          "Location (center of chest)"
+        ]
+      },
+      {
+        "diagnosis": "Pulmonary Embolism (PE)",
+        "likelihood": "low",
+        "key_findings_for": [
+          "Chest pain (can be pleuritic or central)",
+          "Associated symptoms (sweaty, potentially nausea)"
+        ],
+        "key_findings_against": [
+          "Pain quality (pressure)",
+          "Pain aggravated by exertion",
+          "Lack of typical PE symptoms (shortness of breath, pleuritic pain, cough, hemoptysis, leg swelling - though patient denies leg swelling)"
+        ]
+      },
+      {
+        "diagnosis": "Aortic Dissection",
+        "likelihood": "low",
+        "key_findings_for": [
+          "Severe chest pain (often tearing/ripping)",
+          "Risk factors (HTN)"
+        ],
+        "key_findings_against": [
+          "Pain quality (pressure, not tearing)",
+          "Pain location (central, not radiating to back typically)",
+          "Lack of other typical symptoms (pulse deficits, neurological deficits, syncope)"
+        ]
+      }
+    ],
+    "recommended_investigations": [
+      {
+        "test": "Electrocardiogram (ECG/EKG)",
+        "urgency": "stat",
+        "rationale": "To evaluate for ST-segment elevation myocardial infarction (STEMI), ST-segment depression, T-wave inversions, or other ischemic changes suggestive of acute coronary syndrome (ACS)."
+      },
+      {
+        "test": "Cardiac Biomarkers (Troponin I or T)",
+        "urgency": "stat",
+        "rationale": "To detect myocardial necrosis, indicating myocardial infarction (MI). Serial measurements are often needed."
+      },
+      {
+        "test": "Complete Blood Count (CBC)",
+        "urgency": "routine",
+        "rationale": "To assess for anemia or infection."
+      },
+      {
+        "test": "Basic Metabolic Panel (BMP)",
+        "urgency": "routine",
+        "rationale": "To assess electrolytes, renal function, and glucose."
+      },
+      {
+        "test": "Coagulation Studies (PT/INR, PTT)",
+        "urgency": "routine",
+        "rationale": "If considering anticoagulation or thrombolysis."
+      },
+      {
+        "test": "Chest X-ray (CXR)",
+        "urgency": "routine",
+        "rationale": "To evaluate for other causes of chest pain (e.g., pneumothorax, pneumonia, widened mediastinum suggesting aortic dissection) and assess for pulmonary edema."
+      }
+    ],
+    "treatment_plan": {
+      "immediate": [
+        "Administer Oxygen if SpO2 < 90%",
+        "Establish IV access",
+        "Obtain 12-lead ECG stat",
+        "Administer Aspirin 325 mg (chewed) unless contraindicated",
+        "Administer Nitroglycerin sublingual (0.4 mg) every 5 minutes for up to 3 doses if systolic BP > 90 mmHg and no inferior MI suspected",
+        "Administer Morphine IV for pain relief if nitroglycerin ineffective, titrate to effect",
+        "Continuous cardiac monitoring",
+        "Notify cardiology consultant"
+      ],
+      "short_term": [
+        "Based on ECG and biomarker results: consider antiplatelet therapy (e.g., clopidogrel, ticagrelor), anticoagulation (e.g., heparin), beta-blockers, ACE inhibitors, statins, and potential reperfusion therapy (PCI or thrombolysis) if indicated for STEMI or high-risk NSTE-ACS."
+      ],
+      "monitoring": [
+        "Continuous cardiac monitoring (rate, rhythm, ST segments)",
+        "Vital signs (BP, HR, RR, SpO2, temperature)",
+        "Pain level",
+        "Serial cardiac biomarkers (Troponin)",
+        "ECG monitoring for dynamic changes",
+        "Urine output"
+      ]
+    },
+    "disposition": {
+      "recommendation": "admit",
+      "level_of_care": "telemetry",
+      "rationale": "High suspicion for Acute Coronary Syndrome (ACS) based on symptoms, risk factors, and associated findings. Requires continuous cardiac monitoring, serial biomarkers, and potential intervention. Telemetry unit is appropriate for initial management pending further evaluation and risk stratification."
+    },
+    "knowledge_gaps": [
+      "Specific ECG findings (ST elevation, depression, T-wave changes)?",
+      "Initial Troponin level?",
+      "Patient's blood pressure and heart rate?",
+      "Presence of contraindications to aspirin, nitroglycerin, or morphine?",
+      "Any history of prior cardiac events or interventions?",
+      "Specific details of family history (age at onset, type of event)?",
+      "Any other medications or supplements?",
+      "Allergies (specifically to contrast dye if PCI is considered)?",
+      "Time of last meal (relevant for potential procedures)"
+    ],
+    "plan_confidence": 0.8,
+    "plan_completeness": "preliminary",
+    "last_updated_phase": "complete"
+  }
+}

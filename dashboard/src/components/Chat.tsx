@@ -97,7 +97,6 @@ export function Chat({ onPaperClick }: ChatProps) {
 
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const response = await fetch(
         `${apiUrl}/api/chat`,
         {

@@ -1,0 +1,104 @@
+{
+  "patient_instructions": "You had a heart attack (myocardial infarction). This means a part of your heart muscle didn't get enough blood. We opened the blocked artery with a procedure called PCI (Percutaneous Coronary Intervention). You will need to take special medicines every day to keep your heart healthy and prevent another heart attack. It's very important to stop smoking. Eat healthy foods and exercise when you are able. Call 911 right away if you have chest pain again or feel very short of breath.",
+  "medication_reconciliation": [
+    {
+      "medication": "Lisinopril 20mg daily",
+      "action": "continue",
+      "instructions": "Take one tablet by mouth every day at the same time.",
+      "reason": "To control your blood pressure."
+    },
+    {
+      "medication": "Atorvastatin 40mg daily",
+      "action": "continue",
+      "instructions": "Take one tablet by mouth every day, usually in the evening.",
+      "reason": "To lower your cholesterol."
+    },
+    {
+      "medication": "Aspirin 81mg daily",
+      "action": "continue",
+      "instructions": "Take one tablet by mouth every day with or without food.",
+      "reason": "To prevent blood clots."
+    },
+    {
+      "medication": "Ticagrelor 180mg (loading dose) then 60mg BID",
+      "action": "new",
+      "instructions": "You received a loading dose in the hospital. Now take one 60mg tablet by mouth twice a day (every 12 hours) with or without food for at least 1 year, unless your doctor tells you otherwise.",
+      "reason": "To prevent blood clots after your heart attack."
+    },
+    {
+      "medication": "Beta-blocker (e.g., Metoprolol)",
+      "action": "new",
+      "instructions": "Take as prescribed by your doctor (e.g., Metoprolol Succinate 25mg PO daily). Follow specific instructions given by your doctor regarding timing and food.",
+      "reason": "To protect your heart, lower blood pressure, and slow heart rate."
+    }
+  ],
+  "follow_up": [
+    {
+      "timeframe": "1-2 weeks",
+      "provider": "Cardiologist",
+      "reason": "To check how you are doing after the heart attack and PCI, review medications, and discuss long-term care."
+    },
+    {
+      "timeframe": "Within 1 week",
+      "provider": "Primary Care Physician (PCP)",
+      "reason": "To review medications, manage blood pressure and cholesterol, and discuss overall health."
+    },
+    {
+      "timeframe": "Ongoing",
+      "provider": "Cardiac Rehabilitation",
+      "reason": "To help you recover safely, learn about heart health, and improve fitness."
+    }
+  ],
+  "red_flags": [
+    "Chest pain or pressure that is new, worsening, or different from before",
+    "Shortness of breath",
+    "Swelling in your legs or ankles",
+    "Feeling dizzy or lightheaded",
+    "Irregular heartbeat or palpitations",
+    "Fainting or near-fainting"
+  ],
+  "restrictions": [
+    {
+      "type": "activity",
+      "restriction": "Avoid heavy lifting (more than 10 pounds), pushing, or pulling for 4-6 weeks",
+      "duration": "4-6 weeks",
+      "reason": "To allow the PCI site to heal properly."
+    },
+    {
+      "type": "activity",
+      "restriction": "Avoid strenuous activity or exercise until cleared by your doctor or cardiac rehabilitation team",
+      "duration": "Until cleared",
+      "reason": "To allow your heart to recover."
+    },
+    {
+      "type": "dietary",
+      "restriction": "Follow a heart-healthy diet low in saturated and trans fats, cholesterol, and sodium.",
+      "duration": "Long-term",
+      "reason": "To manage cholesterol, blood pressure, and weight."
+    },
+    {
+      "type": "other",
+      "restriction": "Stop smoking completely.",
+      "duration": "Permanent",
+      "reason": "Smoking is very harmful to your heart health."
+    }
+  ],
+  "readmission_risk": {
+    "level": "moderate",
+    "factors": [
+      "Age (62 years)",
+      "History of hypertension and hyperlipidemia",
+      "Family history of MI",
+      "Smoking history",
+      "Recent acute coronary syndrome (MI)"
+    ],
+    "mitigation": [
+      "Strict medication adherence (aspirin, P2Y12 inhibitor, beta-blocker, statin, ACE inhibitor)",
+      "Smoking cessation support",
+      "Cardiac rehabilitation participation",
+      "Dietary counseling and adherence",
+      "Regular follow-up with cardiology and PCP",
+      "Management of comorbidities (hypertension, hyperlipidemia, diabetes if present)"
+    ]
+  }
+}

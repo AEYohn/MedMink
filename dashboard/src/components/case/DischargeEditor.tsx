@@ -114,6 +114,16 @@ export function DischargeEditor({
     const meds: DischargeMedOverride[] = [];
     for (const t of treatmentOptions) {
       const name = (t.name as string) || '';
+      const optionType = (t.option_type as string) || '';
+      const fdaApproved = t.fda_approved as boolean;
+
+      // Only sync actual medications into discharge meds.
+      // Use option_type when available, fall back to fda_approved heuristic.
+      const isMedication = optionType
+        ? optionType === 'medication'
+        : fdaApproved;
+      if (!isMedication) continue;
+
       const treatmentOverride = overrides.treatments[name];
       if (treatmentOverride?.verdict === 'accepted' || treatmentOverride?.verdict === 'modified') {
         meds.push({
@@ -122,6 +132,7 @@ export function DischargeEditor({
           frequency: '',
           source: 'ai',
           action: 'new',
+          option_type: 'medication',
         });
       }
     }
@@ -165,7 +176,6 @@ export function DischargeEditor({
     setError(null);
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/discharge-plan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

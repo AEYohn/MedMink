@@ -77,7 +77,6 @@ export function DifferentialDiagnosisTab({
     setIsRegenerating(true);
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/ddx`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -51,7 +51,7 @@ function CitationBadge({ citation }: { citation: EvidenceCitation }) {
           <ExternalLink className="w-2.5 h-2.5 inline ml-0.5" />
         </a>
       ) : (
-        <span className="text-surface-600 dark:text-surface-300 truncate max-w-[200px]" title={citation.title}>
+        <span className="text-muted-foreground truncate max-w-[200px]" title={citation.title}>
           {citation.title}
         </span>
       )}
@@ -124,10 +124,10 @@ export function PostVisitChat({
   return (
     <div className="flex flex-col h-[calc(100vh-16rem)]">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 p-4 mb-3 space-y-3">
+      <div className="flex-1 overflow-y-auto rounded-xl border border-border bg-card p-4 mb-3 space-y-3">
         {/* Welcome message */}
         <div className="flex justify-start">
-          <div className="max-w-[85%] bg-surface-100 dark:bg-surface-700/50 text-surface-900 dark:text-white rounded-2xl rounded-tl-md px-4 py-3">
+          <div className="max-w-[85%] bg-muted text-foreground rounded-2xl rounded-tl-md px-4 py-3">
             <div className="whitespace-pre-wrap text-sm leading-relaxed">
               <ExplainableText text={welcomeMessage.content} />
             </div>
@@ -139,8 +139,8 @@ export function PostVisitChat({
             <div
               className={`max-w-[85%] ${
                 msg.role === 'user'
-                  ? 'bg-rose-500 text-white rounded-2xl rounded-tr-md px-4 py-3'
-                  : 'bg-surface-100 dark:bg-surface-700/50 text-surface-900 dark:text-white rounded-2xl rounded-tl-md px-4 py-3'
+                  ? 'bg-primary text-primary-foreground rounded-2xl rounded-tr-md px-4 py-3'
+                  : 'bg-muted text-foreground rounded-2xl rounded-tl-md px-4 py-3'
               }`}
             >
               <div className="whitespace-pre-wrap text-sm leading-relaxed">
@@ -149,8 +149,8 @@ export function PostVisitChat({
 
               {/* Citations */}
               {msg.citations && msg.citations.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-surface-200 dark:border-surface-600">
-                  <p className="text-[10px] font-medium text-surface-500 mb-1">Sources:</p>
+                <div className="mt-2 pt-2 border-t border-border">
+                  <p className="text-[10px] font-medium text-muted-foreground mb-1">Sources:</p>
                   <div className="flex flex-wrap">
                     {msg.citations.map((c, j) => (
                       <CitationBadge key={j} citation={c} />
@@ -168,10 +168,10 @@ export function PostVisitChat({
 
         {chatLoading && (
           <div className="flex justify-start">
-            <div className="bg-surface-100 dark:bg-surface-700/50 rounded-2xl rounded-tl-md px-4 py-3">
+            <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
-                <span className="text-sm text-surface-500">Reviewing your records...</span>
+                <span className="text-sm text-muted-foreground">Reviewing your records...</span>
               </div>
             </div>
           </div>
@@ -183,7 +183,7 @@ export function PostVisitChat({
       {/* Suggested questions */}
       {suggestedQuestions.length > 0 && (
         <div className="mb-2">
-          <p className="text-xs text-surface-500 mb-1.5">Suggested questions:</p>
+          <p className="text-xs text-muted-foreground mb-1.5">Suggested questions:</p>
           <div className="flex flex-wrap gap-1.5">
             {suggestedQuestions.map((q, i) => (
               <button
@@ -191,7 +191,7 @@ export function PostVisitChat({
                 onClick={() => {
                   onSend(q);
                 }}
-                className="px-2.5 py-1.5 bg-surface-100 dark:bg-surface-800 hover:bg-surface-200 dark:hover:bg-surface-700 rounded-lg text-xs text-surface-700 dark:text-surface-300 transition-colors border border-surface-200 dark:border-surface-700"
+                className="px-2.5 py-1.5 bg-muted hover:bg-muted/80 rounded-lg text-xs text-muted-foreground transition-colors border border-border"
               >
                 {q}
               </button>
@@ -201,7 +201,7 @@ export function PostVisitChat({
       )}
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 p-3">
+      <form onSubmit={handleSubmit} className="rounded-xl border border-border bg-card p-3">
         <div className="flex items-end gap-2">
           <textarea
             value={input}
@@ -214,19 +214,19 @@ export function PostVisitChat({
             }}
             placeholder="Ask about your visit..."
             rows={1}
-            className="flex-1 px-3 py-2.5 bg-surface-50 dark:bg-surface-700 border border-surface-200 dark:border-surface-600 rounded-xl text-surface-900 dark:text-white placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent resize-none text-sm"
+            className="flex-1 px-3 py-2.5 bg-muted/50 border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none text-sm"
             style={{ minHeight: '44px', maxHeight: '100px' }}
           />
           <button
             type="submit"
             disabled={!input.trim() || chatLoading}
-            className="p-2.5 bg-rose-500 hover:bg-indigo-600 disabled:bg-surface-300 dark:disabled:bg-surface-700 text-white rounded-xl transition-colors"
+            className="p-2.5 bg-primary hover:bg-primary/90 disabled:bg-muted text-primary-foreground rounded-xl transition-colors"
           >
             {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
         </div>
         <div className="flex items-center justify-between mt-2">
-          <div className="flex items-center gap-1.5 text-[11px] text-surface-400">
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Sparkles className="w-3 h-3" />
             <span>AI answers with evidence citations — always verify with your doctor</span>
           </div>

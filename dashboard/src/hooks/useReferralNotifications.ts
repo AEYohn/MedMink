@@ -26,7 +26,6 @@ export function useReferralNotifications() {
 
   const checkForUpdates = useCallback(async () => {
     const apiUrl = getApiUrl();
-    if (!apiUrl) return;
 
     try {
       const response = await fetch(`${apiUrl}/api/case/referrals/sent`);

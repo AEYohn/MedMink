@@ -1,0 +1,20 @@
+{
+  "modality": "dermoscopy",
+  "findings": [
+    "Asymmetry: The lesion exhibits asymmetry in shape and color distribution.",
+    "Border: The border appears irregular and poorly defined.",
+    "Color: Multiple colors are present, including shades of brown, black, and possibly a blue-white veil (though less distinct in this image).",
+    "Diameter: The lesion appears to be greater than 6mm.",
+    "Dermoscopic Structures: The image shows a network of irregular pigment, possibly streaks, and areas of atypical pigment globules or irregular brown structures."
+  ],
+  "impression": "The dermoscopic features (asymmetry, irregular border, multiple colors, diameter > 6mm, atypical pigment network/streaks/globules) are highly suggestive of melanoma.",
+  "differential_diagnoses": [
+    "Melanoma",
+    "Atypical Nevus"
+  ],
+  "confidence": 0.9,
+  "recommendations": [
+    "Biopsy for histopathological examination"
+  ],
+  "model": "medgemma_multimodal"
+}

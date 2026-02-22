@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import type { FullHealthContext } from '@/types/health-context';
-import { buildHealthContext, seedHealthDataIfNeeded } from '@/lib/health-context-store';
+import { buildHealthContext } from '@/lib/health-context-store';
 
 interface HealthContextValue {
   context: FullHealthContext | null;
@@ -19,7 +19,6 @@ export function HealthContextProvider({ children }: { children: ReactNode }) {
   const [context, setContext] = useState<FullHealthContext | null>(null);
 
   useEffect(() => {
-    seedHealthDataIfNeeded();
     setContext(buildHealthContext());
   }, []);
 

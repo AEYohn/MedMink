@@ -1225,6 +1225,7 @@ class TreatmentOption:
         default_factory=list
     )  # [{pmid, title, match_type, matched_words}]
     reasoning: dict = field(default_factory=dict)  # structured reasoning for transparency
+    option_type: str = "medication"  # medication|procedure|diagnostic|supportive_care
 
 
 @dataclass
@@ -2070,6 +2071,7 @@ class ClinicalCaseAnalyzer:
                     name=opt.get("name", ""),
                     mechanism=opt.get("mechanism", ""),
                     rationale=opt.get("rationale", ""),
+                    option_type=opt.get("option_type", "medication"),
                 )
                 for opt in data.get("options", [])
             ]
@@ -2704,6 +2706,7 @@ Output ONLY the JSON array. No preamble. Start with [ and end with ]."""
                     "rationale": opt.rationale,
                     "papers_used": opt.papers_used or [],
                     "reasoning": opt.reasoning or {},
+                    "option_type": opt.option_type,
                 }
                 for opt in result.treatment_options
             ],

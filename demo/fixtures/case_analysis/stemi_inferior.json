@@ -1,0 +1,704 @@
+{
+  "parsed_case": {
+    "patient": {
+      "age": "62 years",
+      "sex": "female",
+      "relevant_history": [
+        "hypertension",
+        "hyperlipidemia"
+      ]
+    },
+    "findings": {
+      "presentation": "substernal chest pressure radiating to her left jaw",
+      "timeline": "for the past 45 minutes",
+      "physical_exam": [],
+      "labs": [
+        "Troponin I is 2.4 ng/mL (normal <0.04)"
+      ],
+      "imaging": [
+        "ECG shows ST-segment elevation in leads II, III, and aVF"
+      ],
+      "precipitating_factors": "",
+      "context_of_onset": "",
+      "associated_symptoms": [
+        "diaphoretic",
+        "nauseated"
+      ]
+    },
+    "management": {
+      "medications": [],
+      "recent_changes": "",
+      "response_to_treatment": ""
+    },
+    "clinical_question": "",
+    "case_category": "cardiology"
+  },
+  "treatment_options": [
+    {
+      "name": "P2Y12 inhibitor loading (e.g., Ticagrelor 180 mg PO, Prasugrel 60 mg PO, Clopidogrel 300-600 mg PO)",
+      "mechanism": "Inhibits platelet P2Y12 receptor, blocking ADP-mediated platelet activation and aggregation.",
+      "verdict": "recommended",
+      "confidence": 0.95,
+      "fda_approved": true,
+      "fda_indication": "Adjunctive therapy to aspirin in patients with acute coronary syndrome (ACS)",
+      "evidence_grade": "high",
+      "pros": [
+        "Reduces ischemic events (MI, stroke, cardiovascular death) in patients with ACS, particularly those undergoing PCI.",
+        "Part of standard guideline-directed medical therapy for ACS, including NSTEMI (which this patient likely has given elevated troponin and symptoms)."
+      ],
+      "cons": [
+        "Increased risk of bleeding compared to aspirin alone."
+      ],
+      "key_evidence": [],
+      "rationale": "The patient presents with symptoms and elevated troponin consistent with an acute coronary syndrome (likely NSTEMI). P2Y12 inhibitors, in addition to aspirin, are standard first-line therapy for ACS to reduce thrombotic events. This is a critical component of initial management. [Door-to-balloon target <90 minutes for STEMI; PCI activation within 10 minutes of ECG diagnosis]",
+      "papers_used": [],
+      "reasoning": {
+        "patient_factors_considered": [
+          "Symptoms suggestive of ACS (substernal chest pressure radiating to jaw)",
+          "Elevated troponin (2.4 ng/mL)",
+          "Risk factors (hypertension, hyperlipidemia)",
+          "Age (62 years)"
+        ],
+        "supporting_evidence": "Guidelines from major cardiology societies (ACC/AHA, ESC) strongly recommend P2Y12 inhibitor therapy (e.g., clopidogrel, ticagrelor, prasugrel) in addition to aspirin for patients with ACS, regardless of initial management strategy (invasive or conservative). Numerous large RCTs (e.g., CURE, PLATO, TRITON-TIMI 38) have demonstrated the benefit of P2Y12 inhibitors in reducing ischemic events.",
+        "key_concern": "Balancing the reduction in ischemic risk with the increased risk of bleeding.",
+        "context_relevance": "The presentation is typical for ACS, making P2Y12 inhibition a standard and necessary part of management."
+      }
+    },
+    {
+      "name": "Unfractionated Heparin (UFH) bolus + infusion OR Enoxaparin (LMWH)",
+      "mechanism": "Anticoagulant; potentiates antithrombin III, inhibiting thrombin and factor Xa (UFH); inhibits factor Xa primarily (Enoxaparin).",
+      "verdict": "recommended",
+      "confidence": 0.95,
+      "fda_approved": true,
+      "fda_indication": "Treatment and prevention of thromboembolic disorders",
+      "evidence_grade": "high",
+      "pros": [
+        "Anticoagulation is standard of care for acute coronary syndrome (ACS) with elevated troponin, reducing thrombus propagation and reinfarction risk.",
+        "Both UFH and LMWH (enoxaparin) are established anticoagulants for ACS, providing effective and rapid anticoagulation.",
+        "Choice between UFH and LMWH depends on local protocols, renal function, and planned procedures (e.g., PCI), but both are appropriate initial options."
+      ],
+      "cons": [
+        "Risk of bleeding, especially major bleeding.",
+        "UFH requires monitoring (aPTT) and intravenous administration, while LMWH is subcutaneous but requires dose adjustment in renal impairment."
+      ],
+      "key_evidence": [],
+      "rationale": "The patient presents with symptoms, ECG changes (implied by chest pressure radiating to jaw), and elevated troponin (2.4 ng/mL), consistent with an acute myocardial infarction (AMI) or unstable angina (UA) with myocardial injury. Anticoagulation with heparin (UFH or LMWH) is a cornerstone of initial management for ACS, alongside antiplatelet therapy (like aspirin, which is standard but not listed as current med). Given the presentation, anticoagulation is strongly indicated.",
+      "papers_used": [],
+      "reasoning": {
+        "patient_factors_considered": [
+          "62-year-old female",
+          "Hypertension, hyperlipidemia (risk factors for ACS)",
+          "Substernal chest pressure radiating to jaw (typical anginal symptoms)",
+          "Elevated Troponin I (confirms myocardial injury)",
+          "No current medications listed (important for interaction check, but doesn't change the need for anticoagulation)"
+        ],
+        "supporting_evidence": "Guidelines from ACC/AHA and ESC consistently recommend anticoagulation (UFH or LMWH) in addition to antiplatelet therapy for patients with ACS, including NSTEMI (which this likely is given the troponin elevation and lack of ST elevation description). While specific trials comparing UFH vs LMWH in this exact scenario aren't cited in the provided PubMed search, their use is well-established.",
+        "key_concern": "Balancing the benefit of preventing further thrombosis against the risk of bleeding complications.",
+        "context_relevance": "The acute presentation with myocardial injury necessitates immediate anticoagulation to stabilize the patient and prevent further ischemic events."
+      }
+    },
+    {
+      "name": "Emergent Percutaneous Coronary Intervention (PCI)",
+      "mechanism": "Mechanical reperfusion therapy; opens the occluded coronary artery with balloon angioplasty and stent placement.",
+      "verdict": "recommended",
+      "confidence": 0.95,
+      "fda_approved": false,
+      "fda_indication": "N/A \u2014 procedure/diagnostic/supportive",
+      "evidence_grade": "high",
+      "pros": [
+        "Patient presents with symptoms (substernal chest pressure radiating to jaw) and elevated troponin (2.4 ng/mL) highly suggestive of an acute myocardial infarction (MI), likely ST-elevation MI (STEMI) given the presentation, although ECG is not provided.",
+        "Emergent PCI is the preferred reperfusion strategy for STEMI when available within recommended timeframes (e.g., <90-120 minutes from first medical contact). It directly addresses the underlying coronary artery occlusion.",
+        "PCI has been shown to be superior to thrombolysis in reducing mortality, reinfarction, and stroke in patients with STEMI, especially when performed promptly by experienced operators."
+      ],
+      "cons": [
+        "PCI carries risks such as bleeding, stroke, contrast-induced nephropathy, and procedural complications (e.g., dissection, perforation), although these are generally lower than with thrombolysis when PCI is performed effectively.",
+        "Requires specialized facilities and personnel, which may not be immediately available in all settings, potentially delaying reperfusion."
+      ],
+      "key_evidence": [],
+      "rationale": "The patient's presentation (chest pain, elevated troponin) strongly indicates an acute MI. Given the likely diagnosis of STEMI (based on typical symptoms, although ECG is missing), emergent PCI is the standard-of-care reperfusion therapy to restore blood flow to the ischemic myocardium and improve outcomes. It is superior to medical management alone or thrombolysis in this context.",
+      "papers_used": [],
+      "reasoning": {
+        "patient_factors_considered": [
+          "62-year-old female",
+          "Symptoms consistent with acute MI (chest pressure, radiation)",
+          "Elevated troponin (2.4 ng/mL)",
+          "Hypertension and hyperlipidemia (risk factors for coronary artery disease)"
+        ],
+        "supporting_evidence": "Clinical guidelines (e.g., ACC/AHA) strongly recommend primary PCI for STEMI when feasible within guideline-recommended timeframes. While specific PubMed evidence wasn't retrieved, this is a cornerstone of acute MI management.",
+        "key_concern": "Timeliness of PCI is crucial; delays can negate the benefits. The patient's presentation warrants immediate evaluation for PCI eligibility and rapid transfer if necessary.",
+        "context_relevance": "The acute onset (45 minutes) and severity of symptoms, coupled with elevated troponin, point towards an urgent need for reperfusion therapy."
+      }
+    },
+    {
+      "name": "Nitroglycerin IV infusion",
+      "mechanism": "Vasodilator; reduces preload and afterload, improving coronary blood flow and relieving chest pain.",
+      "verdict": "recommended",
+      "confidence": 0.95,
+      "fda_approved": true,
+      "fda_indication": "Acute Coronary Syndrome, Heart Failure",
+      "evidence_grade": "high",
+      "pros": [
+        "Reduces preload and afterload, decreasing myocardial oxygen demand.",
+        "Vasodilation improves coronary blood flow, potentially relieving ischemia.",
+        "Effective for relieving chest pain associated with acute coronary syndromes (ACS) and heart failure."
+      ],
+      "cons": [
+        "Can cause hypotension, especially in preload-dependent patients or with rapid infusion.",
+        "May cause reflex tachycardia."
+      ],
+      "key_evidence": [],
+      "rationale": "The patient presents with symptoms (substernal chest pressure radiating to jaw), elevated troponin (2.4 ng/mL), and vital signs (BP 165/95, HR 102) highly suggestive of an acute coronary syndrome (ACS), likely NSTEMI or unstable angina. Intravenous nitroglycerin is a standard therapy for ACS to relieve chest pain, reduce myocardial oxygen demand, and improve coronary perfusion. Although PubMed search yielded no direct evidence, this is a well-established treatment.",
+      "papers_used": [],
+      "reasoning": {
+        "patient_factors_considered": [
+          "Symptoms consistent with ACS (chest pressure, radiation)",
+          "Elevated troponin indicating myocardial injury",
+          "Hypertension (BP 165/95) - caution needed but not absolute contraindication",
+          "Tachycardia (HR 102)"
+        ],
+        "supporting_evidence": "Standard clinical practice guidelines for ACS recommend nitroglycerin for ongoing chest pain, hypertension, or heart failure. While specific trial data wasn't found in the PubMed search, its use is based on decades of clinical experience and pathophysiological understanding.",
+        "key_concern": "Potential for hypotension, requiring careful titration and monitoring of blood pressure.",
+        "context_relevance": "Onset within the past 45 minutes is consistent with acute ischemia. No identified precipitating factors are noted."
+      }
+    },
+    {
+      "name": "Beta-blocker IV (e.g., Metoprolol) or Oral",
+      "mechanism": "Reduces heart rate, blood pressure, and myocardial oxygen demand.",
+      "verdict": "recommended",
+      "confidence": 0.95,
+      "fda_approved": true,
+      "fda_indication": "Hypertension, Angina, Heart Failure, Myocardial Infarction",
+      "evidence_grade": "high",
+      "pros": [
+        "Reduces myocardial oxygen demand by decreasing heart rate and contractility, which is beneficial in acute coronary syndrome (ACS) like this patient's presentation.",
+        "Lowers blood pressure, which is elevated (165/95 mmHg) and can worsen myocardial ischemia.",
+        "May reduce infarct size and improve outcomes in patients with ACS, especially those with ST-elevation myocardial infarction (STEMI) or non-ST-elevation myocardial infarction (NSTEMI)."
+      ],
+      "cons": [
+        "Potential for bradycardia or hypotension, especially in patients with pre-existing conduction abnormalities or reduced left ventricular function (though not specified here).",
+        "Contraindicated in patients with severe bradycardia, heart block (2nd or 3rd degree), cardiogenic shock, or severe decompensated heart failure."
+      ],
+      "key_evidence": [],
+      "rationale": "The patient presents with symptoms (substernal chest pressure radiating to jaw), elevated troponin (2.4 ng/mL), and elevated vital signs (BP 165/95, HR 102) consistent with an acute myocardial infarction (likely NSTEMI given the presentation). Beta-blockers are standard-of-care therapy in ACS to reduce myocardial oxygen demand, heart rate, and blood pressure, improving outcomes. While specific PubMed evidence wasn't found, this is a well-established guideline recommendation.",
+      "papers_used": [],
+      "reasoning": {
+        "patient_factors_considered": [
+          "Symptoms suggestive of ACS (chest pressure, radiation)",
+          "Elevated troponin confirming myocardial injury",
+          "Elevated heart rate (102 bpm)",
+          "Elevated blood pressure (165/95 mmHg)",
+          "No listed contraindications (e.g., severe bradycardia, heart block, shock)"
+        ],
+        "supporting_evidence": "Standard guidelines for ACS management (e.g., ACC/AHA) recommend beta-blockers unless contraindicated. While specific PubMed abstracts weren't provided, the underlying evidence is robust and forms the basis of clinical practice.",
+        "key_concern": "Ensuring the patient does not have contraindications (e.g., signs of heart failure, bradycardia, hypotension) before administration, and monitoring vital signs closely after initiation.",
+        "context_relevance": "The acute onset of chest pain with elevated troponin strongly indicates ACS, making beta-blockade appropriate to manage symptoms and improve outcomes."
+      }
+    },
+    {
+      "name": "High-intensity Statin (e.g., Atorvastatin 80 mg PO)",
+      "mechanism": "Inhibits HMG-CoA reductase, lowering LDL cholesterol and providing pleiotropic effects (plaque stabilization, anti-inflammatory).",
+      "verdict": "recommended",
+      "confidence": 0.95,
+      "fda_approved": true,
+      "fda_indication": "Hyperlipidemia, Cardiovascular Risk Reduction",
+      "evidence_grade": "high",
+      "pros": [
+        "High-intensity statins are standard of care for secondary prevention in patients with acute coronary syndrome (ACS) like this patient presenting with elevated troponin and chest pain suggestive of myocardial infarction.",
+        "Statins have pleiotropic effects beyond LDL lowering, including plaque stabilization and anti-inflammatory properties, which are beneficial in the acute setting of ACS.",
+        "Early initiation of statins (within 24 hours) in ACS has been shown to improve outcomes."
+      ],
+      "cons": [
+        "Potential for myopathy or rhabdomyolysis, although rare, especially with high-intensity doses. Monitor for muscle symptoms.",
+        "Drug interactions are possible, although the patient is not currently on any listed medications."
+      ],
+      "key_evidence": [],
+      "rationale": "This patient presents with symptoms and elevated troponin consistent with an acute myocardial infarction (AMI), a form of ACS. High-intensity statin therapy is a cornerstone of secondary prevention and acute management in ACS, recommended by major guidelines (e.g., AHA/ACC) to reduce cardiovascular events and mortality. Given the patient's presentation, initiating a high-intensity statin like atorvastatin 80mg is strongly indicated.",
+      "papers_used": [],
+      "reasoning": {
+        "patient_factors_considered": [
+          "62-year-old female",
+          "History of hypertension and hyperlipidemia",
+          "Presentation consistent with acute myocardial infarction (chest pain, elevated troponin)"
+        ],
+        "supporting_evidence": "Guidelines from major cardiology societies (AHA/ACC, ESC) strongly recommend high-intensity statin therapy for patients with ACS, regardless of baseline LDL levels. Numerous large RCTs support the benefit of early statin initiation in ACS (e.g., PROVE-IT TIMI 22, TNT, IDEAL). While specific PubMed evidence wasn't retrieved, this is standard practice.",
+        "key_concern": "Balancing the significant cardiovascular benefits of statins in ACS against the potential risk of muscle-related side effects.",
+        "context_relevance": "The acute setting of myocardial infarction necessitates immediate initiation of guideline-directed medical therapy, including high-intensity statins."
+      }
+    },
+    {
+      "name": "Morphine IV",
+      "mechanism": "Opioid analgesic; reduces pain and anxiety, causes venodilation (preload reduction).",
+      "verdict": "recommended",
+      "confidence": 0.9,
+      "fda_approved": true,
+      "fda_indication": "Pain relief",
+      "evidence_grade": "low",
+      "pros": [
+        "Provides analgesia for severe chest pain associated with acute coronary syndrome (ACS).",
+        "Reduces anxiety and sympathetic drive, potentially decreasing myocardial oxygen demand.",
+        "Causes venodilation, which reduces preload and may alleviate pulmonary congestion."
+      ],
+      "cons": [
+        "Potential for respiratory depression, hypotension, and nausea/vomiting.",
+        "May mask ongoing ischemic pain or delay diagnosis if used inappropriately."
+      ],
+      "key_evidence": [],
+      "rationale": "The patient presents with symptoms and elevated troponin consistent with an acute myocardial infarction (MI). Morphine is a standard therapy for pain relief in ACS, particularly when pain is refractory to nitroglycerin. While evidence supporting its routine use is limited and some studies suggest potential harm, it remains a recommended option for severe pain control in this context, balancing benefits against risks.",
+      "papers_used": [],
+      "reasoning": {
+        "patient_factors_considered": [
+          "Presentation consistent with acute myocardial infarction (chest pressure, radiation, elevated troponin).",
+          "Severe pain (implied by presentation and likely need for intervention)."
+        ],
+        "supporting_evidence": "Clinical guidelines (e.g., ACC/AHA) recommend morphine for pain relief in ACS when nitroglycerin is insufficient. Although specific PubMed evidence for this exact scenario wasn't found, morphine is a long-standing component of ACS management.",
+        "key_concern": "Balancing the benefit of pain relief and reduced sympathetic drive against potential adverse effects like respiratory depression and hypotension.",
+        "context_relevance": "The acute setting of suspected MI necessitates prompt pain management to reduce patient distress and potentially improve outcomes."
+      }
+    },
+    {
+      "name": "Aspirin 325 mg PO",
+      "mechanism": "Irreversibly inhibits COX-1, reducing thromboxane A2 synthesis and platelet aggregation.",
+      "verdict": "not_recommended",
+      "confidence": 0.2,
+      "fda_approved": true,
+      "fda_indication": "N/A \u2014 procedure/diagnostic/supportive",
+      "evidence_grade": "high",
+      "pros": [
+        "Reduces mortality and morbidity in acute coronary syndrome (ACS) by inhibiting platelet aggregation.",
+        "Standard of care for initial management of suspected ACS, including ST-elevation myocardial infarction (STEMI) and non-ST-elevation myocardial infarction (NSTEMI).",
+        "Rapid onset of action when given orally."
+      ],
+      "cons": [
+        "Contradicts: Administer NSAIDs (increased cardiovascular risk).",
+        "Risk of bleeding, especially gastrointestinal bleeding.",
+        "Contraindicated in patients with aspirin allergy or active peptic ulcer disease (not apparent in this patient)."
+      ],
+      "key_evidence": [],
+      "rationale": "SAFETY: Contradicts do_not_do guideline \u2014 \"Administer NSAIDs (increased cardiovascular risk).\". The patient presents with symptoms (substernal chest pressure radiating to jaw), elevated troponin (2.4 ng/mL), and risk factors (hypertension, hyperlipidemia) highly suggestive of acute myocardial infarction (AMI). Aspirin is a cornerstone of initial therapy for AMI, proven to reduce mortality and reinfarction. Its administration is recommended immediately upon suspicion of AMI unless contraindicated.",
+      "papers_used": [],
+      "reasoning": {
+        "patient_factors_considered": [
+          "Symptoms consistent with AMI (chest pressure, radiation)",
+          "Elevated troponin confirming myocardial injury",
+          "Risk factors for coronary artery disease (hypertension, hyperlipidemia)",
+          "Age (62 years)"
+        ],
+        "supporting_evidence": "Aspirin's benefit in AMI is established through numerous large clinical trials and is a fundamental component of ACS guidelines (e.g., AHA/ACC guidelines). While specific PubMed results weren't found, this is standard practice.",
+        "key_concern": "Balancing the significant benefit of reducing thrombotic events in AMI against the risk of bleeding.",
+        "context_relevance": "The acute onset of chest pain and elevated troponin indicate an acute event requiring immediate antiplatelet therapy."
+      }
+    }
+  ],
+  "top_recommendation": "P2Y12 inhibitor loading (e.g., Ticagrelor 180 mg PO, Prasugrel 60 mg PO, Clopidogrel 300-600 mg PO)",
+  "recommendation_rationale": "The patient presents with symptoms and elevated troponin consistent with an acute coronary syndrome (likely NSTEMI). P2Y12 inhibitors, in addition to aspirin, are standard first-line therapy for ACS to reduce thrombotic events. This is a critical component of initial management.",
+  "clinical_pearls": [
+    "This 62-year-old female presents with classic symptoms (substernal chest pressure radiating to jaw), ECG changes (ST elevation in II, III, aVF indicating inferior MI), and elevated cardiac biomarkers (Troponin I 2.4 ng/mL), confirming an acute ST-elevation myocardial infarction (STEMI).",
+    "Given the STEMI diagnosis and availability of PCI, emergent reperfusion therapy with PCI is the recommended strategy, and thrombolytics should be avoided if PCI can be performed within guideline timeframes (e.g., <90 minutes from first medical contact).",
+    "Initiate guideline-directed medical therapy promptly, including dual antiplatelet therapy (P2Y12 inhibitor + aspirin), anticoagulation (UFH or LMWH), beta-blockers, high-intensity statins, and nitroglycerin, while ensuring timely transfer for emergent PCI."
+  ],
+  "papers_reviewed": [],
+  "search_terms_used": [
+    "substernal chest pressure radiating to her left jaw cardiology treatment",
+    "STEMI",
+    "ST-elevation myocardial infarction",
+    "acute coronary syndrome",
+    "reperfusion therapy",
+    "PCI",
+    "antiplatelet therapy",
+    "anticoagulation",
+    "chest pain"
+  ],
+  "acute_management": {
+    "risk_stratification": "HIGH \u2014 Inferior STEMI (II, III, aVF) with elevated troponin and tachycardia. Requires urgent reperfusion.",
+    "immediate_actions": [
+      "Establish IV access x2",
+      "Administer Oxygen if SpO2 <90%",
+      "Administer Aspirin 325 mg PO (chewed)",
+      "Administer P2Y12 inhibitor loading dose (Ticagrelor/Prasugrel/Clopidogrel)",
+      "Administer IV nitroglycerin for chest pain/hypertension (if BP >90 systolic)",
+      "Administer IV beta-blocker if no contraindications",
+      "Administer IV morphine for pain refractory to nitroglycerin",
+      "Initiate anticoagulation (UFH or Enoxaparin)",
+      "Obtain urgent cardiology consult for emergent PCI",
+      "Obtain serial ECGs and troponins"
+    ],
+    "do_not_do": [
+      "Administer thrombolytics (e.g., tPA) if PCI is readily available and can be performed within guideline timeframes.",
+      "Administer NSAIDs (increased cardiovascular risk).",
+      "Delay reperfusion therapy."
+    ],
+    "monitoring_plan": [
+      "Continuous ECG monitoring for arrhythmias, ST-segment changes.",
+      "Frequent vital signs (BP, HR, RR, SpO2) every 5-15 minutes initially.",
+      "Serial cardiac biomarkers (troponin) every 3-6 hours.",
+      "Monitor for signs of heart failure, cardiogenic shock, or complications."
+    ],
+    "disposition": "ICU \u2014 Requires continuous monitoring and emergent intervention (PCI).",
+    "consults": [
+      "Cardiology (emergent)",
+      "Intensivist (emergent)"
+    ],
+    "activity_restrictions": "Strict bed rest initially, then gradual mobilization as tolerated post-procedure/stabilization.",
+    "key_counseling": [
+      "Explain diagnosis and treatment plan.",
+      "Educate on medication adherence (aspirin, P2Y12 inhibitor, statin, beta-blocker).",
+      "Discuss risk factor modification (smoking cessation, diet, exercise).",
+      "Instruct on return precautions (worsening chest pain, shortness of breath, palpitations)."
+    ],
+    "metabolic_corrections": []
+  },
+  "suggested_followups": [
+    "What if the patient can't tolerate P2Y12 inhibitor loading (e.g., Ticagrelor 180 mg PO, Prasugrel 60 mg PO, Clopidogrel 300-600 mg PO)?",
+    "Why was Aspirin 325 mg PO rated not recommended?",
+    "Should additional workup be ordered before starting treatment?",
+    "What monitoring is needed and what is the disposition plan?"
+  ],
+  "medication_review": {
+    "renal_flags": [],
+    "interactions": [],
+    "duplicate_therapy": [],
+    "renal_function": {
+      "egfr": null,
+      "creatinine": null
+    }
+  },
+  "differential_diagnosis": {
+    "clinical_reasoning_summary": "The patient presents with classic symptoms of acute myocardial infarction (AMI), specifically substernal chest pressure radiating to the jaw, associated diaphoresis and nausea, lasting 45 minutes. The ECG showing ST-segment elevation in inferior leads (II, III, aVF) and elevated Troponin I strongly support this diagnosis. Other potential causes of chest pain are considered but are less likely given the specific ECG changes and biomarker elevation.",
+    "key_distinguishing_tests": [
+      "Serial ECGs",
+      "Serial Troponins",
+      "Coronary Angiography"
+    ],
+    "diagnoses": [
+      {
+        "diagnosis": "ST-segment elevation myocardial infarction (STEMI)",
+        "likelihood": "high",
+        "must_rule_out": true,
+        "supporting_findings": [
+          "Substernal chest pressure radiating to jaw",
+          "Duration > 30 minutes",
+          "Diaphoresis",
+          "Nausea",
+          "ST-segment elevation in leads II, III, aVF",
+          "Elevated Troponin I (2.4 ng/mL)"
+        ],
+        "refuting_findings": [
+          "None apparent from the provided information"
+        ],
+        "diagnostic_pathway": [
+          "Confirm ST elevation on serial ECGs",
+          "Monitor serial troponins for rise/fall pattern",
+          "Immediate cardiology consultation for reperfusion therapy (PCI or thrombolysis)"
+        ],
+        "distinguishing_feature": "ST-segment elevation on ECG in specific leads (II, III, aVF) combined with elevated cardiac biomarkers."
+      },
+      {
+        "diagnosis": "Non-ST-segment elevation myocardial infarction (NSTEMI)",
+        "likelihood": "moderate",
+        "must_rule_out": true,
+        "supporting_findings": [
+          "Substernal chest pressure radiating to jaw",
+          "Duration > 30 minutes",
+          "Diaphoresis",
+          "Nausea",
+          "Elevated Troponin I (2.4 ng/mL)"
+        ],
+        "refuting_findings": [
+          "ST-segment elevation in leads II, III, aVF (this finding points strongly towards STEMI)"
+        ],
+        "diagnostic_pathway": [
+          "If ECG showed ST depression or T wave inversion, this would be more likely. Given ST elevation, this is less likely but needs consideration if ECG changes evolve or if initial interpretation is questioned."
+        ],
+        "distinguishing_feature": "Absence of ST-segment elevation on ECG, but presence of elevated cardiac biomarkers."
+      },
+      {
+        "diagnosis": "Unstable Angina",
+        "likelihood": "low",
+        "must_rule_out": true,
+        "supporting_findings": [
+          "Substernal chest pressure radiating to jaw",
+          "Duration > 30 minutes",
+          "Diaphoresis",
+          "Nausea"
+        ],
+        "refuting_findings": [
+          "ST-segment elevation in leads II, III, aVF",
+          "Elevated Troponin I (2.4 ng/mL)"
+        ],
+        "diagnostic_pathway": [
+          "Requires normal cardiac biomarkers. Given elevated troponin, this diagnosis is excluded."
+        ],
+        "distinguishing_feature": "Chest pain without elevated cardiac biomarkers."
+      },
+      {
+        "diagnosis": "Pericarditis",
+        "likelihood": "low",
+        "must_rule_out": false,
+        "supporting_findings": [
+          "Chest pain"
+        ],
+        "refuting_findings": [
+          "Substernal location, radiation to jaw (less typical)",
+          "ST elevation morphology (STEMI ST elevation is usually convex, pericarditis is concave)",
+          "Elevated Troponin I (can be elevated in myopericarditis, but less common and usually lower)",
+          "Inferior lead involvement (pericarditis often diffuse or specific patterns like PR depression)"
+        ],
+        "diagnostic_pathway": [
+          "Assess pain characteristics (pleuritic, positional), look for PR depression on ECG, consider echocardiogram for pericardial effusion."
+        ],
+        "distinguishing_feature": "Diffuse ST elevation (often concave) and PR depression on ECG, positional chest pain relief."
+      },
+      {
+        "diagnosis": "Aortic Dissection",
+        "likelihood": "low",
+        "must_rule_out": true,
+        "supporting_findings": [
+          "Chest pain (can be substernal)",
+          "Hypertension history (risk factor)"
+        ],
+        "refuting_findings": [
+          "Typical radiation pattern to jaw (less common)",
+          "ST elevation in inferior leads (less typical, dissection can cause various ECG changes or ischemia)",
+          "Elevated Troponin I (can occur due to coronary involvement, but not the primary finding)"
+        ],
+        "diagnostic_pathway": [
+          "Assess for tearing pain, blood pressure differential between arms, widened mediastinum on CXR, CT angiography or TEE."
+        ],
+        "distinguishing_feature": "Sudden onset, severe tearing chest pain, often radiating to the back, potential blood pressure discrepancies."
+      },
+      {
+        "diagnosis": "Pulmonary Embolism (PE)",
+        "likelihood": "low",
+        "must_rule_out": true,
+        "supporting_findings": [
+          "Chest pain (can be pleuritic or central)",
+          "Diaphoresis",
+          "Nausea"
+        ],
+        "refuting_findings": [
+          "Substernal location, radiation to jaw (less typical)",
+          "ST elevation in inferior leads (can occur but less common, often sinus tachycardia, S1Q3T3 pattern)",
+          "Elevated Troponin I (can occur due to right heart strain, but less common and usually lower)"
+        ],
+        "diagnostic_pathway": [
+          "Assess for dyspnea, tachycardia, hypoxia, risk factors (e.g., recent surgery, immobility), D-dimer, CT pulmonary angiography."
+        ],
+        "distinguishing_feature": "Sudden onset dyspnea, pleuritic chest pain, tachycardia, hypoxia."
+      },
+      {
+        "diagnosis": "Esophageal Spasm",
+        "likelihood": "low",
+        "must_rule_out": false,
+        "supporting_findings": [
+          "Substernal chest pain"
+        ],
+        "refuting_findings": [
+          "Radiation to jaw (less typical)",
+          "ST elevation in inferior leads",
+          "Elevated Troponin I"
+        ],
+        "diagnostic_pathway": [
+          "Assess pain characteristics (often related to swallowing, relieved by nitroglycerin), consider barium swallow or esophageal manometry."
+        ],
+        "distinguishing_feature": "Chest pain related to swallowing, often relieved by nitroglycerin, normal ECG and cardiac biomarkers."
+      }
+    ]
+  },
+  "clinical_risk_scores": {
+    "scores": [
+      {
+        "score_id": "timi",
+        "score_name": "TIMI Risk Score (UA/NSTEMI)",
+        "total_score": 3,
+        "max_score": 7,
+        "risk_level": "moderate",
+        "risk_interpretation": "Moderate risk (13-20% MACE)",
+        "recommendation": "Admit, serial troponins, consider invasive strategy",
+        "variables": [
+          {
+            "name": "age",
+            "value": 62,
+            "source": "deterministic",
+            "points": 0,
+            "label": "Age \u226565",
+            "criteria": "Age \u226565 \u2192 1pt"
+          },
+          {
+            "name": "asa_use",
+            "value": 0,
+            "source": "deterministic",
+            "points": 0,
+            "label": "Aspirin use",
+            "criteria": "ASA use in past 7 days \u2192 1pt"
+          },
+          {
+            "name": "elevated_troponin",
+            "value": 1,
+            "source": "deterministic",
+            "points": 0,
+            "label": "Elevated troponin",
+            "criteria": "Elevated cardiac markers \u2192 1pt"
+          },
+          {
+            "name": "cad_risk_factors_ge3",
+            "value": 1,
+            "source": "medgemma",
+            "points": 0,
+            "label": "\u22653 CAD risk factors",
+            "criteria": "\u22653 of: HTN, DM, hyperlipidemia, family hx, smoking \u2192 1pt"
+          },
+          {
+            "name": "known_cad",
+            "value": 0,
+            "source": "medgemma",
+            "points": 0,
+            "label": "Known CAD",
+            "criteria": "\u226550% stenosis on prior cath \u2192 1pt"
+          },
+          {
+            "name": "severe_angina_ge2_events",
+            "value": 0,
+            "source": "medgemma",
+            "points": 0,
+            "label": "\u22652 anginal events in 24h",
+            "criteria": "\u22652 anginal episodes in past 24h \u2192 1pt"
+          },
+          {
+            "name": "st_deviation",
+            "value": 1,
+            "source": "medgemma",
+            "points": 0,
+            "label": "ST deviation \u22650.5mm",
+            "criteria": "ST segment deviation on ECG \u2192 1pt"
+          }
+        ],
+        "missing_variables": [],
+        "applicable": true
+      },
+      {
+        "score_id": "heart",
+        "score_name": "HEART Score",
+        "total_score": 9,
+        "max_score": 10,
+        "risk_level": "high",
+        "risk_interpretation": "High risk for MACE (50-65%)",
+        "recommendation": "Aggressive intervention: early invasive strategy, cardiology consult",
+        "variables": [
+          {
+            "name": "age",
+            "value": 62,
+            "source": "deterministic",
+            "points": 0,
+            "label": "Age",
+            "criteria": "Age in years"
+          },
+          {
+            "name": "troponin_category",
+            "value": 2,
+            "source": "deterministic",
+            "points": 0,
+            "label": "Troponin",
+            "criteria": "0=normal, 1=1-3x ULN, 2=>3x ULN"
+          },
+          {
+            "name": "history_suspicion",
+            "value": 2,
+            "source": "medgemma",
+            "points": 0,
+            "label": "History",
+            "criteria": "0=slightly suspicious, 1=moderately suspicious, 2=highly suspicious"
+          },
+          {
+            "name": "ecg",
+            "value": 2,
+            "source": "medgemma",
+            "points": 0,
+            "label": "ECG",
+            "criteria": "0=normal, 1=non-specific repolarization, 2=significant ST deviation"
+          },
+          {
+            "name": "risk_factor_count",
+            "value": 2,
+            "source": "medgemma",
+            "points": 0,
+            "label": "Risk Factors",
+            "criteria": "0=no known risk factors, 1=1-2 risk factors, 2=\u22653 or history of atherosclerotic disease"
+          }
+        ],
+        "missing_variables": [],
+        "applicable": true
+      },
+      {
+        "score_id": "cha2ds2_vasc",
+        "score_name": "CHA\u2082DS\u2082-VASc",
+        "total_score": 2,
+        "max_score": 9,
+        "risk_level": "moderate-high",
+        "risk_interpretation": "Moderate-high stroke risk",
+        "recommendation": "Oral anticoagulation recommended",
+        "variables": [
+          {
+            "name": "age",
+            "value": 62,
+            "source": "deterministic",
+            "points": 0,
+            "label": "Age",
+            "criteria": "65-74 \u2192 1pt, \u226575 \u2192 2pts"
+          },
+          {
+            "name": "sex",
+            "value": "female",
+            "source": "deterministic",
+            "points": 0,
+            "label": "Sex",
+            "criteria": "Female \u2192 1pt"
+          },
+          {
+            "name": "hypertension",
+            "value": 1,
+            "source": "deterministic",
+            "points": 0,
+            "label": "Hypertension",
+            "criteria": "HTN keyword in history \u2192 1pt"
+          },
+          {
+            "name": "diabetes",
+            "value": 0,
+            "source": "deterministic",
+            "points": 0,
+            "label": "Diabetes",
+            "criteria": "DM keyword in history \u2192 1pt"
+          },
+          {
+            "name": "chf",
+            "value": 0,
+            "source": "medgemma",
+            "points": 0,
+            "label": "CHF",
+            "criteria": "Congestive heart failure or LV dysfunction \u2192 1pt"
+          },
+          {
+            "name": "stroke_tia",
+            "value": 0,
+            "source": "medgemma",
+            "points": 0,
+            "label": "Stroke/TIA",
+            "criteria": "Prior stroke, TIA, or thromboembolism \u2192 2pts"
+          },
+          {
+            "name": "vascular_disease",
+            "value": 0,
+            "source": "medgemma",
+            "points": 0,
+            "label": "Vascular Disease",
+            "criteria": "Prior MI, PAD, or aortic plaque \u2192 1pt"
+          }
+        ],
+        "missing_variables": [],
+        "applicable": true
+      }
+    ],
+    "case_category": "cardiology",
+    "summary": "High-risk scores identified: HEART Score (high). Consider aggressive intervention."
+  }
+}

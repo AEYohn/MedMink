@@ -43,11 +43,6 @@ export default function SharedReferralPage() {
   useEffect(() => {
     async function load() {
       const apiUrl = getApiUrl();
-      if (!apiUrl) {
-        setError('Application not configured');
-        setIsLoading(false);
-        return;
-      }
       try {
         const response = await fetch(`${apiUrl}/api/case/referral/shared/${token}`);
         if (response.status === 404) {

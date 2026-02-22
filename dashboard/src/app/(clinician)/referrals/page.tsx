@@ -40,10 +40,6 @@ export default function ReferralsInboxPage() {
 
   const loadReferrals = useCallback(async () => {
     const apiUrl = getApiUrl();
-    if (!apiUrl) {
-      setIsLoading(false);
-      return;
-    }
     try {
       const params = new URLSearchParams();
       if (specialtyFilter) params.set('specialty', specialtyFilter);

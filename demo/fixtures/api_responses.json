@@ -1,0 +1,1807 @@
+{
+  "harvestedAt": "2026-02-20T19:50:00Z",
+  "caseAnalysis": {
+    "events": [
+      {
+        "type": "step",
+        "step": "parsing",
+        "status": "started",
+        "message": "Parsing clinical vignette...",
+        "progress": 0.1
+      },
+      {
+        "type": "step",
+        "step": "parsing",
+        "status": "completed",
+        "message": "Identified: cardiology",
+        "progress": 0.15,
+        "data": {
+          "patient": {
+            "age": "62 years",
+            "sex": "male",
+            "relevant_history": [
+              "hypertension",
+              "hyperlipidemia",
+              "father with myocardial infarction at age 55",
+              "twenty-pack-year smoking history"
+            ]
+          },
+          "findings": {
+            "presentation": "substernal chest pressure",
+            "timeline": "approximately 2 hours, onset at rest, constant since onset",
+            "labs": [
+              "troponin I elevated at 0.82 ng/mL",
+              "glucose 142",
+              "Cr 1.0",
+              "CBC within normal limits",
+              "PT/INR normal"
+            ],
+            "imaging": [
+              "12-lead ECG shows ST elevation in leads V2 through V5 with reciprocal ST depression in leads II, III, and aVF"
+            ],
+            "physical_exam": [
+              "anxious",
+              "diaphoretic",
+              "regular rate and rhythm",
+              "no murmurs rubs or gallops",
+              "lungs clear to auscultation bilaterally",
+              "no lower extremity edema"
+            ],
+            "precipitating_factors": "",
+            "context_of_onset": "at rest",
+            "associated_symptoms": [
+              "radiating to the left arm and jaw",
+              "shortness of breath",
+              "nausea",
+              "diaphoresis"
+            ]
+          },
+          "management": {
+            "medications": [
+              "lisinopril 20mg daily",
+              "atorvastatin 40mg daily",
+              "aspirin 81mg daily"
+            ],
+            "recent_changes": "",
+            "response_to_treatment": "Pain is not relieved by rest"
+          },
+          "clinical_question": "",
+          "case_category": "cardiology"
+        }
+      },
+      {
+        "type": "step",
+        "step": "parallel_analysis",
+        "status": "completed",
+        "message": "DDx, risk scores, and treatment options ready",
+        "progress": 0.3
+      },
+      {
+        "type": "step",
+        "step": "evidence_search",
+        "status": "completed",
+        "message": "Found 0 relevant papers",
+        "progress": 0.5
+      },
+      {
+        "type": "step",
+        "step": "evaluating",
+        "status": "completed",
+        "message": "Evaluated Aspirin 325 mg PO: recommended",
+        "progress": 0.7,
+        "data": {
+          "name": "Aspirin 325 mg PO",
+          "verdict": "recommended",
+          "confidence": 0.95,
+          "papers_used": [],
+          "rationale": "The patient presents with symptoms and elevated troponin consistent with an acute myocardial infarction (AMI). Aspirin i"
+        }
+      },
+      {
+        "type": "step",
+        "step": "evaluating",
+        "status": "completed",
+        "message": "Evaluated P2Y12 inhibitor loading dose (e.g., clopidogrel 300-600 mg PO, ticagrelor 180 mg PO, prasugrel 60 mg PO): recommended",
+        "progress": 0.7,
+        "data": {
+          "name": "P2Y12 inhibitor loading dose (e.g., clopidogrel 300-600 mg PO, ticagrelor 180 mg PO, prasugrel 60 mg PO)",
+          "verdict": "recommended",
+          "confidence": 0.95,
+          "papers_used": [],
+          "rationale": "The patient presents with symptoms and elevated troponin consistent with an acute coronary syndrome (ACS), likely NSTE-A"
+        }
+      },
+      {
+        "type": "step",
+        "step": "evaluating",
+        "status": "completed",
+        "message": "Evaluated IV heparin bolus + drip (unfractionated heparin): recommended",
+        "progress": 0.7,
+        "data": {
+          "name": "IV heparin bolus + drip (unfractionated heparin)",
+          "verdict": "recommended",
+          "confidence": 0.95,
+          "papers_used": [],
+          "rationale": "The patient presents with clinical features (chest pain at rest, elevated troponin) and risk factors strongly suggestive"
+        }
+      },
+      {
+        "type": "step",
+        "step": "evaluating",
+        "status": "completed",
+        "message": "Evaluated Emergent Percutaneous Coronary Intervention (PCI): recommended",
+        "progress": 0.7,
+        "data": {
+          "name": "Emergent Percutaneous Coronary Intervention (PCI)",
+          "verdict": "recommended",
+          "confidence": 0.95,
+          "papers_used": [],
+          "rationale": "The patient's presentation strongly suggests an acute coronary syndrome, likely NSTEMI or STEMI, given the chest pain ch"
+        }
+      },
+      {
+        "type": "step",
+        "step": "evaluating",
+        "status": "completed",
+        "message": "Evaluated IV nitroglycerin: recommended",
+        "progress": 0.7,
+        "data": {
+          "name": "IV nitroglycerin",
+          "verdict": "recommended",
+          "confidence": 0.95,
+          "papers_used": [],
+          "rationale": "The patient presents with symptoms highly suggestive of acute coronary syndrome (ACS), specifically unstable angina or n"
+        }
+      },
+      {
+        "type": "step",
+        "step": "evaluating",
+        "status": "completed",
+        "message": "Evaluated IV beta-blocker (e.g., metoprolol): recommended",
+        "progress": 0.7,
+        "data": {
+          "name": "IV beta-blocker (e.g., metoprolol)",
+          "verdict": "recommended",
+          "confidence": 0.95,
+          "papers_used": [],
+          "rationale": "The patient presents with symptoms and elevated troponin consistent with an acute myocardial infarction (likely NSTEMI g"
+        }
+      },
+      {
+        "type": "step",
+        "step": "evaluating",
+        "status": "completed",
+        "message": "Evaluated Insulin drip for hyperglycemia: recommended",
+        "progress": 0.7,
+        "data": {
+          "name": "Insulin drip for hyperglycemia",
+          "verdict": "recommended",
+          "confidence": 0.95,
+          "papers_used": [],
+          "rationale": "The patient presents with symptoms and elevated troponin consistent with an acute myocardial infarction (AMI). He also h"
+        }
+      },
+      {
+        "type": "step",
+        "step": "medication_review",
+        "status": "completed",
+        "message": "Found 0 renal flags, 8 interactions",
+        "progress": 0.85
+      },
+      {
+        "type": "step",
+        "step": "complete",
+        "status": "completed",
+        "message": "Analysis complete. Top recommendation: P2Y12 inhibitor loading dose (e.g., clopidogrel 300-600 mg PO, ticagrelor 180 mg PO, prasugrel 60 mg PO)",
+        "progress": 1.0
+      },
+      {
+        "type": "result",
+        "data": {
+          "parsed_case": {
+            "patient": {
+              "age": "62 years",
+              "sex": "male",
+              "relevant_history": [
+                "hypertension",
+                "hyperlipidemia",
+                "father with myocardial infarction at age 55",
+                "twenty-pack-year smoking history"
+              ]
+            },
+            "findings": {
+              "presentation": "substernal chest pressure",
+              "timeline": "approximately 2 hours, onset at rest, constant since onset",
+              "labs": [
+                "troponin I elevated at 0.82 ng/mL",
+                "glucose 142",
+                "Cr 1.0",
+                "CBC within normal limits",
+                "PT/INR normal"
+              ],
+              "imaging": [
+                "12-lead ECG shows ST elevation in leads V2 through V5 with reciprocal ST depression in leads II, III, and aVF"
+              ],
+              "physical_exam": [
+                "anxious",
+                "diaphoretic",
+                "regular rate and rhythm",
+                "no murmurs rubs or gallops",
+                "lungs clear to auscultation bilaterally",
+                "no lower extremity edema"
+              ],
+              "precipitating_factors": "",
+              "context_of_onset": "at rest",
+              "associated_symptoms": [
+                "radiating to the left arm and jaw",
+                "shortness of breath",
+                "nausea",
+                "diaphoresis"
+              ]
+            },
+            "management": {
+              "medications": [
+                "lisinopril 20mg daily",
+                "atorvastatin 40mg daily",
+                "aspirin 81mg daily"
+              ],
+              "recent_changes": "",
+              "response_to_treatment": "Pain is not relieved by rest"
+            },
+            "clinical_question": "",
+            "case_category": "cardiology",
+            "vitals": {
+              "bp": "162/98",
+              "hr": "94",
+              "rr": "20",
+              "spo2": "96%",
+              "temp": "98.4\u00b0F"
+            },
+            "assessment": "Acute anterior STEMI"
+          },
+          "treatment_options": [
+            {
+              "name": "Aspirin 325 mg PO",
+              "verdict": "recommended",
+              "confidence": 0.95,
+              "papers_used": [],
+              "rationale": "The patient presents with symptoms and elevated troponin consistent with an acute myocardial infarction (AMI). Aspirin i",
+              "mechanism": "",
+              "fda_approved": true,
+              "fda_indication": "",
+              "evidence_grade": "A",
+              "pros": [],
+              "cons": [],
+              "key_evidence": [],
+              "reasoning": {}
+            },
+            {
+              "name": "P2Y12 inhibitor loading dose (e.g., clopidogrel 300-600 mg PO, ticagrelor 180 mg PO, prasugrel 60 mg PO)",
+              "verdict": "recommended",
+              "confidence": 0.95,
+              "papers_used": [],
+              "rationale": "The patient presents with symptoms and elevated troponin consistent with an acute coronary syndrome (ACS), likely NSTE-A",
+              "mechanism": "",
+              "fda_approved": true,
+              "fda_indication": "",
+              "evidence_grade": "A",
+              "pros": [],
+              "cons": [],
+              "key_evidence": [],
+              "reasoning": {}
+            },
+            {
+              "name": "IV heparin bolus + drip (unfractionated heparin)",
+              "verdict": "recommended",
+              "confidence": 0.95,
+              "papers_used": [],
+              "rationale": "The patient presents with clinical features (chest pain at rest, elevated troponin) and risk factors strongly suggestive",
+              "mechanism": "",
+              "fda_approved": true,
+              "fda_indication": "",
+              "evidence_grade": "A",
+              "pros": [],
+              "cons": [],
+              "key_evidence": [],
+              "reasoning": {}
+            },
+            {
+              "name": "Emergent Percutaneous Coronary Intervention (PCI)",
+              "verdict": "recommended",
+              "confidence": 0.95,
+              "papers_used": [],
+              "rationale": "The patient's presentation strongly suggests an acute coronary syndrome, likely NSTEMI or STEMI, given the chest pain ch",
+              "mechanism": "",
+              "fda_approved": true,
+              "fda_indication": "",
+              "evidence_grade": "A",
+              "pros": [],
+              "cons": [],
+              "key_evidence": [],
+              "reasoning": {}
+            },
+            {
+              "name": "IV nitroglycerin",
+              "verdict": "recommended",
+              "confidence": 0.95,
+              "papers_used": [],
+              "rationale": "The patient presents with symptoms highly suggestive of acute coronary syndrome (ACS), specifically unstable angina or n",
+              "mechanism": "",
+              "fda_approved": true,
+              "fda_indication": "",
+              "evidence_grade": "A",
+              "pros": [],
+              "cons": [],
+              "key_evidence": [],
+              "reasoning": {}
+            },
+            {
+              "name": "IV beta-blocker (e.g., metoprolol)",
+              "verdict": "recommended",
+              "confidence": 0.95,
+              "papers_used": [],
+              "rationale": "The patient presents with symptoms and elevated troponin consistent with an acute myocardial infarction (likely NSTEMI g",
+              "mechanism": "",
+              "fda_approved": true,
+              "fda_indication": "",
+              "evidence_grade": "A",
+              "pros": [],
+              "cons": [],
+              "key_evidence": [],
+              "reasoning": {}
+            },
+            {
+              "name": "Insulin drip for hyperglycemia",
+              "verdict": "recommended",
+              "confidence": 0.95,
+              "papers_used": [],
+              "rationale": "The patient presents with symptoms and elevated troponin consistent with an acute myocardial infarction (AMI). He also h",
+              "mechanism": "",
+              "fda_approved": true,
+              "fda_indication": "",
+              "evidence_grade": "A",
+              "pros": [],
+              "cons": [],
+              "key_evidence": [],
+              "reasoning": {}
+            }
+          ],
+          "top_recommendation": "P2Y12 inhibitor loading dose (e.g., clopidogrel 300-600 mg PO, ticagrelor 180 mg PO, prasugrel 60 mg PO)",
+          "recommendation_rationale": "The patient presents with symptoms and elevated troponin consistent with an acute myocardial infarction (AMI). Aspirin i",
+          "clinical_pearls": [
+            "In STEMI, door-to-balloon time should be <90 minutes for primary PCI.",
+            "Aspirin should be given immediately unless truly allergic \u2014 chew for faster absorption.",
+            "P2Y12 inhibitors (ticagrelor or prasugrel preferred over clopidogrel) should be loaded before cath lab.",
+            "Avoid nitrates if systolic BP <90 mmHg or suspected right ventricular infarction (inferior STEMI).",
+            "Beta-blockers reduce mortality but withhold if signs of heart failure or hemodynamic instability.",
+            "Morphine is no longer routinely recommended in STEMI \u2014 may worsen outcomes by reducing antiplatelet absorption."
+          ],
+          "papers_reviewed": 0,
+          "search_terms_used": [
+            "substernal chest pressure cardiology treatment",
+            "Acute Myocardial Infarction",
+            "STEMI",
+            "ST Elevation Myocardial Infarction",
+            "Reperfusion Therapy",
+            "Percutaneous Coronary Intervention",
+            "Antiplatelet Therapy",
+            "Anticoagulation",
+            "Chest Pain",
+            "Hypertension",
+            "Hyperglycemia"
+          ],
+          "acute_management": {
+            "risk_stratification": "HIGH \u2014 Anterior STEMI (V2-V5) with elevated troponin, hypertension, and risk factors.",
+            "immediate_actions": [
+              "Establish IV access x2",
+              "Administer Oxygen if SpO2 <90% (currently 96% on RA, so not immediately required but monitor)",
+              "Administer Aspirin 325 mg PO",
+              "Administer P2Y12 inhibitor loading dose (clopidogrel, ticagrelor, or prasugrel)",
+              "Administer IV heparin bolus + drip",
+              "Obtain 12-lead ECG (already done)",
+              "Obtain cardiac biomarkers (troponin already elevated)",
+              "Initiate contact with receiving PCI center/transfer",
+              "Consider IV nitroglycerin for chest pain/hypertension",
+              "Consider IV beta-blocker for hypertension/tachycardia/ischemia (if no contraindications)",
+              "Initiate insulin drip if glucose remains elevated or per institutional protocol"
+            ],
+            "do_not_do": [
+              "Administer oral medications if NPO or unstable (use IV alternatives if available)",
+              "Delay reperfusion therapy (PCI or fibrinolysis)",
+              "Administer NSAIDs (increase cardiovascular risk)"
+            ],
+            "monitoring_plan": [
+              "Continuous cardiac monitoring (ECG)",
+              "Frequent vital signs (BP, HR, RR, SpO2) every 5-15 minutes initially",
+              "Serial cardiac biomarkers (troponin) every 3-6 hours",
+              "Monitor for signs of heart failure, arrhythmias, or bleeding",
+              "Monitor glucose levels frequently if insulin drip is initiated"
+            ],
+            "disposition": "ICU or monitored bed (e.g., CCU/Step-Down) \u2014 Requires continuous monitoring, frequent assessment, and emergent intervention capability.",
+            "consults": [
+              "Cardiology (emergent)",
+              "Internal Medicine (urgent)"
+            ],
+            "activity_restrictions": "Strict bed rest initially, then gradual mobilization as tolerated post-procedure/stabilization.",
+            "key_counseling": [
+              "Explain diagnosis and treatment plan",
+              "Discuss importance of medication adherence (aspirin, P2Y12 inhibitor, statin, beta-blocker, ACE inhibitor)",
+              "Educate on lifestyle modifications (smoking cessation, diet, exercise)",
+              "Provide return precautions (worsening chest pain, shortness of breath, palpitations)"
+            ],
+            "metabolic_corrections": [
+              "Hyperglycemia (Glucose 142 mg/dL) \u2192 Initiate insulin drip to target <180 mg/dL"
+            ]
+          },
+          "suggested_followups": [
+            "What is the target activated clotting time during PCI?",
+            "Should this patient receive GP IIb/IIIa inhibitors?",
+            "When should dual antiplatelet therapy duration be reassessed?",
+            "What troponin trend would suggest successful reperfusion?"
+          ],
+          "medication_review": {
+            "renal_flags": [],
+            "interactions": []
+          },
+          "clinical_risk_scores": [],
+          "differential_diagnoses": [
+            {
+              "diagnosis": "ST-Elevation Myocardial Infarction (STEMI)",
+              "likelihood": "high",
+              "must_rule_out": true,
+              "supporting_findings": [
+                "Substernal chest pressure at rest",
+                "Radiation to left arm and jaw",
+                "Associated symptoms (SOB, nausea, diaphoresis)",
+                "Elevated troponin I (0.82 ng/mL)",
+                "ST elevation in V2-V5",
+                "Reciprocal ST depression in II, III, aVF",
+                "Risk factors (age, male, HTN, HLD, smoking, family history)"
+              ],
+              "refuting_findings": [
+                "None clearly present"
+              ],
+              "diagnostic_pathway": [
+                "Confirm diagnosis based on clinical presentation, ECG, and biomarkers.",
+                "Immediate reperfusion therapy (PCI or thrombolysis) is indicated.",
+                "Coronary angiography to identify and treat culprit lesion."
+              ],
+              "distinguishing_feature": "ST-segment elevation on ECG with elevated cardiac biomarkers",
+              "probability": 0,
+              "supporting_features": [],
+              "against_features": [],
+              "workup": []
+            },
+            {
+              "diagnosis": "Non-ST-Elevation Myocardial Infarction (NSTEMI)",
+              "likelihood": "moderate",
+              "must_rule_out": true,
+              "supporting_findings": [
+                "Substernal chest pressure at rest",
+                "Radiation to left arm and jaw",
+                "Associated symptoms (SOB, nausea, diaphoresis)",
+                "Elevated troponin I (0.82 ng/mL)",
+                "Risk factors (age, male, HTN, HLD, smoking, family history)"
+              ],
+              "refuting_findings": [
+                "ST-segment elevation on ECG (V2-V5)"
+              ],
+              "diagnostic_pathway": [
+                "Rule out STEMI first. If troponin is elevated but ECG shows ST depression or T-wave inversion, consider NSTEMI.",
+                "Coronary angiography is indicated."
+              ],
+              "distinguishing_feature": "Elevated cardiac biomarkers without ST-segment elevation",
+              "probability": 0,
+              "supporting_features": [],
+              "against_features": [],
+              "workup": []
+            },
+            {
+              "diagnosis": "Unstable Angina",
+              "likelihood": "moderate",
+              "must_rule_out": true,
+              "supporting_findings": [
+                "Substernal chest pressure at rest",
+                "Radiation to left arm and jaw",
+                "Associated symptoms (SOB, nausea, diaphoresis)",
+                "Risk factors (age, male, HTN, HLD, smoking, family history)"
+              ],
+              "refuting_findings": [
+                "Elevated troponin I (0.82 ng/mL)",
+                "ST-segment elevation on ECG (V2-V5)"
+              ],
+              "diagnostic_pathway": [
+                "Rule out STEMI and NSTEMI. If chest pain occurs at rest or with increasing frequency/severity, and troponin is normal, consider unstable angina.",
+                "Coronary angiography is indicated."
+              ],
+              "distinguishing_feature": "Chest pain suggestive of ACS without elevated cardiac biomarkers",
+              "probability": 0,
+              "supporting_features": [],
+              "against_features": [],
+              "workup": []
+            },
+            {
+              "diagnosis": "Pericarditis",
+              "likelihood": "low",
+              "must_rule_out": false,
+              "supporting_findings": [
+                "Chest pain"
+              ],
+              "refuting_findings": [
+                "ST elevation morphology (diffuse, concave up, often with PR depression) is not described; ST elevation is localized to V2-V5 with reciprocal changes, typical for MI.",
+                "Elevated troponin I (suggests myocardial injury, less typical for isolated pericarditis)",
+                "Pain characteristics (constant, onset at rest) less typical for pericarditis (often pleuritic, positional)"
+              ],
+              "diagnostic_pathway": [
+                "Assess pain characteristics (pleuritic, positional).",
+                "Look for diffuse ST elevation and PR depression on ECG.",
+                "Consider inflammatory markers (ESR, CRP).",
+                "Echocardiogram may show pericardial effusion."
+              ],
+              "distinguishing_feature": "Diffuse concave ST elevation, PR depression, pleuritic/positional pain",
+              "probability": 0,
+              "supporting_features": [],
+              "against_features": [],
+              "workup": []
+            },
+            {
+              "diagnosis": "Aortic Dissection",
+              "likelihood": "low",
+              "must_rule_out": true,
+              "supporting_findings": [
+                "Chest pain",
+                "Hypertension history"
+              ],
+              "refuting_findings": [
+                "Pain description (substernal pressure) less typical for dissection (often tearing, radiating to back).",
+                "ECG findings (ST elevation in V2-V5) are not typical for dissection (can be normal or show non-specific changes).",
+                "No mention of pulse deficits, blood pressure differences between arms, or neurological symptoms."
+              ],
+              "diagnostic_pathway": [
+                "Assess pain characteristics (tearing, radiating to back).",
+                "Check blood pressure in both arms.",
+                "Evaluate for pulse deficits.",
+                "CT angiography or TEE is diagnostic."
+              ],
+              "distinguishing_feature": "Sudden onset tearing chest/back pain, pulse/BP discrepancies",
+              "probability": 0,
+              "supporting_features": [],
+              "against_features": [],
+              "workup": []
+            },
+            {
+              "diagnosis": "Pulmonary Embolism (PE)",
+              "likelihood": "low",
+              "must_rule_out": false,
+              "supporting_findings": [
+                "Shortness of breath",
+                "Chest pain"
+              ],
+              "refuting_findings": [
+                "ECG findings (ST elevation in V2-V5) are not typical for PE (can show S1Q3T3, RBBB, T-wave inversions).",
+                "Pain description (substernal pressure) less typical for PE (often pleuritic).",
+                "No mention of risk factors for PE (immobilization, recent surgery, malignancy) or signs of DVT."
+              ],
+              "diagnostic_pathway": [
+                "Assess risk factors for PE (e.g., Wells score).",
+                "Consider D-dimer if low probability.",
+                "CT pulmonary angiography is diagnostic."
+              ],
+              "distinguishing_feature": "Pleuritic chest pain, dyspnea, tachycardia, hypoxia, risk factors for VTE",
+              "probability": 0,
+              "supporting_features": [],
+              "against_features": [],
+              "workup": []
+            },
+            {
+              "diagnosis": "Esophageal Spasm/Rupture",
+              "likelihood": "low",
+              "must_rule_out": false,
+              "supporting_findings": [
+                "Chest pain",
+                "Nausea"
+              ],
+              "refuting_findings": [
+                "Pain description (substernal pressure) less typical for esophageal spasm (often squeezing, burning).",
+                "ECG findings (ST elevation in V2-V5) are not typical.",
+                "Elevated troponin I argues against esophageal cause."
+              ],
+              "diagnostic_pathway": [
+                "Assess pain characteristics (related to swallowing, relieved by nitroglycerin?).",
+                "Consider endoscopy or barium swallow."
+              ],
+              "distinguishing_feature": "Chest pain related to swallowing, relieved by nitroglycerin",
+              "probability": 0,
+              "supporting_features": [],
+              "against_features": [],
+              "workup": []
+            }
+          ]
+        }
+      },
+      {
+        "type": "done"
+      }
+    ]
+  },
+  "aiAssist": {
+    "answer": "Aspirin 325 mg is recommended as first-line antiplatelet therapy in acute STEMI per AHA/ACC guidelines. It irreversibly inhibits cyclooxygenase-1, reducing thromboxane A2-mediated platelet aggregation. The higher loading dose (325 mg vs 81 mg) ensures rapid platelet inhibition within 15 minutes when chewed, which is critical in the acute setting before PCI."
+  },
+  "medicationSafety": {
+    "interactions": [
+      {
+        "drug_a": "Aspirin 325 mg",
+        "drug_b": "IV Heparin",
+        "severity": "moderate",
+        "mechanism": "Additive anticoagulant/antiplatelet effects",
+        "clinical_effect": "Increased bleeding risk when dual antithrombotic therapy is used",
+        "recommendation": "Monitor closely for signs of bleeding (guaiac stools, CBC, aPTT). This combination is standard of care in STEMI but requires vigilant monitoring.",
+        "alternatives": [],
+        "source": "deterministic"
+      },
+      {
+        "drug_a": "P2Y12 Inhibitor (Ticagrelor)",
+        "drug_b": "Aspirin 325 mg",
+        "severity": "moderate",
+        "mechanism": "Dual antiplatelet therapy increases bleeding risk",
+        "clinical_effect": "DAPT is guideline-recommended but increases major bleeding events by ~1% annually",
+        "recommendation": "Continue DAPT for 6-12 months post-PCI per guidelines. Use PPI for GI protection. Step down aspirin to 81 mg after loading.",
+        "alternatives": [],
+        "source": "deterministic"
+      },
+      {
+        "drug_a": "IV Nitroglycerin",
+        "drug_b": "Lisinopril 20 mg",
+        "severity": "moderate",
+        "mechanism": "Additive hypotensive effect (nitrate + ACE inhibitor)",
+        "clinical_effect": "Risk of symptomatic hypotension, especially in volume-depleted patients",
+        "recommendation": "Hold lisinopril in the acute phase if IV nitroglycerin is running. Resume ACE inhibitor 24-48h post-PCI when hemodynamically stable.",
+        "alternatives": [],
+        "source": "medgemma"
+      },
+      {
+        "drug_a": "IV Beta-blocker (Metoprolol)",
+        "drug_b": "IV Nitroglycerin",
+        "severity": "minor",
+        "mechanism": "Both reduce myocardial oxygen demand through different mechanisms",
+        "clinical_effect": "Additive bradycardia and hypotension possible",
+        "recommendation": "Monitor HR and BP closely. Withhold beta-blocker if HR <60 or SBP <100 mmHg.",
+        "alternatives": [],
+        "source": "medgemma"
+      }
+    ],
+    "drug_disease_conflicts": [
+      {
+        "drug": "IV Beta-blocker (Metoprolol)",
+        "condition": "Acute heart failure / cardiogenic shock",
+        "severity": "major",
+        "risk": "Beta-blockers contraindicated in Killip class III-IV; may worsen cardiogenic shock",
+        "recommendation": "Assess for signs of heart failure (rales, S3, JVD) before administering. Withhold if Killip class \u2265 III."
+      }
+    ],
+    "dosing_concerns": [
+      {
+        "drug": "IV Heparin",
+        "concern": "Weight-based dosing required for ACS: 60 U/kg bolus (max 4000 U), then 12 U/kg/hr (max 1000 U/hr)",
+        "recommendation": "Obtain patient weight. Target aPTT 50-70 seconds. Check aPTT 6h after initiation and after each dose change."
+      },
+      {
+        "drug": "Insulin drip",
+        "concern": "Glucose 142 mg/dL \u2014 borderline. ADA/AHA recommend insulin for persistent hyperglycemia >180 mg/dL in ICU",
+        "recommendation": "Recheck glucose in 2-4 hours. Initiate insulin drip only if glucose persistently >180 mg/dL or per institutional protocol."
+      }
+    ],
+    "allergy_alerts": [],
+    "overall_safety": "caution",
+    "summary": "Standard STEMI medications with expected drug interactions from dual antithrombotic therapy. Key monitoring points: bleeding risk with DAPT + heparin, hypotension risk with nitrates + ACE inhibitor, and beta-blocker contraindication if heart failure develops."
+  },
+  "dischargePlan": {
+    "patient_instructions": "You were treated for a heart attack (ST-elevation myocardial infarction or STEMI). A blocked artery in your heart was opened with a procedure called PCI (percutaneous coronary intervention), and a stent was placed to keep it open.\n\nIt is very important that you take all of your medications exactly as prescribed. Do not stop any medication without talking to your doctor first \u2014 especially the blood thinner medications, as stopping them too early can cause the stent to close.\n\nYou should follow a heart-healthy diet: low in salt, saturated fat, and processed foods. Eat more fruits, vegetables, whole grains, and lean proteins. If you smoke, it is critical that you stop completely \u2014 your care team can help with a quit plan.\n\nStart light walking as tolerated, but avoid heavy lifting (>10 lbs) or strenuous exercise for 4-6 weeks. Your doctor will clear you for more activity at your follow-up visit.\n\nCall 911 immediately if you have chest pain, pressure, or tightness that lasts more than 5 minutes, sudden shortness of breath, fainting, or feel like something is seriously wrong.",
+    "medication_reconciliation": [
+      {
+        "medication": "Aspirin 81 mg daily",
+        "action": "dose_change",
+        "instructions": "Take once daily with food. Was loaded at 325 mg in hospital, now stepping down to 81 mg.",
+        "reason": "Long-term antiplatelet therapy post-stent"
+      },
+      {
+        "medication": "Ticagrelor 90 mg twice daily",
+        "action": "new",
+        "instructions": "Take one tablet in the morning and one in the evening, with or without food. Do NOT skip doses.",
+        "reason": "P2Y12 inhibitor \u2014 prevents stent thrombosis. Take for at least 12 months."
+      },
+      {
+        "medication": "Atorvastatin 80 mg daily",
+        "action": "dose_change",
+        "instructions": "Take once daily at bedtime. Dose increased from 40 mg to 80 mg.",
+        "reason": "High-intensity statin therapy per ACS guidelines"
+      },
+      {
+        "medication": "Metoprolol succinate 25 mg daily",
+        "action": "new",
+        "instructions": "Take once daily in the morning. Do not stop suddenly.",
+        "reason": "Beta-blocker for post-MI cardioprotection"
+      },
+      {
+        "medication": "Lisinopril 20 mg daily",
+        "action": "continue",
+        "instructions": "Continue taking once daily as before.",
+        "reason": "ACE inhibitor for blood pressure and cardiac remodeling"
+      },
+      {
+        "medication": "Nitroglycerin 0.4 mg SL PRN",
+        "action": "new",
+        "instructions": "Place under tongue if chest pain occurs. May repeat every 5 min x3. Call 911 if pain persists after 3 doses.",
+        "reason": "Rescue medication for angina"
+      }
+    ],
+    "follow_up": [
+      {
+        "timeframe": "2-3 days",
+        "provider": "Primary Care Physician",
+        "reason": "Post-discharge medication review, vital signs, wound check at catheter access site"
+      },
+      {
+        "timeframe": "1-2 weeks",
+        "provider": "Cardiology",
+        "reason": "Post-PCI follow-up, echocardiogram to assess LV function, initiate cardiac rehab referral"
+      },
+      {
+        "timeframe": "4-6 weeks",
+        "provider": "Cardiac Rehabilitation",
+        "reason": "Supervised exercise program, risk factor education, psychosocial support"
+      }
+    ],
+    "red_flags": [
+      "Chest pain, pressure, or tightness lasting >5 minutes",
+      "New or worsening shortness of breath",
+      "Fainting or near-fainting",
+      "Rapid or irregular heartbeat",
+      "Swelling in legs or ankles",
+      "Bleeding from catheter access site that does not stop with firm pressure",
+      "Unusual bruising or blood in urine/stool (sign of excess blood thinning)"
+    ],
+    "restrictions": [
+      {
+        "type": "activity",
+        "restriction": "No heavy lifting >10 pounds",
+        "duration": "4-6 weeks",
+        "reason": "Catheter access site healing and cardiac recovery"
+      },
+      {
+        "type": "activity",
+        "restriction": "No driving for 1 week",
+        "duration": "1 week minimum",
+        "reason": "Post-procedural safety; sooner if cleared by cardiologist"
+      },
+      {
+        "type": "dietary",
+        "restriction": "Low-sodium, heart-healthy diet (<2000 mg sodium/day)",
+        "duration": "Indefinite",
+        "reason": "Blood pressure control and cardiovascular risk reduction"
+      }
+    ],
+    "readmission_risk": {
+      "level": "moderate",
+      "factors": [
+        "Anterior STEMI with likely reduced EF",
+        "Multiple cardiovascular risk factors (HTN, HLD, smoking, family history)",
+        "New complex medication regimen (DAPT compliance critical)"
+      ],
+      "mitigation": [
+        "Cardiac rehabilitation enrollment",
+        "Smoking cessation program referral",
+        "Close follow-up within 2-3 days of discharge",
+        "Medication adherence counseling before discharge"
+      ]
+    }
+  },
+  "referral": {
+    "specialty": "Cardiology",
+    "urgency": "emergent",
+    "clinical_question": "Emergent evaluation for primary PCI in setting of acute anterior STEMI with ST elevation in V2-V5 and elevated troponin I (0.82 ng/mL).",
+    "relevant_history": "62-year-old male with HTN, HLD, 20-pack-year smoking history, and family history of premature MI (father at 55). Presents with 2-hour history of substernal chest pressure at rest radiating to left arm and jaw, associated with SOB, nausea, and diaphoresis. Currently on lisinopril 20 mg, atorvastatin 40 mg, aspirin 81 mg daily.",
+    "pertinent_findings": [
+      "ECG: ST elevation V2-V5 with reciprocal ST depression in II, III, aVF",
+      "Troponin I: 0.82 ng/mL (elevated)",
+      "BP 165/95, HR 88, SpO2 96% on RA",
+      "Anxious, diaphoretic; lungs clear; no murmurs, rubs, or gallops"
+    ],
+    "current_management": "Aspirin 325 mg PO given. P2Y12 inhibitor loading dose administered. IV heparin bolus + drip initiated. IV nitroglycerin for ongoing chest pain and hypertension. Continuous telemetry monitoring.",
+    "specific_asks": [
+      "Emergent coronary angiography with intent for primary PCI",
+      "Assessment of culprit lesion and need for multivessel intervention",
+      "Post-PCI monitoring plan and disposition recommendation",
+      "Echocardiogram timing for LV function assessment"
+    ],
+    "reason_for_urgency": "Acute anterior STEMI \u2014 door-to-balloon time target <90 minutes. Ongoing ischemic symptoms despite initial medical therapy."
+  },
+  "handoffIpass": {
+    "format": "ipass",
+    "content": {
+      "illness_severity": "unstable",
+      "patient_summary": "62M with HTN, HLD, smoking hx presenting with acute anterior STEMI (STE V2-V5, troponin 0.82), s/p loading with ASA, P2Y12, heparin drip, awaiting emergent PCI.",
+      "action_list": [
+        "Emergent cardiology consult for primary PCI \u2014 cath lab activation pending",
+        "Continue IV heparin drip \u2014 target aPTT 50-70s, recheck in 6h",
+        "IV nitroglycerin running for chest pain/HTN \u2014 titrate to pain relief, hold if SBP <100",
+        "Repeat troponin at 6h from initial draw",
+        "Recheck glucose in 2-4h \u2014 consider insulin drip if persistently >180",
+        "Type and screen sent \u2014 ensure 2 units pRBC available for cath lab"
+      ],
+      "situation_awareness": [
+        {
+          "watch_for": "Chest pain recurrence or worsening ST elevation",
+          "if_then": "If pain recurs, bolus nitroglycerin and notify cardiology immediately. If new ST changes, obtain stat ECG and escalate."
+        },
+        {
+          "watch_for": "Hemodynamic instability (SBP <90, HR <50 or >120)",
+          "if_then": "If hypotension, stop nitroglycerin and consider fluid bolus. If bradycardia with hypotension, consider atropine. Call rapid response if not responsive."
+        },
+        {
+          "watch_for": "Signs of heart failure (new rales, S3, JVD, hypoxia)",
+          "if_then": "If Killip class worsens, hold beta-blocker, consider diuresis, notify cardiology for possible IABP or mechanical support."
+        },
+        {
+          "watch_for": "Bleeding (access site, GI, or other)",
+          "if_then": "If significant bleeding, hold heparin, apply pressure to access sites, check CBC/fibrinogen, and transfuse as needed."
+        }
+      ],
+      "synthesis_questions": [
+        "Has the cath lab been activated and what is the estimated door-to-balloon time?",
+        "Was there any response to nitroglycerin \u2014 is the patient still having chest pain?",
+        "Any contraindications to beta-blocker identified (HF signs, bradycardia)?"
+      ]
+    }
+  },
+  "handoffSbar": {
+    "format": "sbar",
+    "content": {
+      "situation": "I am handing off Mr. [Patient], a 62-year-old male admitted through the ED with an acute anterior STEMI. He is currently hemodynamically stable but remains on IV nitroglycerin and heparin drip, awaiting emergent cardiac catheterization.",
+      "background": "He has a history of hypertension, hyperlipidemia, and a 20-pack-year smoking history with a family history of premature MI. He presented with 2 hours of substernal chest pressure radiating to his left arm and jaw, with associated shortness of breath, nausea, and diaphoresis. ECG showed ST elevation in V2-V5 with reciprocal depression in II, III, aVF. Initial troponin I was 0.82 ng/mL. Home medications: lisinopril 20 mg, atorvastatin 40 mg, aspirin 81 mg daily.",
+      "assessment": "This is a high-risk anterior STEMI requiring emergent reperfusion. He has been loaded with aspirin 325 mg, P2Y12 inhibitor, and started on IV heparin and nitroglycerin. Vitals are currently stable (BP 145/88 on NTG drip, HR 82, SpO2 97%). Pain has improved from 8/10 to 4/10 with nitroglycerin. No signs of heart failure at this time.",
+      "recommendation": [
+        "Proceed with emergent PCI as soon as cath lab is available",
+        "Continue heparin drip \u2014 next aPTT due at [time]",
+        "Titrate nitroglycerin to chest pain and BP (hold if SBP <100)",
+        "Repeat troponin at 6h, glucose at 2-4h",
+        "Monitor closely for arrhythmias, HF, and bleeding",
+        "Keep NPO for possible catheterization"
+      ]
+    }
+  },
+  "soapFromCase": {
+    "corrections": [
+      {
+        "original": "trop I 0.82",
+        "corrected": "Troponin I 0.82 ng/mL"
+      },
+      {
+        "original": "STE in V2-V5",
+        "corrected": "ST elevation in leads V2-V5"
+      }
+    ],
+    "soap": {
+      "subjective": {
+        "chief_complaint": "Substernal chest pressure for 2 hours",
+        "history_of_present_illness": "62-year-old male with history of hypertension, hyperlipidemia, and 20-pack-year smoking history presents with approximately 2 hours of substernal chest pressure at rest, radiating to the left arm and jaw, associated with shortness of breath, nausea, and diaphoresis. Pain is constant since onset and not relieved by rest. Father had MI at age 55.",
+        "review_of_systems": [
+          "Chest pain/pressure \u2014 positive",
+          "Shortness of breath \u2014 positive",
+          "Nausea \u2014 positive",
+          "Diaphoresis \u2014 positive",
+          "No lower extremity edema"
+        ],
+        "patient_reported": [
+          "Pain onset at rest, constant for ~2 hours",
+          "Radiating to left arm and jaw",
+          "Not relieved by rest"
+        ]
+      },
+      "objective": {
+        "vital_signs": {
+          "BP": "165/95 mmHg",
+          "HR": "88 bpm",
+          "RR": "20",
+          "Temp": "98.6 F",
+          "SpO2": "96% on RA"
+        },
+        "physical_exam": [
+          "General: Anxious, diaphoretic",
+          "Cardiovascular: Regular rate and rhythm, no murmurs rubs or gallops",
+          "Pulmonary: Lungs clear to auscultation bilaterally",
+          "Extremities: No lower extremity edema"
+        ],
+        "labs": [
+          "Troponin I: 0.82 ng/mL (elevated)",
+          "Glucose: 142 mg/dL",
+          "Creatinine: 1.0 mg/dL",
+          "CBC: Within normal limits",
+          "PT/INR: Normal"
+        ],
+        "imaging": [
+          "12-lead ECG: ST elevation in leads V2-V5 with reciprocal ST depression in leads II, III, and aVF"
+        ]
+      },
+      "assessment": {
+        "primary_diagnosis": "ST-Elevation Myocardial Infarction (STEMI) \u2014 Anterior wall",
+        "differential": [
+          "NSTEMI",
+          "Unstable angina",
+          "Aortic dissection",
+          "Pericarditis",
+          "Pulmonary embolism"
+        ],
+        "clinical_impression": "Acute anterior STEMI with high-risk features including anterior location, elevated troponin, hypertension, and multiple cardiovascular risk factors. Requires emergent reperfusion therapy."
+      },
+      "plan": {
+        "medications": [
+          {
+            "drug": "Aspirin",
+            "dose": "325 mg PO x1",
+            "frequency": "loading dose"
+          },
+          {
+            "drug": "Ticagrelor",
+            "dose": "180 mg PO x1",
+            "frequency": "loading dose"
+          },
+          {
+            "drug": "Heparin",
+            "dose": "60 U/kg IV bolus then 12 U/kg/hr",
+            "frequency": "continuous infusion"
+          },
+          {
+            "drug": "Nitroglycerin",
+            "dose": "5-200 mcg/min IV",
+            "frequency": "titrate to pain and BP"
+          },
+          {
+            "drug": "Metoprolol",
+            "dose": "5 mg IV",
+            "frequency": "q5min x3 if tolerated"
+          }
+        ],
+        "procedures": [
+          "Emergent cardiac catheterization with primary PCI"
+        ],
+        "referrals": [
+          "Cardiology \u2014 emergent consult for cath lab activation"
+        ],
+        "follow_up": "ICU/CCU admission post-PCI; cardiology follow-up 1-2 weeks after discharge",
+        "patient_education": [
+          "Explained diagnosis of heart attack and need for emergent procedure",
+          "Discussed risks and benefits of PCI",
+          "Family updated on plan of care"
+        ]
+      }
+    },
+    "metadata": {
+      "timestamp": "2026-02-20T12:00:00Z",
+      "processing_model": "medgemma-27b-it",
+      "dictation_length": 450
+    }
+  },
+  "imageAnalysis": {
+    "modality": "xray",
+    "findings": [
+      "Normal cardiac silhouette \u2014 no cardiomegaly",
+      "Clear lung fields bilaterally \u2014 no pulmonary edema or consolidation",
+      "No pleural effusion",
+      "Mediastinal contours within normal limits \u2014 no widening to suggest dissection",
+      "No pneumothorax"
+    ],
+    "impression": "Normal chest radiograph. No acute cardiopulmonary process. No evidence of pulmonary edema or heart failure at this time, which is reassuring in the setting of acute STEMI.",
+    "differential_diagnoses": [
+      "Normal study",
+      "Early heart failure (may not yet manifest radiographically)",
+      "Subtle pneumonia (clinical correlation recommended)"
+    ],
+    "confidence": 0.88,
+    "recommendations": [
+      "Repeat CXR post-PCI or if clinical status changes",
+      "Compare with prior studies if available",
+      "Echocardiogram recommended for cardiac function assessment"
+    ],
+    "model": "CXR Foundation + MedGemma 27B"
+  },
+  "labExtraction": {
+    "labs": [
+      {
+        "test": "Troponin I",
+        "value": "0.82",
+        "unit": "ng/mL",
+        "reference_range": "0.00-0.04",
+        "flag": "critical_high"
+      },
+      {
+        "test": "Glucose",
+        "value": "142",
+        "unit": "mg/dL",
+        "reference_range": "70-100",
+        "flag": "high"
+      },
+      {
+        "test": "Creatinine",
+        "value": "1.0",
+        "unit": "mg/dL",
+        "reference_range": "0.7-1.3",
+        "flag": "normal"
+      },
+      {
+        "test": "WBC",
+        "value": "8.2",
+        "unit": "K/uL",
+        "reference_range": "4.5-11.0",
+        "flag": "normal"
+      },
+      {
+        "test": "Hemoglobin",
+        "value": "14.5",
+        "unit": "g/dL",
+        "reference_range": "13.5-17.5",
+        "flag": "normal"
+      },
+      {
+        "test": "Platelets",
+        "value": "245",
+        "unit": "K/uL",
+        "reference_range": "150-400",
+        "flag": "normal"
+      },
+      {
+        "test": "PT",
+        "value": "12.8",
+        "unit": "seconds",
+        "reference_range": "11.0-13.5",
+        "flag": "normal"
+      },
+      {
+        "test": "INR",
+        "value": "1.0",
+        "unit": "",
+        "reference_range": "0.8-1.2",
+        "flag": "normal"
+      },
+      {
+        "test": "Sodium",
+        "value": "140",
+        "unit": "mEq/L",
+        "reference_range": "136-145",
+        "flag": "normal"
+      },
+      {
+        "test": "Potassium",
+        "value": "4.2",
+        "unit": "mEq/L",
+        "reference_range": "3.5-5.0",
+        "flag": "normal"
+      },
+      {
+        "test": "BUN",
+        "value": "18",
+        "unit": "mg/dL",
+        "reference_range": "7-20",
+        "flag": "normal"
+      }
+    ],
+    "collection_date": "2026-02-20",
+    "patient_info": "62 yo male",
+    "model": "MedGemma 27B",
+    "error": ""
+  },
+  "interview": {
+    "start": {
+      "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+      "question": "Hi there! Welcome. What brings you in today?",
+      "phase": "chief_complaint",
+      "extracted_data": {},
+      "language": "en"
+    },
+    "turns": [
+      {
+        "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+        "question": "Can you tell me more about the pain? Does it feel sharp, dull, or something else?",
+        "phase": "chief_complaint",
+        "phase_complete": false,
+        "extracted_data": {
+          "chief_complaint": {
+            "chief_complaint": "chest pain",
+            "symptom_location": "center of chest",
+            "symptom_quality": "pressure",
+            "symptom_onset": "this morning"
+          }
+        },
+        "red_flags": ["chest pain"],
+        "suggested_responses": [
+          "It's a pressure feeling",
+          "It feels like a sharp stabbing pain",
+          "It's more of a dull ache"
+        ]
+      },
+      {
+        "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+        "question": "When did this start, and how severe is it on a 0-10 scale?",
+        "phase": "hpi",
+        "phase_complete": true,
+        "extracted_data": {
+          "chief_complaint": {
+            "chief_complaint": "chest pain",
+            "symptom_location": "center of chest",
+            "symptom_quality": "pressure",
+            "symptom_onset": "3 hours ago",
+            "symptom_severity": "7/10",
+            "aggravating_factors": "walking",
+            "associated_symptoms": "sweaty, nauseous"
+          }
+        },
+        "red_flags": ["chest pain", "sweaty", "nauseous"],
+        "suggested_responses": [
+          "About 3 hours ago, 7 out of 10",
+          "It started this morning, maybe a 5",
+          "A few hours, and it's getting worse"
+        ]
+      },
+      {
+        "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+        "question": "Does anything make the chest pain better?",
+        "phase": "hpi",
+        "phase_complete": false,
+        "extracted_data": {
+          "chief_complaint": {
+            "chief_complaint": "chest pain",
+            "symptom_location": "center of chest",
+            "symptom_quality": "pressure",
+            "symptom_onset": "3 hours ago",
+            "symptom_severity": "7/10",
+            "aggravating_factors": "walking",
+            "associated_symptoms": "sweaty, nauseous"
+          },
+          "hpi": {
+            "chief_complaint": "chest pain",
+            "symptom_location": "center of chest",
+            "symptom_quality": "pressure",
+            "symptom_onset": "3 hours ago",
+            "symptom_severity": "7/10",
+            "aggravating_factors": "walking",
+            "associated_symptoms": "sweaty, nauseous",
+            "denies": "fever, headache, leg swelling"
+          }
+        },
+        "red_flags": [
+          "chest pain",
+          "associated symptoms (sweaty, nauseous)",
+          "pressure",
+          "severity 7/10",
+          "aggravated by exertion (walking)"
+        ],
+        "suggested_responses": [
+          "Nothing helps, rest doesn't relieve it",
+          "Sitting still helps a little",
+          "I haven't tried anything yet"
+        ]
+      },
+      {
+        "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+        "question": "Any other symptoms \u2014 fever, numbness, weakness, or anything else?",
+        "phase": "review_of_systems",
+        "phase_complete": true,
+        "extracted_data": {
+          "chief_complaint": {
+            "chief_complaint": "chest pain",
+            "symptom_location": "center of chest",
+            "symptom_quality": "pressure",
+            "symptom_onset": "3 hours ago",
+            "symptom_severity": "7/10",
+            "aggravating_factors": "walking",
+            "associated_symptoms": "sweaty, nauseous"
+          },
+          "hpi": {
+            "chief_complaint": "chest pain",
+            "symptom_location": "center of chest",
+            "symptom_quality": "pressure",
+            "symptom_onset": "3 hours ago",
+            "symptom_severity": "7/10",
+            "aggravating_factors": "walking",
+            "associated_symptoms": "sweaty, nauseous",
+            "denies": "fever, headache, leg swelling",
+            "past_medical_history": "high blood pressure, high cholesterol",
+            "family_history": "father had a heart attack at 55",
+            "social_history": "used to smoke, quit 2 years ago"
+          }
+        },
+        "red_flags": [
+          "chest pain",
+          "associated symptoms (sweaty, nauseous)",
+          "pressure sensation",
+          "severity 7/10",
+          "aggravated by exertion (walking)",
+          "risk factors: high blood pressure, high cholesterol, past smoker, family history of heart attack"
+        ],
+        "suggested_responses": [
+          "No other symptoms",
+          "I also feel a bit lightheaded",
+          "I feel short of breath sometimes"
+        ]
+      },
+      {
+        "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+        "question": "Are you having any shortness of breath or difficulty breathing?",
+        "phase": "review_and_triage",
+        "phase_complete": true,
+        "extracted_data": {
+          "chief_complaint": {
+            "chief_complaint": "chest pain",
+            "symptom_location": "center of chest",
+            "symptom_quality": "pressure",
+            "symptom_onset": "3 hours ago",
+            "symptom_severity": "7/10",
+            "aggravating_factors": "walking",
+            "associated_symptoms": "sweaty, nauseous"
+          },
+          "hpi": {
+            "chief_complaint": "chest pain",
+            "symptom_location": "center of chest",
+            "symptom_quality": "pressure",
+            "symptom_onset": "3 hours ago",
+            "symptom_severity": "7/10",
+            "aggravating_factors": "walking",
+            "associated_symptoms": "sweaty, nauseous",
+            "denies": "fever, headache, leg swelling",
+            "past_medical_history": "high blood pressure, high cholesterol",
+            "family_history": "father had a heart attack at 55",
+            "social_history": "used to smoke, quit 2 years ago"
+          },
+          "review_of_systems": {
+            "medications": "lisinopril, atorvastatin"
+          }
+        },
+        "red_flags": [
+          "chest pain",
+          "associated symptoms (sweaty, nauseous)",
+          "pressure sensation",
+          "severity 7/10",
+          "aggravated by exertion (walking)",
+          "risk factors: high blood pressure, high cholesterol, past smoker, family history of heart attack",
+          "worsens with exertion",
+          "associated diaphoresis (sweaty)",
+          "associated nausea"
+        ],
+        "suggested_responses": [
+          "No known allergies",
+          "I'm allergic to penicillin",
+          "No allergies that I know of"
+        ]
+      },
+      {
+        "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+        "question": "Okay, just to confirm, your main problem is chest pain that started 3 hours ago, is a 7 out of 10, gets worse with walking, and you also feel sweaty and nauseous. You have high blood pressure and high cholesterol, your father had a heart attack, you used to smoke, and you take lisinopril and atorvastatin. You have no known allergies. Is that all correct?",
+        "phase": "review_and_triage",
+        "phase_complete": true,
+        "extracted_data": {
+          "chief_complaint": {
+            "chief_complaint": "chest pain",
+            "symptom_location": "center of chest",
+            "symptom_quality": "pressure",
+            "symptom_onset": "3 hours ago",
+            "symptom_severity": "7/10",
+            "aggravating_factors": "walking",
+            "associated_symptoms": "sweaty, nauseous"
+          },
+          "hpi": {
+            "chief_complaint": "chest pain",
+            "symptom_location": "center of chest",
+            "symptom_quality": "pressure",
+            "symptom_onset": "3 hours ago",
+            "symptom_severity": "7/10",
+            "aggravating_factors": "walking",
+            "associated_symptoms": "sweaty, nauseous",
+            "denies": "fever, headache, leg swelling",
+            "past_medical_history": "high blood pressure, high cholesterol",
+            "family_history": "father had a heart attack at 55",
+            "social_history": "used to smoke, quit 2 years ago"
+          },
+          "review_of_systems": {
+            "medications": "lisinopril, atorvastatin"
+          },
+          "review_and_triage": {
+            "chief_complaint": "chest pain",
+            "symptom_location": "center of chest",
+            "symptom_quality": "pressure",
+            "symptom_onset": "3 hours ago",
+            "symptom_severity": "7/10",
+            "aggravating_factors": "walking",
+            "associated_symptoms": "sweaty, nauseous",
+            "denies": "fever, headache, leg swelling, shortness of breath, difficulty breathing, numbness, weakness",
+            "past_medical_history": "high blood pressure, high cholesterol",
+            "family_history": "father had a heart attack at 55",
+            "social_history": "used to smoke, quit 2 years ago",
+            "medications": "lisinopril, atorvastatin",
+            "allergies": "no known allergies"
+          }
+        },
+        "red_flags": [
+          "chest pain",
+          "associated symptoms (sweaty, nauseous)",
+          "pressure sensation",
+          "severity 7/10",
+          "aggravated by exertion (walking)",
+          "risk factors: high blood pressure, high cholesterol, past smoker, family history of heart attack",
+          "worsens with exertion",
+          "associated diaphoresis (sweaty)",
+          "associated nausea",
+          "past medical history of hypertension and hypercholesterolemia",
+          "family history of myocardial infarction",
+          "pain worse with exertion"
+        ],
+        "suggested_responses": [
+          "Yes that sounds right",
+          "Actually I forgot to mention something",
+          "Yes, that's correct"
+        ]
+      }
+    ],
+    "complete": {
+      "session_id": "c2c09a49-5400-41a8-842f-0179702290c1",
+      "esi_level": 2,
+      "esi_reasoning": "High-risk presentation: chest pain with pressure quality, radiation to arm/jaw, associated diaphoresis and nausea, severity 7/10, aggravated by exertion. Multiple cardiac risk factors (HTN, HLD, family history of MI at age 55, past smoker). Immediate evaluation needed to rule out acute coronary syndrome.",
+      "recommended_setting": "ER",
+      "setting_reasoning": "The patient's symptoms (chest pain, pressure, severity 7/10, associated diaphoresis/nausea, aggravated by exertion) and risk factors (HTN, HLD, family history of MI, smoking history) are highly suggestive of a potential acute coronary syndrome. This requires immediate evaluation and management in an Emergency Department setting.",
+      "red_flags": [
+        "Chest pain (pressure, 7/10, center of chest, onset 3 hours ago, worse with walking)",
+        "Associated diaphoresis and nausea",
+        "Risk factors: HTN, HLD, family history of MI, past smoker"
+      ],
+      "chief_complaint": "Chest pain",
+      "hpi": {
+        "onset": "3 hours ago",
+        "location": "Center of chest",
+        "duration": "3 hours",
+        "character": "Pressure",
+        "aggravating": "Walking",
+        "relieving": "Not specified",
+        "severity": "7/10"
+      },
+      "review_of_systems": {
+        "positive": ["Sweaty", "Nauseous"],
+        "negative": ["Fever", "Headache", "Leg swelling", "Shortness of breath", "Numbness", "Weakness"]
+      },
+      "past_medical_history": ["High blood pressure", "High cholesterol"],
+      "medications": ["Lisinopril", "Atorvastatin"],
+      "allergies": ["No known allergies"],
+      "family_history": "Father had a heart attack at 55",
+      "social_history": "Used to smoke, quit 2 years ago"
+    }
+  },
+  "ems": {
+    "start": {
+      "session_id": "11cd1f22-1b7b-4900-9057-d1be530ab411",
+      "run_id": "1b879a14-2aad-4aa0-b5eb-0ad9deb66f12",
+      "phase": "dispatch",
+      "question": "Ready to document. What's the call?",
+      "extracted_data": {
+        "dispatch": {
+          "reason": "chest pain",
+          "age": 62,
+          "sex": "male"
+        }
+      },
+      "validation_flags": []
+    },
+    "turns": [
+      {
+        "session_id": "11cd1f22-1b7b-4900-9057-d1be530ab411",
+        "run_id": "1b879a14-2aad-4aa0-b5eb-0ad9deb66f12",
+        "question": "What is the priority of this call?",
+        "phase": "dispatch",
+        "phase_complete": false,
+        "extracted_data": {
+          "dispatch": {
+            "reason": "chest pain",
+            "age": 62,
+            "sex": "male"
+          },
+          "scene": {
+            "location_type": "single-family home",
+            "scene_safety": "safe"
+          },
+          "patient_info": {
+            "position": "sitting upright",
+            "appearance": "diaphoretic",
+            "chief_complaint": "clutching chest"
+          }
+        },
+        "validation_flags": [],
+        "section_completeness": {
+          "dispatch": 0.0,
+          "scene": 0.33,
+          "patient_info": 0.33,
+          "primary_assessment": 0.0,
+          "vitals": 0.0,
+          "secondary_assessment": 0.0,
+          "interventions": 0.0,
+          "transport": 0.0
+        }
+      },
+      {
+        "session_id": "11cd1f22-1b7b-4900-9057-d1be530ab411",
+        "run_id": "1b879a14-2aad-4aa0-b5eb-0ad9deb66f12",
+        "question": "What's the scene look like? Location, safety, mechanism or nature of illness?",
+        "phase": "scene",
+        "phase_complete": true,
+        "extracted_data": {
+          "dispatch": {
+            "reason": "chest pain",
+            "age": 62,
+            "sex": "male"
+          },
+          "scene": {
+            "location_type": "single-family home",
+            "scene_safety": "safe"
+          },
+          "patient_info": {
+            "position": "sitting upright",
+            "appearance": "diaphoretic",
+            "chief_complaint": "clutching chest",
+            "age": 62,
+            "sex": "male",
+            "weight_kg": 90,
+            "history": ["HTN", "hyperlipidemia"],
+            "medications": ["lisinopril", "atorvastatin"],
+            "allergies": "No allergies"
+          }
+        },
+        "validation_flags": [],
+        "section_completeness": {
+          "dispatch": 0.0,
+          "scene": 0.33,
+          "patient_info": 1.0,
+          "primary_assessment": 0.0,
+          "vitals": 0.0,
+          "secondary_assessment": 0.0,
+          "interventions": 0.0,
+          "transport": 0.0
+        }
+      },
+      {
+        "session_id": "11cd1f22-1b7b-4900-9057-d1be530ab411",
+        "run_id": "1b879a14-2aad-4aa0-b5eb-0ad9deb66f12",
+        "question": "What is the mechanism of injury or nature of illness?",
+        "phase": "scene",
+        "phase_complete": false,
+        "extracted_data": {
+          "dispatch": {
+            "reason": "chest pain",
+            "age": 62,
+            "sex": "male"
+          },
+          "scene": {
+            "location_type": "single-family home",
+            "scene_safety": "safe"
+          },
+          "patient_info": {
+            "position": "sitting upright",
+            "appearance": "diaphoretic",
+            "chief_complaint": "clutching chest",
+            "age": 62,
+            "sex": "male",
+            "weight_kg": 90,
+            "history": ["HTN", "hyperlipidemia"],
+            "medications": ["lisinopril", "atorvastatin"],
+            "allergies": "No allergies"
+          },
+          "primary_assessment": {
+            "level_of_consciousness": "alert and oriented times 4",
+            "airway": "patent",
+            "breathing": "labored",
+            "respirations": 22,
+            "skin": "pale, cool, diaphoretic",
+            "gcs": 15
+          },
+          "vitals": {
+            "respirations": 22
+          }
+        },
+        "validation_flags": [],
+        "section_completeness": {
+          "dispatch": 0.0,
+          "scene": 0.33,
+          "patient_info": 1.0,
+          "primary_assessment": 0.0,
+          "vitals": 1.0,
+          "secondary_assessment": 0.0,
+          "interventions": 0.0,
+          "transport": 0.0
+        }
+      },
+      {
+        "session_id": "11cd1f22-1b7b-4900-9057-d1be530ab411",
+        "run_id": "1b879a14-2aad-4aa0-b5eb-0ad9deb66f12",
+        "question": "Tell me about the patient \u2014 age, sex, chief complaint, medical history?",
+        "phase": "patient_info",
+        "phase_complete": true,
+        "extracted_data": {
+          "dispatch": {
+            "reason": "chest pain",
+            "age": 62,
+            "sex": "male"
+          },
+          "scene": {
+            "location_type": "single-family home",
+            "scene_safety": "safe"
+          },
+          "patient_info": {
+            "position": "sitting upright",
+            "appearance": "diaphoretic",
+            "chief_complaint": "clutching chest",
+            "age": 62,
+            "sex": "male",
+            "weight_kg": 90,
+            "history": ["HTN", "hyperlipidemia"],
+            "medications": ["lisinopril", "atorvastatin"],
+            "allergies": "No allergies"
+          },
+          "primary_assessment": {
+            "level_of_consciousness": "alert and oriented times 4",
+            "airway": "patent",
+            "breathing": "labored",
+            "respirations": 22,
+            "skin": "pale, cool, diaphoretic",
+            "gcs": 15
+          },
+          "vitals": {
+            "respirations": 22
+          },
+          "transport": {
+            "destination": "General Hospital",
+            "priority": "emergent"
+          }
+        },
+        "validation_flags": [],
+        "section_completeness": {
+          "dispatch": 0.0,
+          "scene": 0.33,
+          "patient_info": 1.0,
+          "primary_assessment": 0.0,
+          "vitals": 1.0,
+          "secondary_assessment": 0.0,
+          "interventions": 0.0,
+          "transport": 0.33
+        }
+      }
+    ],
+    "complete": {
+      "session_id": "11cd1f22-1b7b-4900-9057-d1be530ab411",
+      "run_id": "1b879a14-2aad-4aa0-b5eb-0ad9deb66f12",
+      "status": "complete",
+      "narrative": "On 2026-02-20 at 14:32, dispatch received a call for a patient complaining of chest pain. Unit was dispatched and arrived on scene at a single-family home at 14:38. The scene was safe. One patient, a 62-year-old male, was found sitting upright in the living room, clutching his chest, diaphoretic. The patient reported a chief complaint of chest pain. History includes hypertension and hyperlipidemia. Takes lisinopril and atorvastatin. No known allergies. Full code status.\n\nInitial assessment revealed the patient was alert and oriented x4. Airway patent, breathing labored at 22. Bilateral lung sounds clear. Skin pale, cool, diaphoretic. GCS 15. Vital signs obtained at 14:40 showed a blood pressure of 158/92 mmHg, heart rate of 104 bpm, respiratory rate of 22 breaths/min, and SpO2 of 94% on room air. Pain was rated as 8/10.\n\nA 12-lead ECG was performed at 14:42, revealing ST elevation in leads V2-V5. STEMI alert activated. The patient was administered 324mg of Aspirin orally at 14:43 and tolerated it well.\n\nThe patient was packaged and prepared for emergent transport. Transport was initiated to General Hospital via ground ambulance, lights and sirens. The patient's condition remained stable during transport. Handoff occurred at 14:58 to ED and cath lab staff.",
+      "icd10_codes": [
+        {
+          "code": "I21.09",
+          "description": "ST elevation (STEMI) myocardial infarction involving other coronary artery of anterior wall",
+          "confidence": 0.95,
+          "rationale": "Patient presents with chief complaint of clutching chest, pale/cool/diaphoretic skin, elevated blood pressure (158/92), tachycardia (HR 104), tachypnea (RR 22), and pain score of 8. 12-Lead ECG shows ST elevation V2-V5, which is diagnostic for an anterior STEMI."
+        },
+        {
+          "code": "R07.2",
+          "description": "Precordial pain",
+          "confidence": 0.85,
+          "rationale": "The chief complaint is 'clutching chest', which is a common description for precordial pain."
+        },
+        {
+          "code": "I50.9",
+          "description": "Heart failure, unspecified",
+          "confidence": 0.75,
+          "rationale": "Symptoms like chest pain, diaphoresis, tachycardia, and tachypnea can be associated with heart failure, although the ECG findings strongly point towards MI."
+        }
+      ],
+      "medical_necessity": "The patient, a 62-year-old male, presented with a chief complaint of chest pain, described as \"clutching chest,\" and exhibited signs of distress including pale, cool, diaphoretic skin, elevated blood pressure (158/92 mmHg), tachycardia (104 bpm), tachypnea (22 breaths/min), and reported pain of 8/10. A 12-lead ECG revealed ST elevation in leads V2-V5, indicative of an acute ST-elevation myocardial infarction (STEMI). Due to the patient's critical condition requiring continuous cardiac monitoring, potential for rapid deterioration, and the need for immediate transport to a facility capable of emergent cardiac intervention, ambulance transport was medically necessary.",
+      "validation_flags": [
+        {
+          "severity": "error",
+          "section": "medications",
+          "field": "time",
+          "rule_id": "MED_MISSING_FIELDS",
+          "message": "Medication 'Aspirin' missing: time",
+          "auto_fixable": false,
+          "suggested_fix": ""
+        },
+        {
+          "severity": "warning",
+          "section": "dispatch",
+          "field": "call_type",
+          "rule_id": "DIS_MISSING_FIELDS",
+          "message": "Missing call type. This field is often required for billing and dispatch analysis.",
+          "auto_fixable": false,
+          "suggested_fix": ""
+        },
+        {
+          "severity": "warning",
+          "section": "dispatch",
+          "field": "priority",
+          "rule_id": "DIS_MISSING_FIELDS",
+          "message": "Missing call priority. This field is important for resource allocation and performance analysis.",
+          "auto_fixable": false,
+          "suggested_fix": ""
+        }
+      ],
+      "section_completeness": {
+        "dispatch": 0.0,
+        "scene": 0.33,
+        "patient_info": 1.0,
+        "primary_assessment": 0.0,
+        "vitals": 1.0,
+        "secondary_assessment": 0.0,
+        "interventions": 1.0,
+        "transport": 0.33
+      }
+    }
+  },
+  "chartEnhance": {
+    "events": [
+      {
+        "type": "progress",
+        "data": {
+          "step": "analyzing",
+          "message": "Analyzing dictation...",
+          "progress": 0.2
+        }
+      },
+      {
+        "type": "progress",
+        "data": {
+          "step": "correcting",
+          "message": "Applying medical terminology corrections...",
+          "progress": 0.4
+        }
+      },
+      {
+        "type": "corrections",
+        "data": {
+          "corrections": [
+            {
+              "original": "trop I 0.82",
+              "corrected": "Troponin I 0.82 ng/mL"
+            },
+            {
+              "original": "STE in V2-V5",
+              "corrected": "ST elevation in leads V2-V5"
+            },
+            {
+              "original": "hx of HTN",
+              "corrected": "history of hypertension"
+            }
+          ]
+        }
+      },
+      {
+        "type": "progress",
+        "data": {
+          "step": "structuring",
+          "message": "Generating structured SOAP note...",
+          "progress": 0.7
+        }
+      },
+      {
+        "type": "progress",
+        "data": {
+          "step": "finalizing",
+          "message": "Finalizing note...",
+          "progress": 0.9
+        }
+      },
+      {
+        "type": "result",
+        "data": {
+          "corrections": [
+            {
+              "original": "trop I 0.82",
+              "corrected": "Troponin I 0.82 ng/mL"
+            },
+            {
+              "original": "STE in V2-V5",
+              "corrected": "ST elevation in leads V2-V5"
+            },
+            {
+              "original": "hx of HTN",
+              "corrected": "history of hypertension"
+            }
+          ],
+          "soap": {
+            "subjective": {
+              "chief_complaint": "Acute onset substernal chest pressure radiating to left arm for 3 hours.",
+              "history_of_present_illness": "62 year old male presents with acute onset substernal chest pressure radiating to left arm for 3 hours. Associated diaphoresis and nausea. History of hypertension and hyperlipidemia.",
+              "review_of_systems": [
+                "Chest pain/pressure \u2014 positive",
+                "Diaphoresis \u2014 positive",
+                "Nausea \u2014 positive",
+                "Shortness of breath \u2014 negative",
+                "Lower extremity edema \u2014 negative"
+              ],
+              "patient_reported": [
+                "Substernal chest pressure radiating to left arm",
+                "Diaphoresis",
+                "Nausea"
+              ]
+            },
+            "objective": {
+              "vital_signs": {
+                "BP": "158/92",
+                "HR": "104",
+                "RR": "22",
+                "SpO2": "94% on RA"
+              },
+              "physical_exam": [
+                "General: Diaphoretic, clutching chest",
+                "Lungs: Clear to auscultation bilaterally",
+                "Heart: Regular rate, no murmurs",
+                "Skin: Pale, cool, diaphoretic"
+              ],
+              "labs": [
+                "Troponin I: 0.82 ng/mL (elevated)"
+              ],
+              "imaging": [
+                "12-lead ECG: ST elevation in leads V2-V5"
+              ]
+            },
+            "assessment": {
+              "primary_diagnosis": "Anterior STEMI",
+              "differential": [
+                "NSTEMI",
+                "Unstable angina",
+                "Aortic dissection",
+                "Pulmonary embolism"
+              ],
+              "clinical_impression": "Acute anterior ST-elevation myocardial infarction in a 62-year-old male with multiple cardiovascular risk factors. Requires emergent reperfusion therapy."
+            },
+            "plan": {
+              "medications": [
+                {
+                  "drug": "Aspirin",
+                  "dose": "325 mg PO",
+                  "frequency": "loading dose"
+                },
+                {
+                  "drug": "Heparin",
+                  "dose": "60 U/kg IV bolus then 12 U/kg/hr",
+                  "frequency": "continuous infusion"
+                },
+                {
+                  "drug": "Ticagrelor",
+                  "dose": "180 mg PO",
+                  "frequency": "loading dose"
+                },
+                {
+                  "drug": "Nitroglycerin",
+                  "dose": "5-200 mcg/min IV",
+                  "frequency": "titrate to pain and BP"
+                }
+              ],
+              "procedures": [
+                "Emergent PCI",
+                "Cath lab activated"
+              ],
+              "referrals": [
+                "Cardiology \u2014 emergent consult for cath lab activation"
+              ],
+              "follow_up": "ICU/CCU admission post-PCI; cardiology follow-up 1-2 weeks after discharge",
+              "patient_education": [
+                "Explained diagnosis of heart attack and need for emergent procedure",
+                "Discussed risks and benefits of PCI",
+                "Family updated on plan of care"
+              ]
+            }
+          },
+          "metadata": {
+            "timestamp": "2026-02-20T14:59:26.631908",
+            "processing_model": "medgemma-27b-it",
+            "dictation_length": 455
+          }
+        }
+      },
+      {
+        "type": "done"
+      }
+    ]
+  }
+}

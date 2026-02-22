@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useMemo, FormEvent } from 'react';
 import {
   Pill,
   Clock,
@@ -19,6 +19,7 @@ import {
 import { ExplainableText } from '@/components/patient/terms/ExplainableText';
 import { getApiUrl } from '@/lib/api-url';
 import type { ReleasedVisitSummary } from '@/types/visit-summary';
+import { filterActualMedications } from '@/types/visit-summary';
 
 const actionBadge: Record<string, string> = {
   continue: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
@@ -70,6 +71,8 @@ export function CareHubMedications({
   summary: ReleasedVisitSummary;
   onAskAI: (question: string) => void;
 }) {
+  const medications = useMemo(() => filterActualMedications(summary.medications), [summary.medications]);
+
   // Drug interaction checker state
   const [extraMeds, setExtraMeds] = useState<{ id: string; name: string }[]>([]);
   const [newMedName, setNewMedName] = useState('');
@@ -91,7 +94,7 @@ export function CareHubMedications({
   };
 
   const allMedNames = [
-    ...summary.medications.filter(m => m.action !== 'discontinue').map(m => m.name),
+    ...medications.filter(m => m.action !== 'discontinue').map(m => m.name),
     ...extraMeds.map(m => m.name),
   ];
 
@@ -101,7 +104,6 @@ export function CareHubMedications({
     setCheckResult(null);
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const resp = await fetch(`${apiUrl}/api/patient/medications/check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -123,30 +125,30 @@ export function CareHubMedications({
   return (
     <div className="space-y-5">
       {/* Medication Table */}
-      {summary.medications.length > 0 && (
-        <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
+      {medications.length > 0 && (
+        <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Pill className="w-4 h-4 text-rose-500" />
-            <h3 className="font-semibold text-surface-900 dark:text-white">Your Medications</h3>
+            <Pill className="w-4 h-4 text-primary" />
+            <h3 className="font-semibold text-foreground">Your Medications</h3>
           </div>
-          <div className="rounded-xl border border-surface-200 dark:border-surface-700 overflow-hidden overflow-x-auto">
+          <div className="rounded-xl border border-border overflow-hidden overflow-x-auto">
             <table className="w-full text-sm min-w-[480px]">
               <thead>
-                <tr className="bg-rose-50/50 dark:bg-surface-700/50 border-b border-surface-200 dark:border-surface-700">
-                  <th className="text-left px-4 py-2 text-xs font-medium text-surface-500">Medication</th>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-surface-500">Dose</th>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-surface-500">How Often</th>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-surface-500">Action</th>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">Medication</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">Dose</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">How Often</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {summary.medications.map((med, i) => (
-                  <tr key={i} className="border-b last:border-0 border-surface-100 dark:border-surface-700">
-                    <td className="px-4 py-2.5 font-medium text-surface-900 dark:text-white">
+                {medications.map((med, i) => (
+                  <tr key={i} className="border-b last:border-0 border-border">
+                    <td className="px-4 py-2.5 font-medium text-foreground">
                       <ExplainableText text={med.name} />
                     </td>
-                    <td className="px-4 py-2.5 text-surface-600 dark:text-surface-300">{med.dose || '—'}</td>
-                    <td className="px-4 py-2.5 text-surface-600 dark:text-surface-300">{med.frequency || '—'}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{med.dose || '—'}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{med.frequency || '—'}</td>
                     <td className="px-4 py-2.5">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${actionBadge[med.action] || ''}`}>
                         {actionLabel[med.action] || med.action}
@@ -159,15 +161,15 @@ export function CareHubMedications({
           </div>
           {/* Plain language instructions */}
           <div className="mt-3 space-y-2">
-            {summary.medications.map((med, i) =>
+            {medications.map((med, i) =>
               med.plainLanguageInstructions ? (
                 <div key={i} className="flex items-start gap-2">
-                  <span className="text-xs text-surface-500 dark:text-surface-400">
+                  <span className="text-xs text-muted-foreground">
                     {med.plainLanguageInstructions}
                   </span>
                   <button
                     onClick={() => onAskAI(`Why was ${med.name} prescribed? How should I take it?`)}
-                    className="flex-shrink-0 text-rose-500 hover:text-rose-600"
+                    className="flex-shrink-0 text-primary hover:text-primary/80"
                   >
                     <HelpCircle className="w-3 h-3" />
                   </button>
@@ -179,21 +181,21 @@ export function CareHubMedications({
       )}
 
       {/* When to Take */}
-      {summary.medications.filter(m => m.action !== 'discontinue').length > 0 && (
-        <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
+      {medications.filter(m => m.action !== 'discontinue').length > 0 && (
+        <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <Clock className="w-4 h-4 text-purple-500" />
-            <h3 className="font-semibold text-sm text-surface-900 dark:text-white">When to Take Your Medications</h3>
+            <h3 className="font-semibold text-sm text-foreground">When to Take Your Medications</h3>
           </div>
           <div className="space-y-2">
-            {summary.medications
+            {medications
               .filter(m => m.action !== 'discontinue')
               .map((med, i) => (
-                <div key={i} className="flex items-center gap-3 rounded-xl bg-rose-50/30 dark:bg-surface-700/30 border border-rose-100 dark:border-surface-700 px-4 py-3">
-                  <div className="w-2 h-2 rounded-full bg-rose-400 flex-shrink-0" />
+                <div key={i} className="flex items-center gap-3 rounded-xl bg-muted/50 border border-border px-4 py-3">
+                  <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-surface-900 dark:text-white">{med.name} {med.dose}</p>
-                    <p className="text-xs text-surface-500">{med.frequency}</p>
+                    <p className="text-sm font-medium text-foreground">{med.name} {med.dose}</p>
+                    <p className="text-xs text-muted-foreground">{med.frequency}</p>
                   </div>
                   <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${actionBadge[med.action]}`}>
                     {actionLabel[med.action]}
@@ -205,12 +207,12 @@ export function CareHubMedications({
       )}
 
       {/* Drug Interaction Checker */}
-      <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
+      <div className="rounded-2xl border border-border bg-card p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Search className="w-4 h-4 text-rose-500" />
-          <h3 className="font-semibold text-surface-900 dark:text-white">Drug Interaction Checker</h3>
+          <Search className="w-4 h-4 text-primary" />
+          <h3 className="font-semibold text-foreground">Drug Interaction Checker</h3>
         </div>
-        <p className="text-xs text-surface-500 dark:text-surface-400 mb-3">
+        <p className="text-xs text-muted-foreground mb-3">
           Add any other medications, supplements, or OTC drugs you take to check for interactions with your prescribed medications.
         </p>
 
@@ -218,12 +220,12 @@ export function CareHubMedications({
         {extraMeds.length > 0 && (
           <div className="space-y-1.5 mb-3">
             {extraMeds.map(med => (
-              <div key={med.id} className="flex items-center justify-between px-3 py-2 rounded-xl bg-rose-50/30 dark:bg-surface-700/30 border border-rose-100 dark:border-surface-700">
+              <div key={med.id} className="flex items-center justify-between px-3 py-2 rounded-xl bg-muted/50 border border-border">
                 <div className="flex items-center gap-2">
-                  <Pill className="w-3.5 h-3.5 text-rose-400" />
-                  <span className="text-sm text-surface-900 dark:text-white">{med.name}</span>
+                  <Pill className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-sm text-foreground">{med.name}</span>
                 </div>
-                <button onClick={() => handleRemoveMed(med.id)} className="p-1 text-surface-400 hover:text-red-500">
+                <button onClick={() => handleRemoveMed(med.id)} className="p-1 text-muted-foreground hover:text-destructive">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -238,12 +240,12 @@ export function CareHubMedications({
             value={newMedName}
             onChange={e => setNewMedName(e.target.value)}
             placeholder="e.g., Ibuprofen, Vitamin D..."
-            className="flex-1 px-3 py-2 bg-rose-50/30 dark:bg-surface-700 border border-rose-100 dark:border-surface-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 text-surface-900 dark:text-white placeholder-surface-400"
+            className="flex-1 px-3 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder-muted-foreground"
           />
           <button
             type="submit"
             disabled={!newMedName.trim()}
-            className="px-3 py-2 bg-rose-500 hover:bg-rose-600 disabled:bg-surface-300 dark:disabled:bg-surface-700 text-white rounded-xl text-sm font-medium transition-colors"
+            className="px-3 py-2 bg-primary hover:bg-primary/90 disabled:bg-muted text-primary-foreground rounded-xl text-sm font-medium transition-colors"
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -254,7 +256,7 @@ export function CareHubMedications({
           <button
             onClick={handleCheckInteractions}
             disabled={isChecking}
-            className="w-full px-4 py-2.5 bg-rose-500 hover:bg-rose-600 disabled:bg-surface-300 dark:disabled:bg-surface-700 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+            className="w-full px-4 py-2.5 bg-primary hover:bg-primary/90 disabled:bg-muted text-primary-foreground rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
           >
             {isChecking ? (
               <>
@@ -271,7 +273,7 @@ export function CareHubMedications({
         )}
 
         {allMedNames.length >= 2 && (
-          <p className="text-xs text-center text-surface-400 mt-2 flex items-center justify-center gap-1">
+          <p className="text-xs text-center text-muted-foreground mt-2 flex items-center justify-center gap-1">
             <Sparkles className="w-3 h-3" />
             Powered by AI + medical literature
           </p>
@@ -280,7 +282,7 @@ export function CareHubMedications({
 
       {/* Interaction Results */}
       {checkResult && (
-        <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
           <div
             className={`p-4 border-b ${
               checkResult.safe
@@ -316,7 +318,7 @@ export function CareHubMedications({
           </div>
 
           {checkResult.interactions.length > 0 && (
-            <div className="divide-y divide-surface-200 dark:divide-surface-700">
+            <div className="divide-y divide-border">
               {checkResult.interactions.map((interaction, idx) => {
                 const interactionId = `${interaction.drug1}-${interaction.drug2}`;
                 const isExpanded = expandedInteraction === interactionId;
@@ -332,7 +334,7 @@ export function CareHubMedications({
                           <config.icon className="w-4 h-4" />
                         </div>
                         <div className="text-left">
-                          <p className="font-medium text-surface-900 dark:text-white">
+                          <p className="font-medium text-foreground">
                             {interaction.drug1} + {interaction.drug2}
                           </p>
                           <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${config.color}`}>
@@ -340,17 +342,17 @@ export function CareHubMedications({
                           </span>
                         </div>
                       </div>
-                      {isExpanded ? <ChevronUp className="w-5 h-5 text-surface-400" /> : <ChevronDown className="w-5 h-5 text-surface-400" />}
+                      {isExpanded ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
                     </button>
                     {isExpanded && (
                       <div className="mt-4 ml-10 space-y-3">
                         <div>
-                          <h4 className="text-xs font-semibold text-surface-500 uppercase">Description</h4>
-                          <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">{interaction.description}</p>
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase">Description</h4>
+                          <p className="text-sm text-muted-foreground mt-1">{interaction.description}</p>
                         </div>
                         <div>
-                          <h4 className="text-xs font-semibold text-surface-500 uppercase">Recommendation</h4>
-                          <p className="text-sm text-surface-700 dark:text-surface-300 mt-1">{interaction.recommendation}</p>
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase">Recommendation</h4>
+                          <p className="text-sm text-muted-foreground mt-1">{interaction.recommendation}</p>
                         </div>
                       </div>
                     )}
@@ -361,12 +363,12 @@ export function CareHubMedications({
           )}
 
           {checkResult.recommendations.length > 0 && (
-            <div className="p-4 border-t border-surface-200 dark:border-surface-700 bg-rose-50/30 dark:bg-surface-800/50">
-              <h4 className="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">Recommendations</h4>
+            <div className="p-4 border-t border-border bg-muted/50">
+              <h4 className="text-sm font-semibold text-foreground mb-2">Recommendations</h4>
               <ul className="space-y-1">
                 {checkResult.recommendations.map((rec, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-sm text-surface-600 dark:text-surface-400">
-                    <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-rose-400" />
+                  <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
                     {rec}
                   </li>
                 ))}

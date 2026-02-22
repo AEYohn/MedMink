@@ -32,14 +32,17 @@ function buildPlainLanguage(med: DischargeMedOverride): string {
   return parts.join(' ');
 }
 
-function mapMedications(meds: DischargeMedOverride[]): PatientMedication[] {
-  return meds.map(med => ({
-    name: med.name,
-    dose: med.dose,
-    frequency: med.frequency,
-    action: med.action,
-    plainLanguageInstructions: buildPlainLanguage(med),
-  }));
+function mapMedications(meds: DischargeMedOverride[], nonMedNames: Set<string>): PatientMedication[] {
+  return meds
+    .filter(med => !nonMedNames.has(med.name))
+    .map(med => ({
+      name: med.name,
+      dose: med.dose,
+      frequency: med.frequency,
+      action: med.action,
+      plainLanguageInstructions: buildPlainLanguage(med),
+      option_type: med.option_type ?? 'medication' as const,
+    }));
 }
 
 function mapFollowUps(plan: DischargePlanSnapshot | null): PatientFollowUp[] {
@@ -68,13 +71,21 @@ export function buildVisitSummary({
   releasedBy = 'Clinician',
   companionConfig,
 }: BuildVisitSummaryParams): ReleasedVisitSummary {
+  // Build set of treatment names that are NOT medications (procedures, diagnostics, etc.)
+  // so we can filter them out of the patient-facing medication list
+  const nonMedNames = new Set<string>(
+    (analysisData.treatment_options || [])
+      .filter(t => t.option_type && t.option_type !== 'medication')
+      .map(t => t.name)
+  );
+
   return {
     id: `vs-${Date.now()}`,
     caseSessionId,
     patientId,
     diagnosis: analysisData.top_recommendation,
     diagnosisExplanation: analysisData.recommendation_rationale,
-    medications: mapMedications(overrides.dischargeMeds),
+    medications: mapMedications(overrides.dischargeMeds, nonMedNames),
     dischargeInstructions: overrides.dischargeInstructions,
     followUps: mapFollowUps(dischargePlan),
     redFlags: dischargePlan?.red_flags || [],

@@ -25,7 +25,7 @@ import type {
 } from '@/types/postvisit';
 
 // ── Sparkline SVG ──
-function Sparkline({ data, color = '#f43f5e' }: { data: number[]; color?: string }) {
+function Sparkline({ data, color = 'hsl(var(--primary))' }: { data: number[]; color?: string }) {
   if (data.length < 2) return null;
   const min = Math.min(...data);
   const max = Math.max(...data);
@@ -77,27 +77,27 @@ function VitalCard({
       ? 'text-red-500'
       : trend === 'down'
       ? 'text-emerald-500'
-      : 'text-surface-400';
+      : 'text-muted-foreground';
 
   return (
-    <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-4">
+    <div className="rounded-2xl border border-border bg-card p-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <div className={`p-1.5 rounded-lg ${color}`}>
             <Icon className="w-4 h-4 text-white" />
           </div>
-          <span className="text-sm font-medium text-surface-600 dark:text-surface-400">
+          <span className="text-sm font-medium text-muted-foreground">
             {label}
           </span>
         </div>
         <TrendIcon className={`w-4 h-4 ${trendColor}`} />
       </div>
       <div className="flex items-baseline gap-1.5">
-        <span className="text-2xl font-bold text-surface-900 dark:text-white">{value}</span>
-        <span className="text-sm text-surface-500 dark:text-surface-400">{unit}</span>
+        <span className="text-2xl font-bold text-foreground">{value}</span>
+        <span className="text-sm text-muted-foreground">{unit}</span>
       </div>
       <div className="flex items-center justify-between mt-2">
-        <span className="text-xs text-surface-400">Normal: {normalRange}</span>
+        <span className="text-xs text-muted-foreground">Normal: {normalRange}</span>
         <Sparkline data={sparkData} />
       </div>
     </div>
@@ -131,11 +131,11 @@ function LabTrendChart({ results }: { results: LabResult[] }) {
   return (
     <svg width={w} height={h} className="w-full max-w-[200px]">
       <rect x={pad} y={refTop} width={w - 2 * pad} height={Math.max(refBot - refTop, 1)} fill="#10b98120" rx="2" />
-      <polyline points={points.join(' ')} fill="none" stroke="#f43f5e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={points.join(' ')} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       {sorted.map((r, i) => {
         const x = pad + (i / (sorted.length - 1)) * (w - 2 * pad);
         const y = toY(r.value);
-        return <circle key={i} cx={x} cy={y} r="3" fill="#f43f5e" />;
+        return <circle key={i} cx={x} cy={y} r="3" fill="hsl(var(--primary))" />;
       })}
     </svg>
   );
@@ -242,7 +242,7 @@ export function CareHubLabs({
 
   const SortIndicator = ({ field }: { field: SortField }) =>
     sortField === field ? (
-      <span className="ml-1 text-rose-500">{sortDir === 'asc' ? '\u2191' : '\u2193'}</span>
+      <span className="ml-1 text-primary">{sortDir === 'asc' ? '\u2191' : '\u2193'}</span>
     ) : null;
 
   return (
@@ -250,11 +250,11 @@ export function CareHubLabs({
       {/* Vitals Grid */}
       {latest && (
         <section>
-          <h2 className="text-lg font-semibold text-surface-900 dark:text-white mb-3">
+          <h2 className="text-lg font-semibold text-foreground mb-3">
             Current Vitals
           </h2>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-            <VitalCard label="Blood Pressure" value={`${latest.systolic}/${latest.diastolic}`} unit="mmHg" icon={Heart} trend={trend(sparkBP)} normalRange="<130/80" sparkData={sparkBP} color="bg-rose-500" />
+            <VitalCard label="Blood Pressure" value={`${latest.systolic}/${latest.diastolic}`} unit="mmHg" icon={Heart} trend={trend(sparkBP)} normalRange="<130/80" sparkData={sparkBP} color="bg-primary" />
             <VitalCard label="Heart Rate" value={`${latest.heartRate}`} unit="bpm" icon={Activity} trend={trend(sparkHR)} normalRange="60-100" sparkData={sparkHR} color="bg-red-500" />
             <VitalCard label="Temperature" value={`${latest.temperature}`} unit="\u00b0F" icon={Thermometer} trend={trend(sparkTemp)} normalRange="97.8-99.1" sparkData={sparkTemp} color="bg-amber-500" />
             <VitalCard label="Weight" value={`${latest.weight}`} unit="lbs" icon={Activity} trend={trend(sparkWeight)} normalRange="\u2014" sparkData={sparkWeight} color="bg-blue-500" />
@@ -267,7 +267,7 @@ export function CareHubLabs({
       {/* Lab Results */}
       {labs.length > 0 && (
         <section>
-          <h2 className="text-lg font-semibold text-surface-900 dark:text-white mb-3">
+          <h2 className="text-lg font-semibold text-foreground mb-3">
             Lab Results
           </h2>
 
@@ -279,8 +279,8 @@ export function CareHubLabs({
                 onClick={() => setCategory(cat)}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                   category === cat
-                    ? 'bg-rose-500 text-white'
-                    : 'bg-rose-50 text-surface-600 hover:bg-rose-100 dark:bg-surface-800 dark:text-surface-400 dark:hover:bg-surface-700'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 }`}
               >
                 {categoryLabels[cat]}
@@ -289,39 +289,39 @@ export function CareHubLabs({
           </div>
 
           {/* Table */}
-          <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 overflow-hidden overflow-x-auto">
+          <div className="rounded-2xl border border-border bg-card overflow-hidden overflow-x-auto">
             <table className="w-full text-sm min-w-[640px]">
               <thead>
-                <tr className="bg-rose-50/50 dark:bg-surface-700/50 border-b border-surface-200 dark:border-surface-700">
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-surface-500 cursor-pointer hover:text-surface-700" onClick={() => handleSort('testName')}>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => handleSort('testName')}>
                     Test <SortIndicator field="testName" />
                   </th>
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-surface-500 cursor-pointer hover:text-surface-700" onClick={() => handleSort('value')}>
+                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => handleSort('value')}>
                     Result <SortIndicator field="value" />
                   </th>
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-surface-500">Reference</th>
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-surface-500 cursor-pointer hover:text-surface-700" onClick={() => handleSort('status')}>
+                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Reference</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => handleSort('status')}>
                     Status <SortIndicator field="status" />
                   </th>
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-surface-500 cursor-pointer hover:text-surface-700" onClick={() => handleSort('date')}>
+                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground" onClick={() => handleSort('date')}>
                     Date <SortIndicator field="date" />
                   </th>
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-surface-500">Trend</th>
+                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Trend</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredLabs.map(lab => (
-                  <tr key={lab.id} className="border-b last:border-0 border-surface-100 dark:border-surface-700 hover:bg-rose-50/30 dark:hover:bg-surface-700/30">
-                    <td className="px-4 py-2.5 font-medium text-surface-900 dark:text-white">
+                  <tr key={lab.id} className="border-b last:border-0 border-border hover:bg-muted/30">
+                    <td className="px-4 py-2.5 font-medium text-foreground">
                       <div className="flex items-center gap-2">
-                        <FlaskConical className="w-3.5 h-3.5 text-surface-400" />
+                        <FlaskConical className="w-3.5 h-3.5 text-muted-foreground" />
                         {lab.testName}
                       </div>
                     </td>
-                    <td className="px-4 py-2.5 text-surface-900 dark:text-white font-semibold">
-                      {lab.value} <span className="font-normal text-surface-500">{lab.unit}</span>
+                    <td className="px-4 py-2.5 text-foreground font-semibold">
+                      {lab.value} <span className="font-normal text-muted-foreground">{lab.unit}</span>
                     </td>
-                    <td className="px-4 py-2.5 text-surface-500 dark:text-surface-400">
+                    <td className="px-4 py-2.5 text-muted-foreground">
                       {lab.referenceRange.low}&ndash;{lab.referenceRange.high} {lab.unit}
                     </td>
                     <td className="px-4 py-2.5">
@@ -329,7 +329,7 @@ export function CareHubLabs({
                         {lab.status}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-surface-500 dark:text-surface-400">
+                    <td className="px-4 py-2.5 text-muted-foreground">
                       {new Date(lab.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td className="px-4 py-2.5">
@@ -345,7 +345,7 @@ export function CareHubLabs({
 
       {/* Vitals Tracker (manual entry, CSV import, AI analysis) */}
       <section>
-        <h2 className="text-lg font-semibold text-surface-900 dark:text-white mb-3">
+        <h2 className="text-lg font-semibold text-foreground mb-3">
           Track Your Vitals
         </h2>
         <VitalsTracker

@@ -44,7 +44,6 @@ export default function ImagingPage() {
 
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const formData = new FormData();
       formData.append('image', file);
 

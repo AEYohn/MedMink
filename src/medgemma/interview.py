@@ -187,6 +187,17 @@ def restore_session(
     return session
 
 
+_PARSE_FALLBACKS: dict[str, str] = {
+    "en": "I'm sorry, could you repeat that?",
+    "es": "Lo siento, ¿podría repetir eso?",
+    "zh": "抱歉，能再说一遍吗？",
+    "ms": "Maaf, boleh ulang semula?",
+    "ta": "மன்னிக்கவும், மீண்டும் சொல்ல முடியுமா?",
+    "vi": "Xin lỗi, bạn có thể nhắc lại không?",
+    "ar": "عذراً، هل يمكنك إعادة ذلك؟",
+}
+
+
 class PatientInterviewer:
     """Orchestrates the patient interview flow using MedGemma."""
 
@@ -231,7 +242,7 @@ class PatientInterviewer:
             max_tokens=512,
         )
 
-        data = self._parse_response(response_text)
+        data = self._parse_response(response_text, language=session.language)
         fallback = "Hello! What brought you in today?"
         question = data.get("next_question") or fallback
         question = question.strip()
@@ -297,7 +308,7 @@ class PatientInterviewer:
             max_tokens=768,
         )
 
-        data = self._parse_response(response_text)
+        data = self._parse_response(response_text, language=session.language)
 
         # Extract data from response
         new_data = data.get("extracted_data", {})
@@ -415,7 +426,7 @@ class PatientInterviewer:
             max_tokens=2048,
         )
 
-        triage = self._parse_response(response_text)
+        triage = self._parse_response(response_text, language=session.language)
 
         # Merge any session-level red flags with substring-aware dedup
         triage_flags = triage.get("red_flags", [])
@@ -460,7 +471,7 @@ class PatientInterviewer:
             lines.append(f"{role}: {msg['content']}")
         return "\n".join(lines)
 
-    def _parse_response(self, text: str) -> dict[str, Any]:
+    def _parse_response(self, text: str, language: str = "en") -> dict[str, Any]:
         """Parse JSON response from MedGemma, with fallback."""
         # Use the client's parser if available
         try:
@@ -480,8 +491,9 @@ class PatientInterviewer:
             pass
 
         logger.warning("Failed to parse interview response", text=text[:200])
+        fallback = _PARSE_FALLBACKS.get(language, _PARSE_FALLBACKS["en"])
         return {
-            "next_question": "I'm sorry, could you repeat that?",
+            "next_question": fallback,
             "phase_complete": False,
             "extracted_data": {},
             "red_flags": [],

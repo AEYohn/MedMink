@@ -33,6 +33,7 @@ export interface TreatmentOption {
     key_concern?: string;
     context_relevance?: string;
   };
+  option_type?: 'medication' | 'procedure' | 'diagnostic' | 'supportive_care';
 }
 
 export interface ParsedCase {

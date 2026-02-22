@@ -125,7 +125,6 @@ export function SafetyAlertsPanel({
     setIsLoading(true);
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/medication-safety`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -267,7 +266,11 @@ export function SafetyAlertsPanel({
   return (
     <Card className={cn(
       'border',
-      hasUnacked && totalAlerts > 0 ? 'border-red-300 bg-red-50/30' : 'border-green-300 bg-green-50/30',
+      hasUnacked && totalAlerts > 0
+        ? 'border-red-300 bg-red-50/30 dark:border-red-500/40 dark:bg-red-950/20'
+        : totalAlerts > 0
+          ? 'border-green-300 bg-green-50/30 dark:border-green-500/40 dark:bg-green-950/20'
+          : '',
     )}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
@@ -285,7 +288,9 @@ export function SafetyAlertsPanel({
             {totalAlerts > 0 && (
               <Badge variant="outline" className={cn(
                 'text-xs',
-                hasUnacked ? 'bg-red-100 text-red-700 border-red-300' : 'bg-green-100 text-green-700 border-green-300'
+                hasUnacked
+                  ? 'bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700'
+                  : 'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700'
               )}>
                 {hasUnacked ? `${unacknowledged.length} unacked` : 'All acknowledged'}
               </Badge>
@@ -336,7 +341,7 @@ export function SafetyAlertsPanel({
                         </Badge>
                         <span className="text-xs font-medium">{alert.title}</span>
                       </div>
-                      <Badge variant="outline" className="text-[10px] bg-green-50 text-green-700">
+                      <Badge variant="outline" className="text-[10px] bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                         <Check className="w-2.5 h-2.5 mr-0.5" /> Acked by {ack?.by || 'Clinician'}
                       </Badge>
                     </div>

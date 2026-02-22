@@ -129,7 +129,6 @@ export default function ConsensusPage() {
 
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/consensus/analyze/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -21,7 +21,6 @@ import {
   Search,
   Stethoscope,
   Camera,
-  ClipboardList,
   Users,
   FolderOpen,
   Send,
@@ -81,7 +80,6 @@ export function Sidebar({ isCollapsed, onToggle, isMobile, isOpen, onClose }: Si
     : [
         { href: '/', icon: Home, label: 'Dashboard' },
         { href: '/case', icon: Stethoscope, label: 'Case Analysis' },
-        { href: '/interview', icon: ClipboardList, label: 'Interview' },
         { href: '/patients', icon: Users, label: 'Patients' },
       ];
 
@@ -117,7 +115,7 @@ export function Sidebar({ isCollapsed, onToggle, isMobile, isOpen, onClose }: Si
           {allNav.map(item => (
             <Link
               key={item.href}
-              href={patientId && ['/case', '/interview', '/chart', '/ems'].includes(item.href) ? `${item.href}?patient=${patientId}` : item.href}
+              href={patientId && ['/case', '/chart', '/ems'].includes(item.href) ? `${item.href}?patient=${patientId}` : item.href}
               className={`relative flex items-center justify-center p-2.5 rounded-lg transition-all ${
                 pathname === item.href
                   ? 'bg-primary/10 text-primary'
@@ -173,7 +171,7 @@ export function Sidebar({ isCollapsed, onToggle, isMobile, isOpen, onClose }: Si
           {mainNav.map(item => (
             <Link
               key={item.href}
-              href={patientId && ['/case', '/interview', '/chart', '/ems'].includes(item.href) ? `${item.href}?patient=${patientId}` : item.href}
+              href={patientId && ['/case', '/chart', '/ems'].includes(item.href) ? `${item.href}?patient=${patientId}` : item.href}
               onClick={handleNavClick}
               className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all text-[13px] ${
                 pathname === item.href

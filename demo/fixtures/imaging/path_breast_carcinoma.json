@@ -1,0 +1,29 @@
+{
+  "model": "Path Foundation",
+  "tissue_classifications": {
+    "tumor": 0.72,
+    "stroma": 0.18,
+    "necrosis": 0.04,
+    "normal_epithelium": 0.03,
+    "immune_infiltrate": 0.02,
+    "adipose": 0.01
+  },
+  "tumor_probability": 0.72,
+  "grade_assessment": {
+    "tubule_formation": "Score 3 (minimal, <10%)",
+    "nuclear_pleomorphism": "Score 2 (moderate variation)",
+    "mitotic_count": "Score 2 (moderate)",
+    "overall_grade": "Grade 2 (moderately differentiated)",
+    "nottingham_score": 7
+  },
+  "tiles_analyzed": 256,
+  "tumor_type_prediction": "Invasive ductal carcinoma (no special type)",
+  "biomarker_indicators": {
+    "er_prediction": "Likely positive",
+    "her2_prediction": "Likely negative",
+    "ki67_prediction": "Moderate (15-25%)"
+  },
+  "recommendation": "Findings consistent with invasive ductal carcinoma, Grade 2. Recommend immunohistochemistry panel (ER, PR, HER2, Ki-67) for definitive subtyping and treatment planning.",
+  "confidence": 0.87,
+  "source": "path_foundation"
+}

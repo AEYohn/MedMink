@@ -1,0 +1,12 @@
+{
+  "drug_a": "warfarin",
+  "drug_b": "amiodarone",
+  "severity": "major",
+  "mechanism": "Amiodarone is a potent inhibitor of CYP2C9, the primary enzyme responsible for metabolizing the more active S-enantiomer of warfarin. This inhibition significantly reduces warfarin clearance, leading to markedly elevated INR values. The interaction persists for weeks after amiodarone discontinuation due to its extremely long half-life.",
+  "clinical_effect": "Significantly increased INR (often 2-3x baseline) and substantially elevated risk of major bleeding, including intracranial and gastrointestinal hemorrhage.",
+  "recommendation": "Reduce warfarin dose by 30-50% when initiating amiodarone. Monitor INR at least twice weekly for the first 2-4 weeks, then weekly until stable. The effect may persist for months after amiodarone discontinuation.",
+  "onset": "Gradual over 1-4 weeks",
+  "evidence_level": "Well-established (multiple clinical studies)",
+  "alternatives": ["Direct oral anticoagulants (DOACs) — though note amiodarone also increases dabigatran levels via P-glycoprotein inhibition"],
+  "source": "txgemma"
+}

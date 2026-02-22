@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import {
   Stethoscope,
   Pill,
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 import { ExplainableText } from '@/components/patient/terms/ExplainableText';
 import type { ReleasedVisitSummary } from '@/types/visit-summary';
+import { filterActualMedications } from '@/types/visit-summary';
 
 const actionBadge: Record<string, string> = {
   continue: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
@@ -30,28 +32,30 @@ export function PostVisitOverview({
   summary: ReleasedVisitSummary;
   onAskAI: (question: string) => void;
 }) {
+  const medications = useMemo(() => filterActualMedications(summary.medications), [summary.medications]);
+
   return (
     <div className="space-y-5">
       {/* Diagnosis */}
-      <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
+      <div className="rounded-2xl border border-border bg-card p-5">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Stethoscope className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-            <h3 className="font-semibold text-sm text-surface-900 dark:text-white">Your Diagnosis</h3>
+            <h3 className="font-semibold text-sm text-foreground">Your Diagnosis</h3>
           </div>
           <button
             onClick={() => onAskAI(`What does ${summary.diagnosis} mean?`)}
-            className="flex items-center gap-1 text-[11px] text-rose-600 dark:text-rose-400 hover:underline"
+            className="flex items-center gap-1 text-[11px] text-primary hover:underline"
           >
             <HelpCircle className="w-3 h-3" /> Ask AI about this
           </button>
         </div>
         <div className="rounded-lg bg-teal-50 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800 p-4">
-          <p className="font-semibold text-surface-900 dark:text-white">
+          <p className="font-semibold text-foreground">
             <ExplainableText text={summary.diagnosis} />
           </p>
           {summary.diagnosisExplanation && (
-            <p className="text-sm text-surface-600 dark:text-surface-300 mt-1.5">
+            <p className="text-sm text-muted-foreground mt-1.5">
               <ExplainableText text={summary.diagnosisExplanation} />
             </p>
           )}
@@ -59,30 +63,30 @@ export function PostVisitOverview({
       </div>
 
       {/* Medications */}
-      {summary.medications.length > 0 && (
-        <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
+      {medications.length > 0 && (
+        <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <Pill className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <h3 className="font-semibold text-sm text-surface-900 dark:text-white">Your Medications</h3>
+            <h3 className="font-semibold text-sm text-foreground">Your Medications</h3>
           </div>
-          <div className="rounded-lg border border-surface-200 dark:border-surface-700 overflow-hidden overflow-x-auto">
+          <div className="rounded-lg border border-border overflow-hidden overflow-x-auto">
             <table className="w-full text-sm min-w-[480px]">
               <thead>
-                <tr className="bg-surface-50 dark:bg-surface-700/50 border-b border-surface-200 dark:border-surface-700">
-                  <th className="text-left px-4 py-2 text-xs font-medium text-surface-500">Medication</th>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-surface-500">Dose</th>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-surface-500">How Often</th>
-                  <th className="text-left px-4 py-2 text-xs font-medium text-surface-500">Action</th>
+                <tr className="bg-muted/50 border-b border-border">
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">Medication</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">Dose</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">How Often</th>
+                  <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {summary.medications.map((med, i) => (
-                  <tr key={i} className="border-b last:border-0 border-surface-100 dark:border-surface-700">
-                    <td className="px-4 py-2.5 font-medium text-surface-900 dark:text-white">
+                {medications.map((med, i) => (
+                  <tr key={i} className="border-b last:border-0 border-border">
+                    <td className="px-4 py-2.5 font-medium text-foreground">
                       <ExplainableText text={med.name} />
                     </td>
-                    <td className="px-4 py-2.5 text-surface-600 dark:text-surface-300">{med.dose || '—'}</td>
-                    <td className="px-4 py-2.5 text-surface-600 dark:text-surface-300">{med.frequency || '—'}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{med.dose || '—'}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{med.frequency || '—'}</td>
                     <td className="px-4 py-2.5">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${actionBadge[med.action] || ''}`}>
                         {actionLabel[med.action] || med.action}
@@ -95,14 +99,14 @@ export function PostVisitOverview({
           </div>
           {/* Plain language instructions */}
           <div className="mt-3 space-y-2">
-            {summary.medications.map((med, i) => (
+            {medications.map((med, i) => (
               <div key={i} className="flex items-start gap-2">
-                <span className="text-xs text-surface-500 dark:text-surface-400">
+                <span className="text-xs text-muted-foreground">
                   {med.plainLanguageInstructions}
                 </span>
                 <button
                   onClick={() => onAskAI(`Why was ${med.name} prescribed? How should I take it?`)}
-                  className="flex-shrink-0 text-rose-600 dark:text-rose-400 hover:underline"
+                  className="flex-shrink-0 text-primary hover:underline"
                 >
                   <HelpCircle className="w-3 h-3" />
                 </button>
@@ -113,21 +117,21 @@ export function PostVisitOverview({
       )}
 
       {/* Medication timeline */}
-      {summary.medications.filter(m => m.action !== 'discontinue').length > 0 && (
-        <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
+      {medications.filter(m => m.action !== 'discontinue').length > 0 && (
+        <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <Clock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-            <h3 className="font-semibold text-sm text-surface-900 dark:text-white">When to Take Your Medications</h3>
+            <h3 className="font-semibold text-sm text-foreground">When to Take Your Medications</h3>
           </div>
           <div className="space-y-2">
-            {summary.medications
+            {medications
               .filter(m => m.action !== 'discontinue')
               .map((med, i) => (
-                <div key={i} className="flex items-center gap-3 rounded-lg bg-surface-50 dark:bg-surface-700/30 border border-surface-200 dark:border-surface-700 px-4 py-3">
+                <div key={i} className="flex items-center gap-3 rounded-lg bg-muted/50 border border-border px-4 py-3">
                   <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-surface-900 dark:text-white">{med.name} {med.dose}</p>
-                    <p className="text-xs text-surface-500">{med.frequency}</p>
+                    <p className="text-sm font-medium text-foreground">{med.name} {med.dose}</p>
+                    <p className="text-xs text-muted-foreground">{med.frequency}</p>
                   </div>
                   <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${actionBadge[med.action]}`}>
                     {actionLabel[med.action]}
@@ -140,20 +144,20 @@ export function PostVisitOverview({
 
       {/* Follow-Up Appointments */}
       {summary.followUps.length > 0 && (
-        <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
+        <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-            <h3 className="font-semibold text-sm text-surface-900 dark:text-white">Follow-Up Appointments</h3>
+            <h3 className="font-semibold text-sm text-foreground">Follow-Up Appointments</h3>
           </div>
           <div className="space-y-2">
             {summary.followUps.map((fu, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-lg bg-surface-50 dark:bg-surface-700/30 border border-surface-200 dark:border-surface-700 px-4 py-3">
+              <div key={i} className="flex items-start gap-3 rounded-lg bg-muted/50 border border-border px-4 py-3">
                 <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 shrink-0 mt-0.5">
                   {fu.timeframe}
                 </span>
                 <div>
-                  <p className="font-medium text-sm text-surface-900 dark:text-white">{fu.provider}</p>
-                  <p className="text-xs text-surface-500">{fu.reason}</p>
+                  <p className="font-medium text-sm text-foreground">{fu.provider}</p>
+                  <p className="text-xs text-muted-foreground">{fu.reason}</p>
                 </div>
               </div>
             ))}
@@ -183,13 +187,13 @@ export function PostVisitOverview({
 
       {/* Discharge Instructions */}
       {summary.dischargeInstructions && (
-        <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
+        <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-3">
-            <FileText className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-            <h3 className="font-semibold text-sm text-surface-900 dark:text-white">What To Do Next</h3>
+            <FileText className="w-4 h-4 text-primary" />
+            <h3 className="font-semibold text-sm text-foreground">What To Do Next</h3>
           </div>
-          <div className="rounded-lg bg-surface-50 dark:bg-surface-700/30 border border-surface-200 dark:border-surface-700 p-4">
-            <p className="text-sm text-surface-700 dark:text-surface-300 whitespace-pre-wrap">
+          <div className="rounded-lg bg-muted/50 border border-border p-4">
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
               <ExplainableText text={summary.dischargeInstructions} />
             </p>
           </div>
@@ -198,12 +202,12 @@ export function PostVisitOverview({
 
       {/* Restrictions */}
       {summary.restrictions.length > 0 && (
-        <div className="rounded-2xl border border-rose-100 dark:border-surface-700 bg-white dark:bg-surface-800 p-5">
-          <h3 className="font-semibold text-sm text-surface-900 dark:text-white mb-3">Restrictions</h3>
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <h3 className="font-semibold text-sm text-foreground mb-3">Restrictions</h3>
           <ul className="space-y-1.5">
             {summary.restrictions.map((r, i) => (
-              <li key={i} className="text-sm text-surface-600 dark:text-surface-300 flex items-start gap-2">
-                <span className="text-surface-400 mt-0.5">•</span> {r}
+              <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                <span className="text-muted-foreground mt-0.5">•</span> {r}
               </li>
             ))}
           </ul>
@@ -211,7 +215,7 @@ export function PostVisitOverview({
       )}
 
       {/* Approved info */}
-      <div className="text-xs text-surface-500 dark:text-surface-400 text-center">
+      <div className="text-xs text-muted-foreground text-center">
         Approved by {summary.releasedBy} on {new Date(summary.releasedAt).toLocaleString()}
       </div>
     </div>

@@ -35,7 +35,7 @@ Generate a discharge plan with these sections:
 
 1. PATIENT INSTRUCTIONS: Written at a 6th-grade reading level. Simple, clear language. Explain the diagnosis, what was done, and what the patient needs to do at home.
 
-2. MEDICATION RECONCILIATION: For each medication, specify action (continue/stop/new/dose_change) with clear instructions.
+2. MEDICATION RECONCILIATION: For each PHARMACEUTICAL MEDICATION ONLY (not procedures, diagnostics, or observation plans), specify action (continue/stop/new/dose_change) with clear instructions. Do NOT include imaging, lab tests, procedures, or non-drug management plans.
 
 3. FOLLOW-UP TIMELINE: When to see which provider and why.
 

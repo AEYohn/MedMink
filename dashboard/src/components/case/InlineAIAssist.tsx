@@ -40,7 +40,6 @@ export function InlineAIAssist({ contextType, contextItem, caseSnippet }: Inline
     setAnswer(null);
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/ai-assist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

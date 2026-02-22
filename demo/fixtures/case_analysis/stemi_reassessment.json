@@ -1,0 +1,794 @@
+{
+  "parsed_case": {
+    "patient": {
+      "age": "62 years",
+      "sex": "male",
+      "relevant_history": [
+        "hypertension",
+        "hyperlipidemia",
+        "father with myocardial infarction at age 55",
+        "twenty-pack-year smoking history"
+      ]
+    },
+    "findings": {
+      "presentation": "substernal chest pressure",
+      "timeline": "approximately 2 hours, onset at rest, constant since onset",
+      "physical_exam": [
+        "anxious and diaphoretic",
+        "regular rate and rhythm",
+        "no murmurs rubs or gallops",
+        "lungs clear to auscultation bilaterally",
+        "no lower extremity edema"
+      ],
+      "labs": [
+        "troponin I elevated at 0.82 ng/mL",
+        "glucose 142",
+        "Cr 1.0",
+        "CBC within normal limits",
+        "PT/INR normal",
+        "Repeat troponin I now 4.2 ng/mL (up from 0.82). ECG shows new Q waves in V2-V4."
+      ],
+      "imaging": [
+        "12-lead ECG shows ST elevation in leads V2 through V5 with reciprocal ST depression in leads II, III, and aVF"
+      ],
+      "precipitating_factors": "",
+      "context_of_onset": "at rest",
+      "associated_symptoms": [
+        "radiating to the left arm and jaw",
+        "shortness of breath",
+        "nausea",
+        "diaphoresis"
+      ]
+    },
+    "management": {
+      "medications": [
+        "lisinopril 20mg daily",
+        "atorvastatin 40mg daily",
+        "aspirin 81mg daily"
+      ],
+      "recent_changes": "",
+      "response_to_treatment": "Pain is not relieved by rest"
+    },
+    "clinical_question": "",
+    "case_category": "cardiology"
+  },
+  "treatment_options": [
+    {
+      "name": "P2Y12 inhibitor loading dose (e.g., clopidogrel 300-600 mg PO, ticagrelor 180 mg PO, prasugrel 60 mg PO)",
+      "mechanism": "Inhibits platelet activation and aggregation via P2Y12 receptor blockade.",
+      "verdict": "recommended",
+      "confidence": 0.95,
+      "fda_approved": true,
+      "fda_indication": "Adjunctive therapy to aspirin in patients with acute coronary syndrome (ACS)",
+      "evidence_grade": "high",
+      "pros": [
+        "Reduces ischemic events (death, MI, stroke) in patients with ACS, particularly STEMI.",
+        "Standard of care in STEMI management, alongside aspirin and reperfusion therapy (PCI or fibrinolysis).",
+        "Improves outcomes when initiated early."
+      ],
+      "cons": [
+        "Increased risk of bleeding compared to aspirin alone.",
+        "Potential drug interactions (e.g., with proton pump inhibitors, strong CYP2C19 inhibitors)."
+      ],
+      "key_evidence": [
+        {
+          "finding": "Various oral and intravenous formulations of platelet function inhibitors have been developed to help decrease platelet aggregation due to acute atherosclerotic plaque rupture.",
+          "pmid": "35202571",
+          "year": "2022",
+          "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction."
+        }
+      ],
+      "rationale": "The patient presents with classic symptoms, ECG changes (new Q waves in V2-V4), and elevated troponins consistent with an acute ST-elevation myocardial infarction (STEMI). Current guidelines strongly recommend dual antiplatelet therapy (DAPT) with aspirin and a P2Y12 inhibitor as adjunctive therapy to reperfusion (PCI or fibrinolysis) in STEMI patients. This patient is already on aspirin. Adding a P2Y12 inhibitor loading dose is standard of care to prevent further thrombotic events.",
+      "papers_used": [
+        {
+          "pmid": "pmid:35202571",
+          "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction.",
+          "match_type": "keyword",
+          "matched_words": [
+            "inhibitor"
+          ]
+        }
+      ],
+      "reasoning": {
+        "patient_factors_considered": [
+          "Diagnosis of acute STEMI based on symptoms, ECG (Q waves V2-V4), and elevated troponins.",
+          "Patient is already on aspirin."
+        ],
+        "supporting_evidence": "The provided PubMed abstract confirms the role of antiplatelet agents, including P2Y12 inhibitors, in STEMI management based on clinical trials and guidelines. While the abstract doesn't detail specific trials, the general principle is well-established.",
+        "key_concern": "Balancing the benefit of reduced ischemic events against the risk of bleeding.",
+        "context_relevance": "The onset at rest and duration of symptoms (2 hours) are typical for STEMI, reinforcing the need for urgent intervention including DAPT."
+      }
+    },
+    {
+      "name": "IV heparin bolus + drip (unfractionated heparin or low molecular weight heparin)",
+      "mechanism": "Anticoagulant; potentiates antithrombin III, inhibiting thrombin and factor Xa.",
+      "verdict": "recommended",
+      "confidence": 0.95,
+      "fda_approved": true,
+      "fda_indication": "Treatment of thromboembolic disorders; prophylaxis of deep vein thrombosis in acute medical illness; adjunct therapy in acute coronary syndrome",
+      "evidence_grade": "high",
+      "pros": [
+        "Anticoagulation is standard of care in STEMI to prevent further thrombus formation and propagation, reducing infarct size and improving outcomes.",
+        "Heparin (UFH or LMWH) is a cornerstone of initial management for STEMI, often used in conjunction with antiplatelet therapy and reperfusion strategies (PCI or fibrinolysis).",
+        "The patient presents with classic symptoms, ECG changes (new Q waves), and elevated troponins consistent with STEMI, indicating an acute coronary occlusion requiring immediate anticoagulation."
+      ],
+      "cons": [
+        "Risk of bleeding, especially major bleeding (e.g., intracranial hemorrhage).",
+        "Requires careful monitoring (aPTT for UFH) or dose adjustment (LMWH) based on renal function and weight."
+      ],
+      "key_evidence": [
+        {
+          "finding": "After acute myocardial infarction, ventricular remodeling is characterized by changes at the molecular, structural, geometrical and functional level that determine progression to heart failure.. Inflammation plays a key role in wound healing and scar formation, affecting ventricular remodeling.",
+          "pmid": "25681486",
+          "year": "2016",
+          "title": "Inflammatory markers in ST-elevation acute myocardial infarction."
+        }
+      ],
+      "rationale": "The patient presents with a clear diagnosis of ST-elevation myocardial infarction (STEMI) based on symptoms, ECG findings (new Q waves in V2-V4), and significantly elevated troponin levels. Anticoagulation with heparin (either unfractionated or low molecular weight) is a fundamental component of initial STEMI management, alongside antiplatelet therapy (aspirin, P2Y12 inhibitor) and reperfusion therapy (PCI or fibrinolysis). It prevents further clot formation and propagation in the coronary artery.",
+      "papers_used": [
+        {
+          "pmid": "pmid:25681486",
+          "title": "Inflammatory markers in ST-elevation acute myocardial infarction.",
+          "match_type": "keyword",
+          "matched_words": [
+            "molecular"
+          ]
+        }
+      ],
+      "reasoning": {
+        "patient_factors_considered": [
+          "Diagnosis of STEMI (based on symptoms, ECG, troponins)",
+          "Age (62 years)",
+          "Risk factors (hypertension, hyperlipidemia, smoking, family history)",
+          "Current medications (lisinopril, atorvastatin, aspirin)"
+        ],
+        "supporting_evidence": "Standard guidelines for STEMI management (e.g., ACC/AHA, ESC) universally recommend early anticoagulation with heparin or LMWH. While the provided PubMed abstract discusses inflammatory markers in MI, it doesn't directly address heparin therapy, but the standard of care for STEMI is well-established.",
+        "key_concern": "Balancing the benefit of preventing further thrombosis against the risk of bleeding complications.",
+        "context_relevance": "The onset at rest and persistence of symptoms despite rest, along with the ECG and troponin findings, strongly indicate an acute thrombotic event requiring immediate anticoagulation."
+      }
+    },
+    {
+      "name": "Emergent Percutaneous Coronary Intervention (PCI)",
+      "mechanism": "Mechanical reperfusion therapy; angioplasty and stenting to open the occluded coronary artery.",
+      "verdict": "recommended",
+      "confidence": 0.95,
+      "fda_approved": false,
+      "fda_indication": "N/A \u2014 procedure/diagnostic/supportive",
+      "evidence_grade": "high",
+      "pros": [
+        "Patient presents with classic symptoms of acute myocardial infarction (substernal chest pressure at rest, unrelieved by rest, diaphoresis, anxiety).",
+        "ECG shows new Q waves in V2-V4, indicating an anterior ST-elevation myocardial infarction (STEMI).",
+        "Serial troponin measurements show a significant rise (0.82 ng/mL to 4.2 ng/mL), confirming myocardial necrosis."
+      ],
+      "cons": [
+        "PCI carries risks such as bleeding, stroke, contrast-induced nephropathy, and vascular complications.",
+        "Requires specialized cardiac catheterization laboratory and experienced personnel."
+      ],
+      "key_evidence": [
+        {
+          "finding": "Platelet aggregation and thrombus formation represent the basic mechanism for clinical, electrocardiographic, and biomarker changes consistent with acute coronary syndrome.. Various oral and intravenous formulations of platelet function inhibitors have been developed to help decrease platelet...",
+          "pmid": "35202571",
+          "year": "2022",
+          "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction."
+        },
+        {
+          "finding": "Acute myocardial infarction (AMI) during pregnancy or the early postpartum period is rare, but can be devastating for both the mother and the fetus.. There have been major advances in the diagnosis and treatment of acute coronary syndromes in the general population, but there is little consensus on...",
+          "pmid": "28191905",
+          "year": "2017",
+          "title": "ST-elevation acute myocardial infarction in pregnancy: 2016 update."
+        }
+      ],
+      "rationale": "The patient presents with a clear diagnosis of STEMI based on symptoms, ECG changes (new Q waves), and elevated cardiac biomarkers (troponin). Emergent PCI is the standard of care for reperfusion therapy in STEMI when available within recommended timeframes (e.g., <90 minutes from first medical contact or <120 minutes if transfer is needed) to restore blood flow to the occluded coronary artery, limit infarct size, and improve outcomes.",
+      "papers_used": [
+        {
+          "pmid": "pmid:35202571",
+          "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction.",
+          "match_type": "keyword",
+          "matched_words": [
+            "coronary"
+          ]
+        },
+        {
+          "pmid": "pmid:28191905",
+          "title": "ST-elevation acute myocardial infarction in pregnancy: 2016 update.",
+          "match_type": "keyword",
+          "matched_words": [
+            "coronary"
+          ]
+        },
+        {
+          "pmid": "pmid:40014670",
+          "title": "2025 ACC/AHA/ACEP/NAEMSP/SCAI Guideline for the Management of Patients With Acute Coronary Syndromes: A Report of the American College of Cardiology/American Heart Association Joint Committee on Clinical Practice Guidelines.",
+          "match_type": "keyword",
+          "matched_words": [
+            "percutaneous",
+            "coronary",
+            "intervention"
+          ]
+        }
+      ],
+      "reasoning": {
+        "patient_factors_considered": [
+          "62-year-old male",
+          "Symptoms consistent with STEMI (chest pressure at rest, unrelieved)",
+          "ECG findings (new Q waves in V2-V4)",
+          "Elevated troponin levels (rising)",
+          "Risk factors for coronary artery disease (hypertension, hyperlipidemia, smoking, family history)"
+        ],
+        "supporting_evidence": "The presentation is classic for STEMI. Guidelines (like the one referenced in PMID: 40014670, although the abstract doesn't detail specific STEMI recommendations, it represents current guidelines) strongly recommend emergent reperfusion therapy for STEMI. PCI is the preferred reperfusion strategy when timely access is available. The provided PubMed abstracts do not contradict this standard of care.",
+        "key_concern": "Timely access to PCI is crucial; delays significantly reduce its benefit. The patient's clinical stability and contraindications (if any) need assessment before proceeding.",
+        "context_relevance": "Onset at rest and persistence of symptoms despite rest strongly suggest an acute coronary event requiring immediate intervention."
+      }
+    },
+    {
+      "name": "IV beta-blocker (e.g., metoprolol, esmolol)",
+      "mechanism": "Reduces heart rate, blood pressure, and myocardial oxygen demand.",
+      "verdict": "recommended",
+      "confidence": 0.95,
+      "fda_approved": true,
+      "fda_indication": "Hypertension, Myocardial Infarction",
+      "evidence_grade": "high",
+      "pros": [
+        "Reduces myocardial oxygen demand by decreasing heart rate, contractility, and blood pressure, which is beneficial in acute myocardial infarction (AMI) with ST-elevation (STEMI).",
+        "May limit infarct size and reduce the risk of arrhythmias.",
+        "Standard of care in the management of STEMI according to major guidelines (e.g., ESC, ACC/AHA)."
+      ],
+      "cons": [
+        "Potential for bradycardia, hypotension, and heart block, especially in patients with pre-existing conduction abnormalities or heart failure.",
+        "Contraindicated in patients with severe bradycardia, hypotension, acute decompensated heart failure, or high-degree AV block."
+      ],
+      "key_evidence": [
+        {
+          "finding": "Abstract not available",
+          "pmid": "28886621",
+          "year": "2018",
+          "title": "2017 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation: The Task Force for the management of acute myocardial infarction in patients presenting with ST-segment elevation of the European Society of Cardiology (ESC)."
+        },
+        {
+          "finding": "Platelet aggregation and thrombus formation represent the basic mechanism for clinical, electrocardiographic, and biomarker changes consistent with acute coronary syndrome.. Various oral and intravenous formulations of platelet function inhibitors have been developed to help decrease platelet...",
+          "pmid": "35202571",
+          "year": "2022",
+          "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction."
+        }
+      ],
+      "rationale": "The patient presents with classic symptoms, ECG changes (new Q waves in V2-V4), and elevated troponins consistent with an acute anterior STEMI. IV beta-blockers are a cornerstone of early management for STEMI to reduce myocardial oxygen demand and improve outcomes, provided there are no contraindications. The patient's current medications (lisinopril, atorvastatin, aspirin) do not preclude the use of beta-blockers, and no specific contraindications are mentioned in the presentation.",
+      "papers_used": [
+        {
+          "pmid": "pmid:28886621",
+          "title": "2017 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation: The Task Force for the management of acute myocardial infarction in patients presenting with ST-segment elevation of the European Society of Cardiology (ESC).",
+          "match_type": "general",
+          "matched_words": []
+        },
+        {
+          "pmid": "pmid:35202571",
+          "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction.",
+          "match_type": "general",
+          "matched_words": []
+        },
+        {
+          "pmid": "pmid:29368892",
+          "title": "[Acute myocardial infarction with ST-segment elevation: Code I].",
+          "match_type": "general",
+          "matched_words": []
+        }
+      ],
+      "reasoning": {
+        "patient_factors_considered": [
+          "Diagnosis of acute anterior STEMI based on symptoms, ECG, and troponin elevation.",
+          "Presence of hypertension and hyperlipidemia (risk factors for CAD).",
+          "No mention of contraindications like hypotension, bradycardia, heart failure, or AV block."
+        ],
+        "supporting_evidence": "The 2017 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation (PMID: 28886621) recommend beta-blockers in patients with STEMI without contraindications.",
+        "key_concern": "Ensuring the patient does not develop hypotension or bradycardia, requiring careful monitoring and dose titration.",
+        "context_relevance": "Onset at rest and prolonged duration (2 hours) are typical for STEMI, making early intervention with guideline-directed medical therapy, including beta-blockers, crucial."
+      }
+    },
+    {
+      "name": "IV nitroglycerin",
+      "mechanism": "Vasodilator; reduces preload and afterload, dilates coronary arteries.",
+      "verdict": "recommended",
+      "confidence": 0.95,
+      "fda_approved": true,
+      "fda_indication": "Treatment of angina pectoris",
+      "evidence_grade": "high",
+      "pros": [
+        "Reduces preload and afterload, decreasing myocardial oxygen demand.",
+        "Dilates coronary arteries, potentially improving blood flow to ischemic myocardium.",
+        "Provides rapid relief of chest pain associated with myocardial ischemia."
+      ],
+      "cons": [
+        "Can cause hypotension, especially in patients who are volume-depleted or have right ventricular infarction.",
+        "May cause reflex tachycardia."
+      ],
+      "key_evidence": [
+        {
+          "finding": "Abstract not available",
+          "pmid": "28886621",
+          "year": "2018",
+          "title": "2017 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation: The Task Force for the management of acute myocardial infarction in patients presenting with ST-segment elevation of the European Society of Cardiology (ESC)."
+        },
+        {
+          "finding": "Platelet aggregation and thrombus formation represent the basic mechanism for clinical, electrocardiographic, and biomarker changes consistent with acute coronary syndrome.. Various oral and intravenous formulations of platelet function inhibitors have been developed to help decrease platelet...",
+          "pmid": "35202571",
+          "year": "2022",
+          "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction."
+        }
+      ],
+      "rationale": "The patient presents with classic symptoms (substernal chest pressure at rest, unrelieved by rest, lasting >20 minutes), elevated troponins, and new Q waves on ECG, consistent with an acute ST-elevation myocardial infarction (STEMI). IV nitroglycerin is a standard initial therapy for STEMI to relieve chest pain and reduce myocardial oxygen demand by decreasing preload and afterload, and potentially improving coronary blood flow. Guidelines support its use in this setting.",
+      "papers_used": [
+        {
+          "pmid": "pmid:28886621",
+          "title": "2017 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation: The Task Force for the management of acute myocardial infarction in patients presenting with ST-segment elevation of the European Society of Cardiology (ESC).",
+          "match_type": "general",
+          "matched_words": []
+        },
+        {
+          "pmid": "pmid:35202571",
+          "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction.",
+          "match_type": "general",
+          "matched_words": []
+        },
+        {
+          "pmid": "pmid:29368892",
+          "title": "[Acute myocardial infarction with ST-segment elevation: Code I].",
+          "match_type": "general",
+          "matched_words": []
+        }
+      ],
+      "reasoning": {
+        "patient_factors_considered": [
+          "Presentation consistent with acute STEMI (chest pain, elevated troponins, ECG changes).",
+          "Patient is experiencing ongoing chest pain."
+        ],
+        "supporting_evidence": "The 2017 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation (PMID: 28886621) recommend nitroglycerin for pain relief in STEMI, unless contraindicated (e.g., hypotension, RV infarct, recent PDE5 inhibitor use).",
+        "key_concern": "Potential for hypotension, requiring careful monitoring of blood pressure.",
+        "context_relevance": "Onset at rest and duration of symptoms (>2 hours) strongly suggest STEMI, making nitroglycerin appropriate for symptom management while awaiting reperfusion therapy."
+      }
+    },
+    {
+      "name": "Insulin drip",
+      "mechanism": "Lowers blood glucose levels.",
+      "verdict": "recommended",
+      "confidence": 0.95,
+      "fda_approved": true,
+      "fda_indication": "Treatment of hyperglycemia in diabetic patients and management of hyperkalemia",
+      "evidence_grade": "high",
+      "pros": [
+        "Hyperglycemia is common in acute myocardial infarction (AMI) and is associated with increased morbidity and mortality.",
+        "Insulin is the preferred agent for managing hyperglycemia in the acute setting of AMI, especially when significant hyperglycemia is present (glucose > 180 mg/dL).",
+        "Insulin improves endothelial function and reduces inflammation, potentially mitigating adverse cardiac remodeling."
+      ],
+      "cons": [
+        "Risk of hypoglycemia if not carefully monitored.",
+        "Requires continuous infusion and frequent blood glucose monitoring."
+      ],
+      "key_evidence": [
+        {
+          "finding": "Abstract not available",
+          "pmid": "28886621",
+          "year": "2018",
+          "title": "2017 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation: The Task Force for the management of acute myocardial infarction in patients presenting with ST-segment elevation of the European Society of Cardiology (ESC)."
+        },
+        {
+          "finding": "Platelet aggregation and thrombus formation represent the basic mechanism for clinical, electrocardiographic, and biomarker changes consistent with acute coronary syndrome.. Various oral and intravenous formulations of platelet function inhibitors have been developed to help decrease platelet...",
+          "pmid": "35202571",
+          "year": "2022",
+          "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction."
+        }
+      ],
+      "rationale": "The patient presents with an acute ST-elevation myocardial infarction (STEMI) evidenced by chest pain, elevated troponins, and new Q waves on ECG. He also has hyperglycemia (glucose 142 mg/dL). While this level is not extremely high, hyperglycemia in the setting of AMI is associated with worse outcomes. Insulin therapy is recommended to control blood glucose levels in patients with AMI and hyperglycemia, aiming for a target range (e.g., 140-180 mg/dL).",
+      "papers_used": [
+        {
+          "pmid": "pmid:28886621",
+          "title": "2017 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation: The Task Force for the management of acute myocardial infarction in patients presenting with ST-segment elevation of the European Society of Cardiology (ESC).",
+          "match_type": "general",
+          "matched_words": []
+        },
+        {
+          "pmid": "pmid:35202571",
+          "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction.",
+          "match_type": "general",
+          "matched_words": []
+        },
+        {
+          "pmid": "pmid:29368892",
+          "title": "[Acute myocardial infarction with ST-segment elevation: Code I].",
+          "match_type": "general",
+          "matched_words": []
+        }
+      ],
+      "reasoning": {
+        "patient_factors_considered": [
+          "Acute ST-elevation myocardial infarction (STEMI)",
+          "Hyperglycemia (glucose 142 mg/dL)",
+          "History of hypertension, hyperlipidemia, smoking, family history of MI"
+        ],
+        "supporting_evidence": "Guidelines for the management of acute myocardial infarction recommend controlling hyperglycemia. While the provided abstracts do not specifically mention insulin for hyperglycemia in AMI, it is a standard component of care. The ESC guidelines [PMID: 28886621] cover STEMI management broadly, and controlling comorbidities like hyperglycemia is part of optimal care. The other abstracts focus on antiplatelet therapy [PMID: 35202571] and general STEMI management [PMID: 29368892], but the principle of managing hyperglycemia in AMI is well-established.",
+        "key_concern": "Balancing the need to control hyperglycemia to improve outcomes against the risk of hypoglycemia during insulin infusion.",
+        "context_relevance": "The onset of chest pain at rest and the significant rise in troponin levels indicate a serious cardiac event (STEMI). Managing associated metabolic derangements like hyperglycemia is crucial for optimal patient outcomes."
+      }
+    },
+    {
+      "name": "Statins (high-intensity, e.g., atorvastatin 80mg or rosuvastatin 20-40mg)",
+      "mechanism": "Inhibits HMG-CoA reductase, lowering LDL cholesterol and stabilizing plaques.",
+      "verdict": "recommended",
+      "confidence": 0.95,
+      "fda_approved": true,
+      "fda_indication": "Treatment of hypercholesterolemia and reduction of cardiovascular risk, including secondary prevention in patients with established cardiovascular disease.",
+      "evidence_grade": "high",
+      "pros": [
+        "Reduces LDL cholesterol, a primary target in secondary prevention of atherosclerotic cardiovascular disease (ASCVD).",
+        "Stabilizes atherosclerotic plaques, potentially reducing the risk of future events like MI or stroke.",
+        "High-intensity statin therapy is guideline-recommended for secondary prevention in patients with established ASCVD, such as this patient presenting with STEMI."
+      ],
+      "cons": [
+        "Potential for muscle-related side effects (myalgia, myopathy, rhabdomyolysis), although risk is generally low.",
+        "Risk of new-onset diabetes, although the cardiovascular benefits typically outweigh this risk in high-risk patients."
+      ],
+      "key_evidence": [
+        {
+          "finding": "Abstract not available",
+          "pmid": "28886621",
+          "year": "2018",
+          "title": "2017 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation: The Task Force for the management of acute myocardial infarction in patients presenting with ST-segment elevation of the European Society of Cardiology (ESC)."
+        },
+        {
+          "finding": "Platelet aggregation and thrombus formation represent the basic mechanism for clinical, electrocardiographic, and biomarker changes consistent with acute coronary syndrome.. Various oral and intravenous formulations of platelet function inhibitors have been developed to help decrease platelet...",
+          "pmid": "35202571",
+          "year": "2022",
+          "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction."
+        }
+      ],
+      "rationale": "This patient presents with an acute ST-elevation myocardial infarction (STEMI), confirmed by ECG changes (new Q waves in V2-V4) and rising troponin levels. He has multiple risk factors for ASCVD (hypertension, hyperlipidemia, family history, smoking). High-intensity statin therapy is a cornerstone of secondary prevention after MI, aiming to lower LDL cholesterol and stabilize plaques. Current guidelines strongly recommend initiating or continuing high-intensity statin therapy in patients with STEMI.",
+      "papers_used": [
+        {
+          "pmid": "pmid:28886621",
+          "title": "2017 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation: The Task Force for the management of acute myocardial infarction in patients presenting with ST-segment elevation of the European Society of Cardiology (ESC).",
+          "match_type": "general",
+          "matched_words": []
+        },
+        {
+          "pmid": "pmid:35202571",
+          "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction.",
+          "match_type": "general",
+          "matched_words": []
+        },
+        {
+          "pmid": "pmid:29368892",
+          "title": "[Acute myocardial infarction with ST-segment elevation: Code I].",
+          "match_type": "general",
+          "matched_words": []
+        }
+      ],
+      "reasoning": {
+        "patient_factors_considered": [
+          "Diagnosis of acute STEMI",
+          "Established ASCVD (previous hyperlipidemia, hypertension, family history, smoking)",
+          "Current use of atorvastatin 40mg (moderate intensity)"
+        ],
+        "supporting_evidence": "The 2018 ESC guidelines for management of acute myocardial infarction (PMID: 28886621) recommend statin therapy for all patients with ACS, with high-intensity statins preferred for those with very high risk (like STEMI). General principles of secondary prevention with statins are well-established.",
+        "key_concern": "Ensuring adequate LDL lowering with high-intensity statin therapy to reduce future cardiovascular events.",
+        "context_relevance": "The acute presentation of STEMI necessitates immediate and aggressive secondary prevention strategies, including high-intensity statin therapy."
+      }
+    },
+    {
+      "name": "Aspirin 325 mg PO",
+      "mechanism": "Irreversibly inhibits COX-1, reducing thromboxane A2 synthesis and platelet aggregation.",
+      "verdict": "not_recommended",
+      "confidence": 0.2,
+      "fda_approved": true,
+      "fda_indication": "N/A \u2014 procedure/diagnostic/supportive",
+      "evidence_grade": "high",
+      "pros": [
+        "Aspirin is a cornerstone of initial management for acute myocardial infarction (AMI), reducing mortality and morbidity by inhibiting platelet aggregation.",
+        "The patient presents with classic symptoms (substernal chest pressure at rest), elevated troponins (0.82 ng/mL -> 4.2 ng/mL), and ECG changes (new Q waves in V2-V4) consistent with ST-elevation myocardial infarction (STEMI).",
+        "Guidelines strongly recommend immediate administration of aspirin (162-325 mg chewed) for all patients with suspected AMI unless contraindicated."
+      ],
+      "cons": [
+        "Contradicts: Administer NSAIDs (increase cardiovascular risk)",
+        "Potential for gastrointestinal bleeding or other bleeding complications, although the benefit in AMI generally outweighs this risk."
+      ],
+      "key_evidence": [
+        {
+          "finding": "Abstract not available",
+          "pmid": "28886621",
+          "year": "2018",
+          "title": "2017 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation: The Task Force for the management of acute myocardial infarction in patients presenting with ST-segment elevation of the European Society of Cardiology (ESC)."
+        },
+        {
+          "finding": "Platelet aggregation and thrombus formation represent the basic mechanism for clinical, electrocardiographic, and biomarker changes consistent with acute coronary syndrome.. Various oral and intravenous formulations of platelet function inhibitors have been developed to help decrease platelet...",
+          "pmid": "35202571",
+          "year": "2022",
+          "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction."
+        }
+      ],
+      "rationale": "SAFETY: Contradicts do_not_do guideline \u2014 \"Administer NSAIDs (increase cardiovascular risk)\". The patient is presenting with clear signs and symptoms of an acute ST-elevation myocardial infarction (STEMI). Aspirin is a standard-of-care, first-line therapy for STEMI, proven to reduce mortality and reinfarction. The patient is already on low-dose aspirin (81mg), but guidelines recommend an initial loading dose of 162-325mg in the acute setting.",
+      "papers_used": [
+        {
+          "pmid": "pmid:28886621",
+          "title": "2017 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation: The Task Force for the management of acute myocardial infarction in patients presenting with ST-segment elevation of the European Society of Cardiology (ESC).",
+          "match_type": "general",
+          "matched_words": []
+        },
+        {
+          "pmid": "pmid:35202571",
+          "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction.",
+          "match_type": "general",
+          "matched_words": []
+        },
+        {
+          "pmid": "pmid:29368892",
+          "title": "[Acute myocardial infarction with ST-segment elevation: Code I].",
+          "match_type": "general",
+          "matched_words": []
+        }
+      ],
+      "reasoning": {
+        "patient_factors_considered": [
+          "Diagnosis of acute ST-elevation myocardial infarction (STEMI) based on symptoms, ECG changes (new Q waves V2-V4), and rising troponins.",
+          "Patient is already on low-dose aspirin (81mg daily)."
+        ],
+        "supporting_evidence": [
+          "2018 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation (PMID: 28886621) recommend immediate administration of aspirin 162-325 mg chewed for all patients with STEMI.",
+          "2022 Review on Antiplatelet Agents in Acute STEMI (PMID: 35202571) confirms the crucial role of aspirin in reducing platelet aggregation and improving outcomes in STEMI."
+        ],
+        "key_concern": "Ensuring prompt administration of an appropriate loading dose of aspirin (162-325 mg) in the setting of STEMI to maximize benefit.",
+        "context_relevance": "The onset of symptoms at rest and the significant rise in troponin levels indicate a high-risk AMI requiring immediate intervention, including antiplatelet therapy."
+      }
+    }
+  ],
+  "top_recommendation": "P2Y12 inhibitor loading dose (e.g., clopidogrel 300-600 mg PO, ticagrelor 180 mg PO, prasugrel 60 mg PO)",
+  "recommendation_rationale": "The patient presents with classic symptoms, ECG changes (new Q waves in V2-V4), and elevated troponins consistent with an acute ST-elevation myocardial infarction (STEMI). Current guidelines strongly recommend dual antiplatelet therapy (DAPT) with aspirin and a P2Y12 inhibitor as adjunctive therapy to reperfusion (PCI or fibrinolysis) in STEMI patients. This patient is already on aspirin. Adding a P2Y12 inhibitor loading dose is standard of care to prevent further thrombotic events.",
+  "clinical_pearls": [
+    "This patient presents with classic signs and symptoms of an acute ST-elevation myocardial infarction (STEMI): substernal chest pressure, elevated troponin I (0.82 ng/mL), and characteristic ECG changes (ST elevation in V2-V5 with reciprocal ST depression in II, III, aVF). Prompt reperfusion therapy, such as emergent PCI, is crucial.",
+    "Given the patient's hyperglycemia (glucose 142 mg/dL) in the setting of acute STEMI, an insulin drip is recommended. Hyperglycemia is common in acute MI and is associated with worse outcomes; controlling blood glucose can improve outcomes.",
+    "The patient is already on aspirin and lisinopril. Adding heparin (bolus + drip) and a P2Y12 inhibitor (e.g., clopidogrel, ticagrelor, or prasugrel) is recommended as part of standard STEMI management, but clinicians must be vigilant for the increased risk of bleeding due to these combined antiplatelet and anticoagulant therapies."
+  ],
+  "papers_reviewed": [
+    {
+      "pmid": "28886621",
+      "title": "2017 ESC Guidelines for the management of acute myocardial infarction in patients presenting with ST-segment elevation: The Task Force for the management of acute myocardial infarction in patients presenting with ST-segment elevation of the European Society of Cardiology (ESC).",
+      "year": "2018"
+    },
+    {
+      "pmid": "35202571",
+      "title": "Antiplatelet Agents in Acute ST Elevation Myocardial Infarction.",
+      "year": "2022"
+    },
+    {
+      "pmid": "29368892",
+      "title": "[Acute myocardial infarction with ST-segment elevation: Code I].",
+      "year": "2018"
+    },
+    {
+      "pmid": "25681486",
+      "title": "Inflammatory markers in ST-elevation acute myocardial infarction.",
+      "year": "2016"
+    },
+    {
+      "pmid": "28191905",
+      "title": "ST-elevation acute myocardial infarction in pregnancy: 2016 update.",
+      "year": "2017"
+    },
+    {
+      "pmid": "40014670",
+      "title": "2025 ACC/AHA/ACEP/NAEMSP/SCAI Guideline for the Management of Patients With Acute Coronary Syndromes: A Report of the American College of Cardiology/American Heart Association Joint Committee on Clinical Practice Guidelines.",
+      "year": "2025"
+    },
+    {
+      "pmid": "35526406",
+      "title": "Impact of COVID-19 on emergency department management of stroke and STEMI. A narrative review.",
+      "year": "2022"
+    },
+    {
+      "pmid": "34053616",
+      "title": "Prehospital Evaluation, ED Management, Transfers, and Management of Inpatient STEMI.",
+      "year": "2021"
+    },
+    {
+      "pmid": "27846459",
+      "title": "Simplifying electrocardiographic assessment in STEMI reperfusion management: Pros and cons.",
+      "year": "2017"
+    },
+    {
+      "pmid": "36130741",
+      "title": "Effects of healthcare system transformations spurred by the COVID-19 pandemic on management of stroke and STEMI: a registry-based cohort study in France.",
+      "year": "2022"
+    }
+  ],
+  "search_terms_used": [
+    "substernal chest pressure cardiology treatment",
+    "Acute ST Elevation Myocardial Infarction",
+    "STEMI Management",
+    "Percutaneous Coronary Intervention",
+    "Dual Antiplatelet Therapy",
+    "Anticoagulation Myocardial Infarction",
+    "Beta Blocker Myocardial Infarction",
+    "Nitroglycerin Myocardial Infarction",
+    "Hyperglycemia Myocardial Infarction"
+  ],
+  "acute_management": {
+    "risk_stratification": "HIGH \u2014 Acute ST-elevation myocardial infarction (STEMI) involving anterior wall (V2-V5), requiring immediate reperfusion therapy.",
+    "immediate_actions": [
+      "Establish IV access x 2",
+      "Administer oxygen if SpO2 <90%",
+      "Obtain 12-lead ECG (already done)",
+      "Administer Aspirin 325 mg PO",
+      "Administer P2Y12 inhibitor loading dose",
+      "Administer IV heparin bolus + drip",
+      "Administer IV nitroglycerin for chest pain (if BP allows)",
+      "Administer IV beta-blocker (if no contraindications)",
+      "Activate cardiac catheterization lab for emergent PCI",
+      "Consider fibrinolysis if PCI not available within 120 minutes"
+    ],
+    "do_not_do": [
+      "Administer NSAIDs (increase cardiovascular risk)",
+      "Administer oral antiplatelets other than aspirin/P2Y12 inhibitor (e.g., ibuprofen)",
+      "Delay reperfusion therapy (PCI or fibrinolysis)",
+      "Administer medications known to worsen heart failure (e.g., thiazolidinediones) if signs of HF present",
+      "Discontinue aspirin unless contraindicated"
+    ],
+    "monitoring_plan": [
+      "Continuous cardiac monitoring (ECG)",
+      "Frequent vital signs (BP, HR, RR, SpO2) every 5-15 minutes initially",
+      "Serial cardiac biomarkers (troponin) every 3-6 hours",
+      "Monitor for signs of bleeding (anticoagulation/antiplatelet therapy)",
+      "Monitor urine output (renal function, volume status)",
+      "Monitor blood glucose levels"
+    ],
+    "disposition": "ICU \u2014 Requires continuous monitoring, invasive procedures (PCI), and management of potential complications (arrhythmias, heart failure, cardiogenic shock).",
+    "consults": [
+      "Cardiology (emergent)",
+      "Intensivist (emergent)"
+    ],
+    "activity_restrictions": "Strict bed rest initially, followed by gradual mobilization as tolerated post-procedure and stabilization.",
+    "key_counseling": [
+      "Importance of adherence to dual antiplatelet therapy",
+      "Lifestyle modifications (smoking cessation, diet, exercise)",
+      "Cardiac rehabilitation",
+      "Medication reconciliation and education",
+      "Return precautions (worsening chest pain, shortness of breath, palpitations)"
+    ],
+    "metabolic_corrections": [
+      "Hyperglycemia: Insulin drip to maintain glucose <180 mg/dL"
+    ]
+  },
+  "suggested_followups": [
+    "Are there drug interactions with lisinopril 20mg daily, atorvastatin 40mg daily, aspirin 81mg daily?",
+    "What if the patient can't tolerate P2Y12 inhibitor loading dose (e.g., clopidogrel 300-600 mg PO, ticagrelor 180 mg PO, prasugrel 60 mg PO)?",
+    "Why was Aspirin 325 mg PO rated not recommended?",
+    "Should additional workup be ordered before starting treatment?",
+    "What monitoring is needed and what is the disposition plan?"
+  ],
+  "medication_review": {
+    "renal_flags": [],
+    "interactions": [
+      {
+        "drug_a": "lisinopril",
+        "drug_b": "heparin",
+        "severity": "major",
+        "effect": "Increased risk of bleeding due to additive antiplatelet/anticoagulant effects.",
+        "recommendation": "Monitor closely for signs of bleeding; consider dose adjustment of heparin or alternative anticoagulation if bleeding occurs."
+      },
+      {
+        "drug_a": "aspirin",
+        "drug_b": "heparin",
+        "severity": "major",
+        "effect": "Increased risk of bleeding due to additive antiplatelet/anticoagulant effects.",
+        "recommendation": "Monitor closely for signs of bleeding; consider dose adjustment of heparin or alternative anticoagulation if bleeding occurs."
+      },
+      {
+        "drug_a": "aspirin",
+        "drug_b": "clopidogrel",
+        "severity": "major",
+        "effect": "Increased risk of bleeding due to combined antiplatelet effects.",
+        "recommendation": "Monitor closely for signs of bleeding; consider dose adjustment or alternative antiplatelet therapy if bleeding occurs."
+      },
+      {
+        "drug_a": "aspirin",
+        "drug_b": "ticagrelor",
+        "severity": "major",
+        "effect": "Increased risk of bleeding due to combined antiplatelet effects.",
+        "recommendation": "Monitor closely for signs of bleeding; consider dose adjustment or alternative antiplatelet therapy if bleeding occurs."
+      },
+      {
+        "drug_a": "aspirin",
+        "drug_b": "prasugrel",
+        "severity": "major",
+        "effect": "Increased risk of bleeding due to combined antiplatelet effects.",
+        "recommendation": "Monitor closely for signs of bleeding; consider dose adjustment or alternative antiplatelet therapy if bleeding occurs."
+      },
+      {
+        "drug_a": "lisinopril",
+        "drug_b": "clopidogrel",
+        "severity": "moderate",
+        "effect": "Potential increased risk of bleeding, although less significant than with heparin or other antiplatelets.",
+        "recommendation": "Monitor for bleeding."
+      },
+      {
+        "drug_a": "lisinopril",
+        "drug_b": "ticagrelor",
+        "severity": "moderate",
+        "effect": "Potential increased risk of bleeding, although less significant than with heparin or other antiplatelets.",
+        "recommendation": "Monitor for bleeding."
+      },
+      {
+        "drug_a": "lisinopril",
+        "drug_b": "prasugrel",
+        "severity": "moderate",
+        "effect": "Potential increased risk of bleeding, although less significant than with heparin or other antiplatelets.",
+        "recommendation": "Monitor for bleeding."
+      },
+      {
+        "drug_a": "atorvastatin",
+        "drug_b": "clopidogrel",
+        "severity": "moderate",
+        "effect": "Clopidogrel may reduce the antiplatelet effect of atorvastatin, although clinical significance is unclear.",
+        "recommendation": "Monitor for bleeding or thrombotic events."
+      },
+      {
+        "drug_a": "atorvastatin",
+        "drug_b": "ticagrelor",
+        "severity": "moderate",
+        "effect": "Ticagrelor may reduce the antiplatelet effect of atorvastatin, although clinical significance is unclear.",
+        "recommendation": "Monitor for bleeding or thrombotic events."
+      },
+      {
+        "drug_a": "atorvastatin",
+        "drug_b": "prasugrel",
+        "severity": "moderate",
+        "effect": "Prasugrel may reduce the antiplatelet effect of atorvastatin, although clinical significance is unclear.",
+        "recommendation": "Monitor for bleeding or thrombotic events."
+      },
+      {
+        "drug_a": "atorvastatin",
+        "drug_b": "heparin",
+        "severity": "moderate",
+        "effect": "Increased risk of myopathy or rhabdomyolysis, although evidence is limited and often debated.",
+        "recommendation": "Monitor for muscle pain, weakness, or dark urine."
+      },
+      {
+        "drug_a": "atorvastatin",
+        "drug_b": "insulin",
+        "severity": "moderate",
+        "effect": "Statins can potentially increase insulin sensitivity and may enhance the hypoglycemic effect of insulin, increasing the risk of hypoglycemia.",
+        "recommendation": "Monitor blood glucose levels closely, especially when initiating or adjusting insulin therapy."
+      },
+      {
+        "drug_a": "aspirin",
+        "drug_b": "beta-blocker",
+        "severity": "moderate",
+        "effect": "Beta-blockers may mask symptoms of hypoglycemia (e.g., tachycardia, tremor) and potentially impair glucose recovery, while aspirin can increase bleeding risk if hypoglycemia leads to falls or trauma.",
+        "recommendation": "Monitor blood glucose levels closely, especially when initiating or adjusting beta-blocker therapy."
+      },
+      {
+        "drug_a": "lisinopril",
+        "drug_b": "beta-blocker",
+        "severity": "moderate",
+        "effect": "Both can lower blood pressure, potentially leading to excessive hypotension.",
+        "recommendation": "Monitor blood pressure closely, especially when initiating or adjusting therapy."
+      },
+      {
+        "drug_a": "lisinopril",
+        "drug_b": "nitroglycerin",
+        "severity": "moderate",
+        "effect": "Both can lower blood pressure, potentially leading to excessive hypotension.",
+        "recommendation": "Monitor blood pressure closely, especially when initiating or adjusting therapy."
+      },
+      {
+        "drug_a": "lisinopril",
+        "drug_b": "insulin",
+        "severity": "moderate",
+        "effect": "ACE inhibitors can potentially increase insulin sensitivity and may enhance the hypoglycemic effect of insulin, increasing the risk of hypoglycemia.",
+        "recommendation": "Monitor blood glucose levels closely, especially when initiating or adjusting insulin therapy."
+      }
+    ],
+    "duplicate_therapy": [],
+    "renal_function": {
+      "egfr": null,
+      "creatinine": 1.0
+    }
+  },
+  "differential_diagnosis": {},
+  "clinical_risk_scores": {}
+}

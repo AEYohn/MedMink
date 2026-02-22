@@ -298,7 +298,6 @@ export function RiskScoresTab({
     setIsRegenerating(true);
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/risk-scores`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

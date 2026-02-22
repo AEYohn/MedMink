@@ -1,0 +1,22 @@
+{
+  "model": "CXR Foundation",
+  "classifications": {
+    "pneumothorax": 0.02,
+    "pleural_effusion": 0.03,
+    "cardiomegaly": 0.05,
+    "consolidation": 0.03,
+    "atelectasis": 0.04,
+    "pneumonia": 0.02,
+    "pulmonary_edema": 0.01,
+    "lung_opacity": 0.06,
+    "rib_fracture": 0.01,
+    "mediastinal_widening": 0.02,
+    "hilar_enlargement": 0.03,
+    "nodule_mass": 0.04,
+    "fibrosis": 0.02
+  },
+  "top_findings": [],
+  "overall_impression": "Normal chest radiograph. No acute cardiopulmonary abnormality.",
+  "confidence": 0.94,
+  "source": "cxr_foundation"
+}

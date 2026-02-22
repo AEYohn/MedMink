@@ -144,6 +144,7 @@ export interface DischargeMedOverride {
   frequency: string;
   source: 'ai' | 'clinician';
   action: 'continue' | 'new' | 'discontinue';
+  option_type?: 'medication' | 'procedure' | 'diagnostic' | 'supportive_care';
 }
 
 export interface SafetyAcknowledgment {
@@ -248,6 +249,7 @@ export const STORAGE_KEYS = {
   REFERRAL_NOTIFICATIONS: 'referral-notifications',
   LAST_REFERRAL_CHECK: 'last-referral-check',
   PATIENT_QUESTIONS: 'patient-questions',
+  INTAKE_RESULTS: 'intake-results',
 } as const;
 
 // Conversation helpers
@@ -468,4 +470,28 @@ export function updatePatientQuestion(id: string, updates: Partial<PatientQuesti
     questions[index] = { ...questions[index], ...updates };
     setItem(STORAGE_KEYS.PATIENT_QUESTIONS, questions);
   }
+}
+
+// Intake triage result helpers
+import type { IntakeTriageResult } from '@/types/intake';
+
+export function getIntakeResults(): IntakeTriageResult[] {
+  return getItem<IntakeTriageResult[]>(STORAGE_KEYS.INTAKE_RESULTS, []);
+}
+
+export function saveIntakeResult(result: IntakeTriageResult): void {
+  const results = getIntakeResults();
+  results.unshift(result);
+  // Keep max 50 intake results
+  setItem(STORAGE_KEYS.INTAKE_RESULTS, results.slice(0, 50));
+}
+
+export function getIntakeResultForPatient(patientId: string): IntakeTriageResult | null {
+  const results = getIntakeResults();
+  return results.find(r => r.patientId === patientId) ?? null;
+}
+
+export function getLatestIntakeResult(): IntakeTriageResult | null {
+  const results = getIntakeResults();
+  return results.length > 0 ? results[0] : null;
 }

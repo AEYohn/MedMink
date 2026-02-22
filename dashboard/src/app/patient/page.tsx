@@ -220,7 +220,7 @@ export default function CareHubPage() {
         )}
 
         {activeTab === 'appointments' && (
-          <CareHubAppointments />
+          <CareHubAppointments summary={selectedSummary} />
         )}
 
         {activeTab === 'chat' && (

@@ -77,7 +77,7 @@ export function usePostVisit(summaryId: string): UsePostVisitReturn {
 
   // Load vitals when switching to tracker tab
   useEffect(() => {
-    if (activeTab === 'tracker' && summary?.patientId && API) {
+    if (activeTab === 'tracker' && summary?.patientId) {
       setVitalsLoading(true);
       fetch(`${API}/api/postvisit/vitals/${summary.patientId}`)
         .then(r => r.json())
@@ -95,7 +95,7 @@ export function usePostVisit(summaryId: string): UsePostVisitReturn {
 
   // Load messages when switching to messages tab
   useEffect(() => {
-    if (activeTab === 'messages' && API) {
+    if (activeTab === 'messages') {
       setMessagesLoading(true);
       fetch(`${API}/api/postvisit/${summaryId}/messages`)
         .then(r => r.json())
@@ -107,7 +107,7 @@ export function usePostVisit(summaryId: string): UsePostVisitReturn {
 
   // Send chat message with SSE streaming
   const sendChatMessage = useCallback(async (message: string) => {
-    if (!summary || !API) return;
+    if (!summary) return;
     setChatLoading(true);
 
     const userMsg: ChatMessage = {
@@ -228,7 +228,6 @@ export function usePostVisit(summaryId: string): UsePostVisitReturn {
 
   // Log a vital reading
   const logVital = useCallback(async (reading: Omit<VitalReading, 'id'>) => {
-    if (!API) return;
     const resp = await fetch(`${API}/api/postvisit/vitals`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -256,7 +255,7 @@ export function usePostVisit(summaryId: string): UsePostVisitReturn {
 
   // Import vitals from file
   const importVitals = useCallback(async (file: File): Promise<number> => {
-    if (!API || !summary?.patientId) return 0;
+    if (!summary?.patientId) return 0;
     const formData = new FormData();
     formData.append('file', file);
     formData.append('patient_id', summary.patientId);
@@ -275,7 +274,7 @@ export function usePostVisit(summaryId: string): UsePostVisitReturn {
 
   // Analyze vitals
   const analyzeVitals = useCallback(async () => {
-    if (!API || !summary?.patientId) return;
+    if (!summary?.patientId) return;
     setVitalsLoading(true);
     try {
       const resp = await fetch(`${API}/api/postvisit/vitals/${summary.patientId}/analyze`, {
@@ -302,7 +301,6 @@ export function usePostVisit(summaryId: string): UsePostVisitReturn {
 
   // Send a message to clinician
   const sendMessage = useCallback(async (content: string) => {
-    if (!API) return;
     const resp = await fetch(`${API}/api/postvisit/${summaryId}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

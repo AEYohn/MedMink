@@ -1,0 +1,27 @@
+{
+  "drug": "amiodarone",
+  "mechanism_of_action": "Class III antiarrhythmic that blocks potassium channels, prolonging action potential duration and refractory period. Also has Class I (sodium channel blocking), Class II (beta-blocking), and Class IV (calcium channel blocking) properties.",
+  "therapeutic_targets": ["Potassium channels (IKr, IKs)", "Sodium channels", "Beta-adrenergic receptors", "Calcium channels (L-type)"],
+  "metabolism": {
+    "primary_pathway": "Hepatic via CYP3A4 and CYP2C8",
+    "active_metabolite": "Desethylamiodarone (DEA)",
+    "half_life": "40-55 days (extremely long)",
+    "elimination": "Primarily biliary/fecal; minimal renal excretion"
+  },
+  "special_populations": {
+    "renal_impairment": "No dose adjustment needed — not renally eliminated",
+    "hepatic_impairment": "Use with extreme caution; hepatotoxicity risk. Monitor LFTs regularly.",
+    "elderly": "Increased sensitivity to bradycardia and thyroid effects. Start at lower doses.",
+    "pregnancy": "Category D — crosses placenta, risk of neonatal thyroid dysfunction and bradycardia"
+  },
+  "pharmacokinetics": {
+    "bioavailability": "35-65% (oral)",
+    "protein_binding": "96%",
+    "volume_of_distribution": "66 L/kg (highly lipophilic, extensive tissue distribution)",
+    "onset_of_action": "Days to weeks (oral); minutes to hours (IV)",
+    "time_to_steady_state": "1-5 months"
+  },
+  "monitoring_parameters": ["Thyroid function (TSH, free T4) q6 months", "Pulmonary function tests annually", "Liver function tests q6 months", "ECG (QTc interval)", "Ophthalmologic exam annually", "Chest X-ray annually"],
+  "black_box_warnings": ["Pulmonary toxicity (potentially fatal)", "Hepatotoxicity", "Proarrhythmic effects (torsades de pointes)"],
+  "source": "txgemma"
+}

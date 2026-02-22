@@ -79,7 +79,6 @@ export function useComplianceScan(soapData: SOAPData | null): UseComplianceScanR
 
     debounceRef.current = setTimeout(async () => {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
 
       setIsScanning(true);
       try {
@@ -116,7 +115,7 @@ export function useComplianceScan(soapData: SOAPData | null): UseComplianceScanR
     }
 
     const apiUrl = getApiUrl();
-    if (!apiUrl || !soapData) return null;
+    if (!soapData) return null;
 
     try {
       const resp = await fetch(`${apiUrl}/api/compliance/fix`, {

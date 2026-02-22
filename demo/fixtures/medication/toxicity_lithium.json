@@ -1,0 +1,50 @@
+{
+  "drug": "lithium",
+  "therapeutic_index": "very narrow",
+  "organ_toxicities": [
+    {
+      "organ": "Renal",
+      "risk": "high",
+      "manifestation": "Nephrogenic diabetes insipidus (20-40%), chronic tubulointerstitial nephropathy, ESRD with prolonged use",
+      "monitoring": "Serum creatinine and eGFR every 3-6 months. Urine osmolality if polyuria develops.",
+      "management": "Amiloride for NDI. Consider switching to alternative mood stabilizer if progressive CKD."
+    },
+    {
+      "organ": "Thyroid",
+      "risk": "high",
+      "manifestation": "Hypothyroidism (20-30%), goiter. Lithium inhibits thyroid hormone synthesis and release.",
+      "monitoring": "TSH every 6 months",
+      "management": "Levothyroxine supplementation. Lithium can often be continued."
+    },
+    {
+      "organ": "Neurologic",
+      "risk": "high",
+      "manifestation": "Tremor (27%), cognitive dulling, ataxia, seizures (in toxicity). Chronic exposure: SILENT syndrome (syndrome of irreversible lithium-effectuated neurotoxicity).",
+      "monitoring": "Serum lithium levels (therapeutic 0.6-1.2 mEq/L). Clinical neurologic assessment.",
+      "management": "Dose adjustment for tremor. Propranolol for tremor if dose can't be reduced."
+    },
+    {
+      "organ": "Cardiac",
+      "risk": "moderate",
+      "manifestation": "T-wave flattening/inversion (benign), sinus node dysfunction, first-degree AV block",
+      "monitoring": "Baseline ECG, then annual ECG for patients >40 or with cardiac risk factors",
+      "management": "Usually benign. Discontinue for significant conduction abnormalities."
+    },
+    {
+      "organ": "Parathyroid",
+      "risk": "moderate",
+      "manifestation": "Hyperparathyroidism with hypercalcemia (5-10%)",
+      "monitoring": "Serum calcium and PTH annually",
+      "management": "May require parathyroidectomy if significant hypercalcemia"
+    },
+    {
+      "organ": "Dermatologic",
+      "risk": "low",
+      "manifestation": "Acne, psoriasis exacerbation, hair thinning",
+      "monitoring": "Clinical assessment",
+      "management": "Symptomatic treatment"
+    }
+  ],
+  "overdose_management": "Aggressive IV normal saline hydration. Hemodialysis for levels >4.0 mEq/L, >2.5 with severe symptoms, or renal failure. Whole bowel irrigation if sustained-release preparation. Monitor levels q2-4h until declining. No activated charcoal (lithium not adsorbed).",
+  "source": "txgemma"
+}

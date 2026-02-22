@@ -54,7 +54,6 @@ export default function LabsPage() {
 
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const formData = new FormData();
       formData.append('image', file);
 

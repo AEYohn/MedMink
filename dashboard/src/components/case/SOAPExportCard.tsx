@@ -40,7 +40,6 @@ export function SOAPExportCard({
     setIsLoading(true);
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/chart/enhance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

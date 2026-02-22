@@ -46,7 +46,6 @@ export default function ChatPage() {
     setIsSearching(true);
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const response = await fetch(
         `${apiUrl}/api/search/semantic?q=${encodeURIComponent(searchQuery)}&type=${searchType}&limit=20`
       );

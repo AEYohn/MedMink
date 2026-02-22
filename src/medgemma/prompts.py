@@ -286,7 +286,7 @@ Then structure into JSON:
     "assessment": {{
       "primary_diagnosis": "main diagnosis or working diagnosis",
       "differential": ["other diagnoses being considered"],
-      "clinical_impression": "overall clinical picture"
+      "clinical_impression": "1-2 sentence clinical reasoning: why this diagnosis was reached based on findings (e.g., 'ST elevation in V2-V5 with elevated troponin consistent with acute anterior STEMI')"
     }},
     "plan": {{
       "medications": [
@@ -305,7 +305,10 @@ Important:
 - Preserve exact medical terminology after corrections
 - Keep patient quotes in subjective section
 - Be concise but complete
-- Extract only what is explicitly mentioned in the dictation"""
+- Extract only what is explicitly mentioned in the dictation
+- ALWAYS extract allergy information into patient_reported (e.g., "NKDA", "No known drug allergies", or specific allergies)
+- ALWAYS generate 2-3 differential diagnoses even if primary diagnosis is clear
+- For medications, include frequency or "stat"/"loading dose"/"bolus" — never leave frequency null"""
 
 
 # Prompt for medication reconciliation — drug interactions and safety

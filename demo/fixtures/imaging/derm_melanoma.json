@@ -1,0 +1,21 @@
+{
+  "model": "Derm Foundation",
+  "classifications": {
+    "melanoma": 0.82,
+    "basal_cell_carcinoma": 0.04,
+    "squamous_cell_carcinoma": 0.03,
+    "actinic_keratosis": 0.02,
+    "benign_nevus": 0.05,
+    "dermatofibroma": 0.01,
+    "seborrheic_keratosis": 0.02,
+    "vascular_lesion": 0.01,
+    "pigmented_benign_keratosis": 0.00
+  },
+  "top_diagnosis": "melanoma",
+  "overall_risk": "high",
+  "malignancy_probability": 0.89,
+  "dermoscopic_features": ["Asymmetric pigment network", "Blue-white veil", "Irregular dots/globules", "Regression structures"],
+  "recommendation": "Urgent excisional biopsy recommended. Refer to dermatology/surgical oncology.",
+  "confidence": 0.85,
+  "source": "derm_foundation"
+}

@@ -102,7 +102,6 @@ export function MedicationSafetyTab({
     setError(null);
     try {
       const apiUrl = getApiUrl();
-      if (!apiUrl) return;
       const response = await fetch(`${apiUrl}/api/case/medication-safety`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

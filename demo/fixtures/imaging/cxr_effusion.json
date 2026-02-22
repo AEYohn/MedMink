@@ -1,0 +1,26 @@
+{
+  "model": "CXR Foundation",
+  "classifications": {
+    "pneumothorax": 0.01,
+    "pleural_effusion": 0.95,
+    "cardiomegaly": 0.15,
+    "consolidation": 0.08,
+    "atelectasis": 0.22,
+    "pneumonia": 0.06,
+    "pulmonary_edema": 0.12,
+    "lung_opacity": 0.78,
+    "rib_fracture": 0.01,
+    "mediastinal_widening": 0.05,
+    "hilar_enlargement": 0.04,
+    "nodule_mass": 0.02,
+    "fibrosis": 0.03
+  },
+  "top_findings": [
+    {"finding": "pleural_effusion", "probability": 0.95, "location": "Left hemithorax"},
+    {"finding": "lung_opacity", "probability": 0.78, "location": "Left lower zone"},
+    {"finding": "atelectasis", "probability": 0.22, "location": "Left lower lobe"}
+  ],
+  "overall_impression": "Large left-sided pleural effusion with associated compressive atelectasis of the left lower lobe. Mediastinal shift toward the right.",
+  "confidence": 0.93,
+  "source": "cxr_foundation"
+}

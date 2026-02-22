@@ -1,0 +1,12 @@
+{
+  "drug_a": "metformin",
+  "drug_b": "lisinopril",
+  "severity": "minor",
+  "mechanism": "ACE inhibitors like lisinopril may enhance the hypoglycemic effect of metformin through improved insulin sensitivity and altered renal hemodynamics. The clinical significance is generally low.",
+  "clinical_effect": "Slight potential for enhanced glucose lowering. Generally a beneficial combination in diabetic patients with hypertension.",
+  "recommendation": "No dose adjustment needed. This is actually a commonly prescribed combination for patients with type 2 diabetes and hypertension. ACE inhibitors also provide renal protective benefits in diabetic nephropathy.",
+  "onset": "N/A (minimal interaction)",
+  "evidence_level": "Theoretical / Minor",
+  "alternatives": [],
+  "source": "txgemma"
+}

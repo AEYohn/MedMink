@@ -37,6 +37,13 @@ export function filterActualMedications(meds: PatientMedication[]): PatientMedic
   });
 }
 
+export interface PatientOrder {
+  name: string;
+  description: string;
+  type: 'procedure' | 'diagnostic' | 'supportive_care' | 'referral';
+  scheduledDate?: string;
+}
+
 export interface ReleasedVisitSummary {
   id: string;
   caseSessionId: string;
@@ -44,6 +51,7 @@ export interface ReleasedVisitSummary {
   diagnosis: string;
   diagnosisExplanation: string;
   medications: PatientMedication[];
+  orders?: PatientOrder[];
   dischargeInstructions: string;
   followUps: PatientFollowUp[];
   redFlags: string[];

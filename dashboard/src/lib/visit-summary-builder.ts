@@ -1,5 +1,5 @@
-import type { ReleasedVisitSummary, PatientMedication, PatientFollowUp } from '@/types/visit-summary';
-import type { CaseAnalysisData } from '@/types/case';
+import type { ReleasedVisitSummary, PatientMedication, PatientFollowUp, PatientOrder } from '@/types/visit-summary';
+import type { CaseAnalysisData, TreatmentOption } from '@/types/case';
 import type { ClinicianOverrides, DischargeMedOverride } from '@/lib/storage';
 import type { CompanionConfig } from '@/types/postvisit';
 
@@ -61,6 +61,34 @@ function mapRestrictions(plan: DischargePlanSnapshot | null): string[] {
   );
 }
 
+function inferOrderType(option: TreatmentOption): PatientOrder['type'] {
+  if (/\brefer/i.test(option.name)) return 'referral';
+  return (option.option_type as PatientOrder['type']) || 'diagnostic';
+}
+
+function mapOrders(
+  treatments: TreatmentOption[],
+  overrideTreatments: ClinicianOverrides['treatments'],
+): PatientOrder[] {
+  return treatments
+    .filter(t => t.option_type && t.option_type !== 'medication')
+    .filter(t => {
+      const v = overrideTreatments[t.name]?.verdict;
+      return v === 'accepted' || v === 'modified';
+    })
+    .map(t => ({
+      name: t.name,
+      description: t.rationale || t.mechanism,
+      type: inferOrderType(t),
+    }));
+}
+
+function appendOrdersToInstructions(instructions: string, orders: PatientOrder[]): string {
+  if (!orders.length) return instructions;
+  const bullets = orders.map(o => `• ${o.name}`).join('\n');
+  return `${instructions}\n\nRecommended tests & referrals:\n${bullets}`;
+}
+
 export function buildVisitSummary({
   caseSessionId,
   patientId,
@@ -79,14 +107,19 @@ export function buildVisitSummary({
       .map(t => t.name)
   );
 
+  const orders = mapOrders(analysisData.treatment_options || [], overrides.treatments);
+
   return {
     id: `vs-${Date.now()}`,
     caseSessionId,
     patientId,
-    diagnosis: analysisData.top_recommendation,
+    diagnosis: analysisData.parsed_case?.clinical_question
+      || analysisData.parsed_case?.findings?.presentation
+      || analysisData.top_recommendation,
     diagnosisExplanation: analysisData.recommendation_rationale,
     medications: mapMedications(overrides.dischargeMeds, nonMedNames),
-    dischargeInstructions: overrides.dischargeInstructions,
+    orders,
+    dischargeInstructions: appendOrdersToInstructions(overrides.dischargeInstructions, orders),
     followUps: mapFollowUps(dischargePlan),
     redFlags: dischargePlan?.red_flags || [],
     restrictions: mapRestrictions(dischargePlan),

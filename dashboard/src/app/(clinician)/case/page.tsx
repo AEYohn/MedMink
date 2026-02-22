@@ -81,6 +81,7 @@ import { getPatient, getPatientAge } from '@/lib/patient-storage';
 import type { Patient } from '@/lib/patient-storage';
 import { buildVisitSummary } from '@/lib/visit-summary-builder';
 import { saveReleasedSummary, getReleasedSummaryBySession } from '@/lib/storage';
+import type { CompanionConfig } from '@/types/postvisit';
 import { buildSOAPFromCase } from '@/lib/case-to-soap';
 
 import type { NewFindings, ClinicianOverrides } from '@/lib/storage';
@@ -312,18 +313,23 @@ export default function CaseAnalysisPage() {
     });
   }, [result, session.currentSession, patientId, overrides, showSummaryPreview]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleReleaseSummary = useCallback(() => {
-    if (!previewSummary) return;
+  const handleReleaseSummary = useCallback((
+    editedSummary: Parameters<typeof saveReleasedSummary>[0],
+    companionConfig?: CompanionConfig,
+  ) => {
     setIsReleasingSummary(true);
+    const withCompanion = companionConfig
+      ? { ...editedSummary, companionConfig }
+      : editedSummary;
     // If updating an existing summary, preserve the original id
     const summaryToSave = existingSummary
-      ? { ...previewSummary, id: existingSummary.id, releasedAt: new Date().toISOString() }
-      : previewSummary;
+      ? { ...withCompanion, id: existingSummary.id, releasedAt: new Date().toISOString() }
+      : withCompanion;
     saveReleasedSummary(summaryToSave);
     setShowSummaryPreview(false);
     setIsReleasingSummary(false);
     toast.success(existingSummary ? 'Patient summary updated' : 'Patient summary released');
-  }, [previewSummary, existingSummary]);
+  }, [existingSummary]);
 
   const handlePlanChange = useCallback((plan: DischargePlanData | null) => {
     dischargePlanRef.current = plan;

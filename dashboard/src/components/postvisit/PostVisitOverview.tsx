@@ -9,6 +9,7 @@ import {
   FileText,
   Clock,
   HelpCircle,
+  ClipboardList,
 } from 'lucide-react';
 import { ExplainableText } from '@/components/patient/terms/ExplainableText';
 import type { ReleasedVisitSummary } from '@/types/visit-summary';
@@ -138,6 +139,42 @@ export function PostVisitOverview({
                   </span>
                 </div>
               ))}
+          </div>
+        </div>
+      )}
+
+      {/* Your Plan (orders) */}
+      {(summary.orders?.length ?? 0) > 0 && (
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <ClipboardList className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <h3 className="font-semibold text-sm text-foreground">Your Plan</h3>
+          </div>
+          <div className="space-y-2">
+            {summary.orders!.map((order, i) => (
+              <div key={i} className="flex items-start gap-3 rounded-lg bg-muted/50 border border-border px-4 py-3">
+                <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium capitalize shrink-0 mt-0.5 ${
+                  order.type === 'referral' ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400' :
+                  order.type === 'procedure' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                  order.type === 'supportive_care' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                  'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400'
+                }`}>
+                  {order.type.replace('_', ' ')}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm text-foreground">
+                    <ExplainableText text={order.name} />
+                  </p>
+                  <p className="text-xs text-muted-foreground">{order.description}</p>
+                  {order.scheduledDate && (
+                    <p className="text-xs text-primary mt-1">
+                      <Calendar className="w-3 h-3 inline mr-1" />
+                      Scheduled: {new Date(order.scheduledDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

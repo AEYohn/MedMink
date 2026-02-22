@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   Send,
   Sparkles,
+  ClipboardList,
 } from 'lucide-react';
 import { ExplainableText } from '@/components/patient/terms/ExplainableText';
 import type { ReleasedVisitSummary } from '@/types/visit-summary';
@@ -104,19 +105,35 @@ export function CareHubHome({
           <p className="text-xs text-muted-foreground">labs &amp; vitals</p>
         </button>
 
-        <button
-          onClick={() => onNavigate('visit')}
-          className="rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <div className="p-1.5 rounded-lg bg-accent/15">
-              <Clock className="w-4 h-4 text-accent" />
+        {(summary.orders?.length ?? 0) > 0 ? (
+          <button
+            onClick={() => onNavigate('visit')}
+            className="rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-900/30">
+                <ClipboardList className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">Plan Items</span>
             </div>
-            <span className="text-xs font-medium text-muted-foreground">Visit Date</span>
-          </div>
-          <p className="text-lg font-bold text-foreground">{visitDate}</p>
-          <p className="text-xs text-muted-foreground">with {summary.releasedBy}</p>
-        </button>
+            <p className="text-2xl font-bold text-foreground">{summary.orders!.length}</p>
+            <p className="text-xs text-muted-foreground">tests &amp; referrals</p>
+          </button>
+        ) : (
+          <button
+            onClick={() => onNavigate('visit')}
+            className="rounded-2xl border border-border bg-card p-4 text-left hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-1.5 rounded-lg bg-accent/15">
+                <Clock className="w-4 h-4 text-accent" />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">Visit Date</span>
+            </div>
+            <p className="text-lg font-bold text-foreground">{visitDate}</p>
+            <p className="text-xs text-muted-foreground">with {summary.releasedBy}</p>
+          </button>
+        )}
       </div>
 
       {/* Warning Signs */}

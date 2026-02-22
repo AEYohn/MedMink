@@ -71,10 +71,12 @@ export default function CareHubPage() {
     [allSummaries, selectedId],
   );
 
-  const patient = useMemo(
-    () => selectedSummary ? getPatient(selectedSummary.patientId) : null,
-    [selectedSummary],
-  );
+  const patient = useMemo(() => {
+    if (!selectedSummary) return null;
+    // Try summary's own patientId first, fall back to the active patient view
+    // (covers legacy summaries released with patientId='unknown')
+    return getPatient(selectedSummary.patientId) ?? (viewAsPatientId ? getPatient(viewAsPatientId) : null);
+  }, [selectedSummary, viewAsPatientId]);
 
   // PostVisit hook for chat, vitals, messages
   const postVisit = usePostVisit(selectedId ?? '');

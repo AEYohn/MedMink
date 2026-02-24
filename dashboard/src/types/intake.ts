@@ -5,6 +5,7 @@ export interface IntakeTriageResult {
   completedAt: string; // ISO-8601
   triageData: TriageData;
   conversationSummary: string; // chief complaint + key findings prose
+  conversationHistory?: Array<{ role: 'assistant' | 'user'; content: string; transcript?: string }>;
   source: 'patient-intake' | 'clinician-interview';
 }
 

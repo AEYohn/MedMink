@@ -360,10 +360,11 @@ class PatientInterviewer:
             session.phase = "review_and_triage"
             phase_complete = True
 
-        # On phase transition, use the deterministic opening question for the new phase
-        # instead of trusting the model (which generated the question while in the old phase)
+        # On phase transition, use the deterministic opening question only if the
+        # new phase has no extracted data yet. If the patient already volunteered info
+        # for that phase, use the model's contextual follow-up instead.
         question = data.get("next_question", "Could you tell me more?")
-        if phase_complete:
+        if phase_complete and not self._phase_has_data(session, session.phase):
             opening = get_opening_question(session.phase, session.language)
             if opening:
                 question = opening
@@ -447,6 +448,15 @@ class PatientInterviewer:
         except (ImportError, Exception) as e:
             logger.warning("Management plan not available", error=str(e))
             return {"error": "Management agent not available"}
+
+    def _phase_has_data(self, session: InterviewSession, phase: str) -> bool:
+        """Check if a phase already has extracted data from the patient."""
+        data = session.extracted_data.get(phase)
+        if isinstance(data, dict):
+            return len(data) > 0
+        if isinstance(data, list):
+            return len(data) > 0
+        return False
 
     def _next_phase(self, session: InterviewSession) -> str:
         """Get the next phase, skipping phases whose data was already collected."""

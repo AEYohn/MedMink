@@ -59,7 +59,7 @@ export function RoleSelector() {
             <button
               key={role}
               onClick={() => handleSelect(role)}
-              className="group relative rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/30 hover:shadow-lg transition-all text-left"
+              className="group relative rounded-2xl border border-border bg-card overflow-clip hover:border-primary/30 hover:shadow-lg transition-all text-left"
             >
               {/* Gradient accent */}
               <div className={`h-1.5 bg-gradient-to-r ${config.gradientFrom} ${config.gradientTo}`} />

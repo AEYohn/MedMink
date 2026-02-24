@@ -11,6 +11,7 @@ import {
   Calendar,
   ArrowRight,
   CheckCircle2,
+  ChevronRight,
 } from 'lucide-react';
 import { useSelectedSummaryContext } from '@/contexts/SelectedSummaryContext';
 import { usePostVisitContext } from '@/contexts/PostVisitContext';
@@ -44,11 +45,10 @@ export default function CareHubHomePage() {
   const postVisit = usePostVisitContext();
   const router = useRouter();
   const { t, bcp47 } = useTranslation();
-  const [latestIntake, setLatestIntake] = useState<IntakeTriageResult | null>(null);
+  const [allIntakes, setAllIntakes] = useState<IntakeTriageResult[]>([]);
 
   useEffect(() => {
-    const results = getIntakeResults();
-    if (results.length > 0) setLatestIntake(results[0]);
+    setAllIntakes(getIntakeResults());
   }, []);
 
   // No summaries — empty state
@@ -94,25 +94,36 @@ export default function CareHubHomePage() {
         </div>
 
         {/* Past check-ins */}
-        {latestIntake && (
+        {allIntakes.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-sm font-semibold text-muted-foreground">{t('home.pastCheckins')}</h3>
-            <div className="p-4 rounded-xl bg-card border border-border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    {latestIntake.triageData.chief_complaint || t('home.checkinCompleted')}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {new Date(latestIntake.completedAt).toLocaleDateString(bcp47, {
-                      month: 'short', day: 'numeric', year: 'numeric',
-                    })}
-                  </p>
-                </div>
-                {latestIntake.triageData.esi_level && (
-                  <ESIBadge level={latestIntake.triageData.esi_level} />
-                )}
-              </div>
+            <div className="space-y-2">
+              {allIntakes.map((intake) => (
+                <button
+                  key={intake.id}
+                  onClick={() => router.push(`/patient/checkin/${intake.id}`)}
+                  className="w-full p-4 rounded-xl bg-card border border-border hover:shadow-sm transition-shadow text-left"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {intake.triageData.chief_complaint || t('home.checkinCompleted')}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {new Date(intake.completedAt).toLocaleDateString(bcp47, {
+                          month: 'short', day: 'numeric', year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {intake.triageData.esi_level && (
+                        <ESIBadge level={intake.triageData.esi_level} />
+                      )}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         )}

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ClipboardList, Phone, Loader2, ChevronRight, AlertTriangle, X, CheckCircle2, Stethoscope } from 'lucide-react';
+import { ClipboardList, Phone, Loader2, ChevronRight, AlertTriangle, X, CheckCircle2, Stethoscope, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { InterviewChat } from '@/components/interview/InterviewChat';
 import { TriageResult } from '@/components/interview/TriageResult';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
@@ -10,6 +10,7 @@ import { getApiUrl } from '@/lib/api-url';
 import { saveIntakeResult } from '@/lib/storage';
 import { mockStartInterview, mockRespond, mockComplete } from '@/lib/mock-interview';
 import { useTranslation, LANGUAGES } from '@/i18n';
+import { useRole } from '@/contexts/RoleContext';
 import type { TriageData } from '@/types/intake';
 
 const API_URL = getApiUrl() || '';
@@ -39,6 +40,51 @@ interface Message {
   role: 'assistant' | 'user';
   content: string;
   transcript?: string;
+  audioUrl?: string;
+}
+
+// --- Persistence helpers for in-progress intake ---
+const INTAKE_STORAGE_KEY = 'research-synthesizer:active-intake';
+const INTAKE_MAX_AGE_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+interface PersistedIntake {
+  sessionId: string;
+  messages: Array<{ role: 'assistant' | 'user'; content: string; transcript?: string }>;
+  currentPhase: string;
+  mockMode: boolean;
+  savedAt: number;
+}
+
+function saveActiveIntake(state: { sessionId: string; messages: Message[]; currentPhase: string; mockMode: boolean }) {
+  try {
+    const data: PersistedIntake = {
+      sessionId: state.sessionId,
+      messages: state.messages.map(({ role, content, transcript }) => ({ role, content, transcript })),
+      currentPhase: state.currentPhase,
+      mockMode: state.mockMode,
+      savedAt: Date.now(),
+    };
+    localStorage.setItem(INTAKE_STORAGE_KEY, JSON.stringify(data));
+  } catch { /* quota exceeded — ignore */ }
+}
+
+function loadActiveIntake(): PersistedIntake | null {
+  try {
+    const raw = localStorage.getItem(INTAKE_STORAGE_KEY);
+    if (!raw) return null;
+    const data: PersistedIntake = JSON.parse(raw);
+    if (Date.now() - data.savedAt > INTAKE_MAX_AGE_MS) {
+      localStorage.removeItem(INTAKE_STORAGE_KEY);
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function clearActiveIntake() {
+  try { localStorage.removeItem(INTAKE_STORAGE_KEY); } catch { /* ignore */ }
 }
 
 const PHASE_LABEL_KEYS: Record<string, string> = {
@@ -72,6 +118,7 @@ export function CareHubIntake({
   onBack?: () => void;
 } = {}) {
   const router = useRouter();
+  const { setRole } = useRole();
   const { locale: language, setLocale: setLanguage, t } = useTranslation();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -83,9 +130,28 @@ export function CareHubIntake({
   const [mockMode, setMockMode] = useState(false);
   const [saved, setSaved] = useState(false);
   const [isHandingOff, setIsHandingOff] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const { isRecording, audioBlob, audioDuration, start: startRecording, stop: stopRecording, clear: clearRecording } = useAudioRecorder();
   const pendingSendRef = useRef(false);
+
+  // Restore persisted intake on mount
+  useEffect(() => {
+    const persisted = loadActiveIntake();
+    if (persisted) {
+      setSessionId(persisted.sessionId);
+      setMessages(persisted.messages as Message[]);
+      setCurrentPhase(persisted.currentPhase);
+      setMockMode(persisted.mockMode);
+    }
+  }, []);
+
+  // Persist intake state on meaningful changes
+  useEffect(() => {
+    if (sessionId && !triage) {
+      saveActiveIntake({ sessionId, messages, currentPhase, mockMode });
+    }
+  }, [sessionId, messages, currentPhase, mockMode, triage]);
 
   const startInterview = useCallback(async () => {
     setIsLoading(true);
@@ -95,7 +161,7 @@ export function CareHubIntake({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language }),
-      }, 10000);
+      }, 30000);
       if (!res.ok) throw new Error(`Failed to start: ${res.status}`);
       const data = await res.json();
       setSessionId(data.session_id);
@@ -145,10 +211,11 @@ export function CareHubIntake({
     }
   }, [sessionId, messages, currentPhase, mockMode]);
 
-  // Save triage result when complete
+  // Save triage result when complete & clear persisted intake
   useEffect(() => {
     if (triage && sessionId && !saved) {
       setSaved(true);
+      clearActiveIntake();
       saveIntakeResult({
         id: `intake-${Date.now()}`,
         patientId: null,
@@ -156,11 +223,20 @@ export function CareHubIntake({
         completedAt: new Date().toISOString(),
         triageData: triage,
         conversationSummary: triage.chief_complaint || 'Patient intake completed',
+        conversationHistory: messages.map(({ role, content, transcript }) => ({ role, content, transcript })),
         source: 'patient-intake',
       });
       onComplete?.();
     }
   }, [triage, sessionId, saved]);
+
+  // Revoke blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      messages.forEach(m => { if (m.audioUrl) URL.revokeObjectURL(m.audioUrl); });
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const sendText = useCallback(async () => {
     if (!inputText.trim() || !sessionId || isLoading) return;
@@ -176,10 +252,11 @@ export function CareHubIntake({
         await new Promise(r => setTimeout(r, 800));
         const data = mockRespond(sessionId, text, updatedMessages, currentPhase);
         setCurrentPhase(data.phase);
-        const aiResponse = data.question?.trim() || "I understand. Can you tell me more?";
-        setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
         if (data.phase === 'review_and_triage' || data.phase === 'complete') {
           await completeInterview();
+        } else {
+          const aiResponse = data.question?.trim() || "I understand. Can you tell me more?";
+          setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
         }
       } else {
         const res = await fetchWithTimeout(`${API_URL}/api/interview/respond`, {
@@ -196,10 +273,11 @@ export function CareHubIntake({
         if (!res.ok) throw new Error(`Response failed: ${res.status}`);
         const data = await res.json();
         setCurrentPhase(data.phase);
-        const aiResponse = data.question?.trim() || "I understand. Can you tell me more?";
-        setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
         if (data.phase === 'review_and_triage' || data.phase === 'complete') {
           await completeInterview();
+        } else {
+          const aiResponse = data.question?.trim() || "I understand. Can you tell me more?";
+          setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
         }
       }
     } catch (err) {
@@ -222,7 +300,8 @@ export function CareHubIntake({
       return;
     }
 
-    setMessages(prev => [...prev, { role: 'user', content: '(audio recording...)', transcript: 'transcribing' }]);
+    const blobUrl = URL.createObjectURL(audioBlob);
+    setMessages(prev => [...prev, { role: 'user', content: '(audio recording...)', transcript: 'transcribing', audioUrl: blobUrl }]);
     setIsLoading(true);
     setError(null);
 
@@ -246,21 +325,25 @@ export function CareHubIntake({
       setMessages(prev => {
         const updated = [...prev];
         const idx = updated.findLastIndex(m => m.role === 'user');
-        if (idx >= 0) updated[idx] = { role: 'user', content: transcript || '(audio)', transcript };
+        if (idx >= 0) updated[idx] = { role: 'user', content: transcript || '(audio)', transcript, audioUrl: updated[idx].audioUrl };
         return updated;
       });
 
-      const aiResponse = data.question?.trim() || "I understand. Can you tell me more?";
-      setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
       setCurrentPhase(data.phase);
       if (data.phase === 'review_and_triage' || data.phase === 'complete') {
         await completeInterview();
+      } else {
+        const aiResponse = data.question?.trim() || "I understand. Can you tell me more?";
+        setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
       }
       clearRecording();
     } catch (err) {
       setMessages(prev => {
         const lastUserIdx = prev.findLastIndex(m => m.content === '(audio recording...)');
-        if (lastUserIdx >= 0) return prev.filter((_, i) => i !== lastUserIdx);
+        if (lastUserIdx >= 0) {
+          if (prev[lastUserIdx].audioUrl) URL.revokeObjectURL(prev[lastUserIdx].audioUrl!);
+          return prev.filter((_, i) => i !== lastUserIdx);
+        }
         return prev;
       });
       clearRecording();
@@ -372,6 +455,51 @@ export function CareHubIntake({
             <h2 className="text-lg font-semibold">{t('intake.assessmentSummary')}</h2>
             <TriageResult triage={triage} />
 
+            {/* Conversation History */}
+            {messages.length > 0 && (
+              <div className="border border-border rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setShowHistory(prev => !prev)}
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                    Conversation History
+                    <span className="text-xs text-muted-foreground font-normal">({messages.length} messages)</span>
+                  </div>
+                  {showHistory ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </button>
+                {showHistory && (
+                  <div className="border-t border-border px-4 py-4 max-h-96 overflow-y-auto space-y-3">
+                    {messages.map((msg, i) => (
+                      <div
+                        key={i}
+                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
+                            msg.role === 'user'
+                              ? 'bg-primary text-primary-foreground rounded-br-md'
+                              : 'bg-muted rounded-bl-md'
+                          }`}
+                        >
+                          <p dir="auto" className="text-sm leading-relaxed whitespace-pre-wrap">
+                            {msg.transcript && msg.transcript !== 'transcribing'
+                              ? msg.transcript
+                              : msg.content}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="mt-6 flex flex-wrap gap-3">
               <button
                 onClick={async () => {
@@ -396,6 +524,7 @@ export function CareHubIntake({
                     if (data.recommended_imaging?.length) {
                       sessionStorage.setItem('handoff-imaging', JSON.stringify(data.recommended_imaging));
                     }
+                    setRole('clinician');
                     router.push('/case?from=interview');
                   } catch (err) {
                     setError(err instanceof Error ? err.message : 'Handoff failed');
@@ -420,6 +549,7 @@ export function CareHubIntake({
               </button>
               <button
                 onClick={() => {
+                  clearActiveIntake();
                   setSessionId(null);
                   setMessages([]);
                   setTriage(null);
@@ -483,7 +613,7 @@ export function CareHubIntake({
           )}
 
           {/* Chat */}
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 min-w-0">
             <InterviewChat
               messages={messages}
               isLoading={isLoading}

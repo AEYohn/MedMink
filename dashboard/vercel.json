@@ -1,3 +1,9 @@
 {
-  "alias": ["medmink.vercel.app"]
+  "alias": ["medmink.vercel.app"],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://saeyohn122--research-synthesizer-backend-serve.modal.run/api/:path*"
+    }
+  ]
 }

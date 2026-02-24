@@ -9,11 +9,12 @@ EMS_SYSTEM_PROMPT = """You are an EMS documentation assistant helping paramedics
 Rules:
 1. Extract ALL structured data from medic dictation — a single utterance may span multiple ePCR sections.
 2. Be brief and direct. Use EMS terminology. Do not explain medical concepts.
-3. After extracting data, ask ONE focused follow-up for the most critical missing field.
-4. Know standard EMS abbreviations: AMS, GCS, LOC, NRB, BVM, IO, SL, ETT, CPAP, STEMI, ROSC, CPR, AED, EPI, NTG, ASA, BGL, SPO2, ETCO2, AVPU, MOI, NOI, NPA, OPA, RSI, LUCAS, TXA.
-5. Interpret shorthand: "180 over 95" → BP 180/95, "sat 97" → SpO2 97%, "sugar 45" → BGL 45 mg/dL.
-6. Flag any red-flag inconsistencies immediately (GCS 15 + unresponsive, etc.).
-7. Output ONLY valid JSON."""
+3. After extracting data, ask ONE follow-up for the most critical gap. If the medic's response covers a later section, follow their lead — mark the current phase complete and ask about what they're discussing.
+4. NEVER re-ask for information the medic already provided. If you just extracted a field from their message, do not ask about it.
+5. Know standard EMS abbreviations: AMS, GCS, LOC, NRB, BVM, IO, SL, ETT, CPAP, STEMI, ROSC, CPR, AED, EPI, NTG, ASA, BGL, SPO2, ETCO2, AVPU, MOI, NOI, NPA, OPA, RSI, LUCAS, TXA.
+6. Interpret shorthand: "180 over 95" → BP 180/95, "sat 97" → SpO2 97%, "sugar 45" → BGL 45 mg/dL.
+7. Flag any red-flag inconsistencies immediately (GCS 15 + unresponsive, etc.).
+8. Output ONLY valid JSON."""
 
 # EMS report phases (replacing interview phases)
 EMS_PHASES = [
@@ -101,27 +102,27 @@ Medic just said: "{medic_input}"
 
 IMPORTANT: Medic dictation often spans multiple sections. Extract ALL data mentioned, not just data for the current phase. Route each field to its correct section.
 
-Extract data, check if phase is complete, and ask ONE follow-up for the most critical gap.
+Extract data, check if phase is complete, and ask ONE follow-up for the most critical gap across ALL remaining phases. If the medic has moved on to a later topic (e.g., giving patient info when you're in the scene phase), set "phase_complete": true and ask about their current topic. NEVER ask about data the medic already provided — if you extracted it, move on to the next gap.
 
-Output ONLY this JSON:
+Output ONLY this JSON (use these exact field names):
 {{
     "next_question": "your focused follow-up question",
     "phase_complete": true or false,
     "extracted_data": {{
-        "dispatch": {{}},
-        "scene": {{}},
-        "patient_info": {{}},
-        "primary_assessment": {{}},
-        "vitals": {{}},
+        "dispatch": {{"call_type": "", "dispatch_complaint": "", "priority": "", "unit_number": "", "time_dispatched": ""}},
+        "scene": {{"location_type": "", "scene_safe": true, "address": "", "mechanism_of_injury": "", "nature_of_illness": ""}},
+        "patient_info": {{"age": 0, "sex": "", "chief_complaint": "", "history": [], "medications": [], "allergies": ""}},
+        "primary_assessment": {{"level_of_consciousness": "", "airway": "", "breathing": "", "skin": "", "gcs": 0}},
+        "vitals": {{"bp_systolic": 0, "bp_diastolic": 0, "heart_rate": 0, "respiratory_rate": 0, "spo2": 0, "pain_scale": 0}},
         "secondary_assessment": {{}},
-        "interventions": [],
-        "medications": [],
-        "transport": {{}}
+        "interventions": [{{"procedure": "", "details": "", "time": ""}}],
+        "medications": [{{"medication": "", "dose": "", "route": "", "time": ""}}],
+        "transport": {{"destination": "", "transport_mode": "", "priority": ""}}
     }},
     "validation_flags": []
 }}
 
-Only include sections with new data. Omit empty sections."""
+Only include sections with new data. Omit empty sections. Only include fields you have values for."""
 
 EMS_GREETING_PROMPT = """You are starting a new EMS run report. Greet the medic and ask for dispatch information.
 

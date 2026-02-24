@@ -10,6 +10,8 @@ import {
   Loader2,
   Stethoscope,
   Beaker,
+  Brain,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,10 +40,17 @@ interface DDxResult {
   diagnoses: DDxDiagnosis[];
 }
 
+interface AgentDiagnosis {
+  primary_diagnosis: string;
+  confidence: number;
+  key_findings?: string[];
+}
+
 interface DifferentialDiagnosisTabProps {
   ddxResult: DDxResult | null;
   caseText: string;
   parsedCase: Record<string, unknown>;
+  agentDiagnosis?: AgentDiagnosis | null;
 }
 
 const likelihoodColor = {
@@ -66,6 +75,7 @@ export function DifferentialDiagnosisTab({
   ddxResult,
   caseText,
   parsedCase,
+  agentDiagnosis,
 }: DifferentialDiagnosisTabProps) {
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -143,6 +153,46 @@ export function DifferentialDiagnosisTab({
           Regenerate DDx
         </Button>
       </div>
+
+      {/* Agent Diagnosis Card */}
+      {agentDiagnosis && (
+        <Card className="border-indigo-200 dark:border-indigo-800 border-l-4 border-l-indigo-500">
+          <CardHeader className="py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Brain className="w-4 h-4 text-indigo-600" />
+                <CardTitle className="text-base">{agentDiagnosis.primary_diagnosis}</CardTitle>
+                <Badge className="text-[10px] px-1.5 py-0 bg-indigo-100 text-indigo-700 border-indigo-300">
+                  Agent
+                </Badge>
+              </div>
+              <Badge variant="outline" className="font-mono text-indigo-700 border-indigo-300">
+                {Math.round(agentDiagnosis.confidence * 100)}%
+              </Badge>
+            </div>
+            {agentDiagnosis.key_findings && agentDiagnosis.key_findings.length > 0 && (
+              <div className="mt-2 space-y-0.5">
+                {agentDiagnosis.key_findings.map((f, i) => (
+                  <p key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
+                    <CheckCircle2 className="w-3 h-3 text-indigo-400 mt-0.5 shrink-0" />
+                    {f}
+                  </p>
+                ))}
+              </div>
+            )}
+            {/* Discrepancy callout */}
+            {result.diagnoses.length > 0 &&
+              result.diagnoses[0].diagnosis.toLowerCase() !== agentDiagnosis.primary_diagnosis.toLowerCase() && (
+              <div className="flex items-start gap-2 mt-2 p-2 rounded bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
+                <p className="text-xs text-amber-800 dark:text-amber-200">
+                  <span className="font-medium">Discrepancy:</span> Agent diagnosis differs from top DDx ({result.diagnoses[0].diagnosis}). Review both assessments.
+                </p>
+              </div>
+            )}
+          </CardHeader>
+        </Card>
+      )}
 
       {/* Diagnosis Cards */}
       {result.diagnoses.map((dx, i) => (

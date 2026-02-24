@@ -90,7 +90,8 @@ export function useEMSSession() {
   const addMessage = useCallback((msg: EMSMessage) => {
     const cur = sessionRef.current;
     if (!cur) return;
-    const updated = { ...cur, messages: [...cur.messages, msg] };
+    const stamped = msg.timestamp ? msg : { ...msg, timestamp: new Date().toISOString() };
+    const updated = { ...cur, messages: [...cur.messages, stamped] };
     saveSession(updated);
     setSession(updated);
   }, [setSession]);

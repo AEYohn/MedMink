@@ -150,6 +150,7 @@ export interface EMSMessage {
   role: 'assistant' | 'user';
   content: string;
   transcript?: string;
+  timestamp?: string;
 }
 
 export interface EMSSession {

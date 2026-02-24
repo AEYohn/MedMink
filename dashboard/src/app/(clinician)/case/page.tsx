@@ -73,6 +73,9 @@ import { FollowUpChatDrawer } from '@/components/case/FollowUpChatDrawer';
 import { AgentReasoningTrace } from '@/components/case/AgentReasoningTrace';
 import { ConsensusPanel } from '@/components/case/ConsensusPanel';
 import type { ConsensusData } from '@/components/case/ConsensusPanel';
+import { ModelAttributionStrip } from '@/components/case/ModelAttributionStrip';
+import { FoundationModelFindings } from '@/components/case/FoundationModelFindings';
+import { QualityScorecard } from '@/components/case/QualityScorecard';
 import { SafetyAlertBanner } from '@/components/case/SafetyAlertBanner';
 import { PatientSummaryPreview } from '@/components/case/PatientSummaryPreview';
 import { PatientBanner } from '@/components/shared/PatientBanner';
@@ -100,6 +103,9 @@ import type {
   CaseAnalysisResult,
   FollowUpMessage,
   SSEEvent,
+  AgentAssessment,
+  AgentToolResult,
+  AgentConsensusData,
 } from '@/types/case';
 
 // Tab migration for saved sessions with old tab names
@@ -109,14 +115,13 @@ const TAB_MIGRATION: Record<string, string> = {
   safety: 'review',
   orders: 'plan',
   tools: 'tools',
-  agent: 'agent',
 };
 
 // Example cases
 const EXAMPLE_CASES: Record<string, { label: string; text: string }> = {
-  musculoskeletal: {
-    label: 'Neck Pain',
-    text: `A 21-year-old male college student presents with progressive neck stiffness and pain for the past 3 days. He reports difficulty turning his head to the left. No fever, no trauma history. He spends 8+ hours daily on his laptop. Physical exam shows limited cervical range of motion, tenderness over the left trapezius and sternocleidomastoid muscles, no neurological deficits. No meningeal signs.`,
+  emergency: {
+    label: 'Chest Pain (PE)',
+    text: `A 21-year-old male college student presents to urgent care with sharp right-sided chest pain that started this morning, rated 5/10, worse with deep breaths. He just finished finals and spent the past 4 days mostly sitting at his desk studying and gaming with minimal breaks. No significant past medical history, no medications, no allergies. Vitals: HR 108, BP 128/82, RR 20, SpO2 94% on room air, Temp 98.6°F. Lung exam is clear bilaterally. No chest wall tenderness. He has mild left calf swelling with tenderness on palpation, which he attributes to "sleeping in a weird position."`,
   },
   cardiology: {
     label: 'Chest Pain (STEMI)',
@@ -156,6 +161,7 @@ const PIPELINE_STEPS = [
   { id: 'evidence_search', label: 'Evidence', icon: Beaker },
   { id: 'evaluating', label: 'Evaluate', icon: Activity },
   { id: 'medication_review', label: 'Meds', icon: Pill },
+  { id: 'agent_reasoning', label: 'Agent', icon: Brain },
   { id: 'complete', label: 'Done', icon: CheckCircle2 },
 ];
 
@@ -242,6 +248,21 @@ export default function CaseAnalysisPage() {
 
   // Dictation state
   const [showDictation, setShowDictation] = useState(false);
+
+  // Agent state
+  const [agentAssessment, setAgentAssessment] = useState<AgentAssessment | null>(null);
+  const [agentConsensus, setAgentConsensus] = useState<AgentConsensusData | null>(null);
+  const [agentToolResults, setAgentToolResults] = useState<AgentToolResult[]>([]);
+  const [agentToolsUsed, setAgentToolsUsed] = useState<string[]>([]);
+
+  // Agent streaming events for inline progress display
+  const [agentStreamEvents, setAgentStreamEvents] = useState<Array<{ type: string; text: string; tool?: string; model?: string }>>([]);
+  const agentAutoRunRef = useRef(false);
+
+  // Interview handoff state
+  const [interviewDDx, setInterviewDDx] = useState<Record<string, unknown> | null>(null);
+  const handoffAutoSubmitRef = useRef(false);
+  const [dictationUsed, setDictationUsed] = useState(false);
 
   // Clinician overrides
   const [overrides, setOverrides] = useState<ClinicianOverrides>(createEmptyOverrides());
@@ -340,6 +361,74 @@ export default function CaseAnalysisPage() {
     dischargePlanRef.current = plan;
   }, []);
 
+  // Agent callbacks
+  const handleAgentAssessment = useCallback((assessment: AgentAssessment, toolsUsed: string[]) => {
+    setAgentAssessment(assessment);
+    setAgentToolsUsed(toolsUsed);
+
+    // Auto-inject recommended_actions into acute management overrides
+    if (assessment.recommended_actions?.length) {
+      setOverrides(prev => {
+        const existing = prev.sectionCustomActions['immediate'] || [];
+        const existingTexts = new Set(existing.map(a => a.text));
+        const newActions = assessment.recommended_actions!
+          .filter(action => !existingTexts.has(`[Agent] ${action}`))
+          .map(action => ({
+            id: `agent-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            text: `[Agent] ${action}`,
+            checked: false,
+            addedAt: new Date().toISOString(),
+          }));
+        if (newActions.length === 0) return prev;
+        const updated = {
+          ...prev,
+          sectionCustomActions: {
+            ...prev.sectionCustomActions,
+            immediate: [...existing, ...newActions],
+          },
+          lastModified: new Date().toISOString(),
+        };
+        session.updateOverrides(updated);
+        return updated;
+      });
+    }
+
+    // Persist to session
+    session.saveSession({
+      ...session.currentSession!,
+      agentResult: {
+        assessment,
+        consensus: agentConsensus,
+        toolResults: agentToolResults,
+        toolsUsed,
+        completedAt: new Date().toISOString(),
+      },
+      updatedAt: new Date().toISOString(),
+    });
+  }, [session, agentConsensus, agentToolResults]);
+
+  const handleAgentConsensus = useCallback((consensus: AgentConsensusData) => {
+    setAgentConsensus(consensus);
+    // Persist to session
+    if (session.currentSession) {
+      session.saveSession({
+        ...session.currentSession,
+        agentResult: {
+          assessment: agentAssessment,
+          consensus,
+          toolResults: agentToolResults,
+          toolsUsed: agentToolsUsed,
+          completedAt: new Date().toISOString(),
+        },
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  }, [session, agentAssessment, agentToolResults, agentToolsUsed]);
+
+  const handleAgentToolResult = useCallback((tool: string, model: string, result: Record<string, unknown>) => {
+    setAgentToolResults(prev => [...prev, { tool, model, result }]);
+  }, []);
+
   const handleOverridesChange = useCallback((newOverrides: ClinicianOverrides) => {
     // Detect treatment verdict changes and log timeline events
     if (session.currentSession && result) {
@@ -382,16 +471,23 @@ export default function CaseAnalysisPage() {
       return;
     }
 
-    // Interview handoff — load vignette from sessionStorage
+    // Interview handoff — load vignette from sessionStorage and auto-submit
     if (params.get('from') === 'interview') {
       const vignette = sessionStorage.getItem('handoff-vignette');
+      const mgmtPlanRaw = sessionStorage.getItem('handoff-management-plan');
       if (vignette) {
         session.clearCurrentSession();
         resetAnalysisState();
         setCaseText(vignette);
+        if (mgmtPlanRaw) {
+          try { setInterviewDDx(JSON.parse(mgmtPlanRaw)); } catch {}
+        }
         sessionStorage.removeItem('handoff-vignette');
         sessionStorage.removeItem('handoff-management-plan');
+        sessionStorage.removeItem('handoff-extracted-data');
         sessionStorage.removeItem('handoff-imaging');
+        // Mark for auto-submit
+        handoffAutoSubmitRef.current = true;
       }
       window.history.replaceState({}, '', '/case');
       return;
@@ -406,12 +502,23 @@ export default function CaseAnalysisPage() {
 
     if (session.currentSession) {
       const s = session.currentSession;
+      s.events = s.events || [];
+      s.followUpMessages = s.followUpMessages || [];
       setCaseText(s.currentCaseText);
       setPatientId(s.patientId || '');
       if (s.patientId) setActivePatient(s.patientId);
       if (s.overrides) setOverrides(s.overrides);
       if (s.currentResult) {
         const r = s.currentResult as unknown as CaseAnalysisData;
+        // Guard against old stored sessions missing array fields
+        r.treatment_options = r.treatment_options || [];
+        r.clinical_pearls = r.clinical_pearls || [];
+        r.papers_reviewed = r.papers_reviewed || [];
+        if (r.medication_review) {
+          r.medication_review.interactions = r.medication_review.interactions || [];
+          r.medication_review.renal_flags = r.medication_review.renal_flags || [];
+          r.medication_review.duplicate_therapy = r.medication_review.duplicate_therapy || [];
+        }
         setResult(r);
         if (r.parsed_case) setParsedCase(r.parsed_case);
         if (r.suggested_followups?.length) setSuggestedQuestions(r.suggested_followups);
@@ -419,8 +526,24 @@ export default function CaseAnalysisPage() {
       if (s.followUpMessages?.length) setFollowUpMessages(s.followUpMessages);
       if (s.activeTab) setActiveTab(TAB_MIGRATION[s.activeTab] || s.activeTab);
       if (s.chatOpen) setChatOpen(s.chatOpen);
+      if (s.agentResult) {
+        if (s.agentResult.assessment) setAgentAssessment(s.agentResult.assessment);
+        if (s.agentResult.consensus) setAgentConsensus(s.agentResult.consensus);
+        if (s.agentResult.toolResults) setAgentToolResults(s.agentResult.toolResults);
+        if (s.agentResult.toolsUsed) setAgentToolsUsed(s.agentResult.toolsUsed);
+      }
     }
   }, [session.isLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-submit on interview handoff
+  useEffect(() => {
+    if (handoffAutoSubmitRef.current && caseText.trim().length >= MIN_CASE_LENGTH && !isLoading && !result) {
+      handoffAutoSubmitRef.current = false;
+      // Trigger submit programmatically
+      const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+      handleSubmit(fakeEvent);
+    }
+  }, [caseText]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     followUpEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -570,7 +693,89 @@ export default function CaseAnalysisPage() {
     setPendingFindings([]);
     setStreamingOptions([]);
     setOverrides(createEmptyOverrides());
+    setAgentAssessment(null);
+    setAgentConsensus(null);
+    setAgentToolResults([]);
+    setAgentToolsUsed([]);
+    setAgentStreamEvents([]);
+    setInterviewDDx(null);
   };
+
+  const runAgentReasoning = useCallback(async (analysisText: string, resultData: CaseAnalysisData) => {
+    setCurrentStep('agent_reasoning');
+    setStepMessage('Running clinical reasoning agent...');
+    setAgentStreamEvents([]);
+
+    try {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/agent/reason/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          case_text: analysisText,
+          parsed_case: resultData.parsed_case || null,
+        }),
+      });
+
+      if (!response.ok) {
+        console.warn('Agent reasoning failed:', response.status);
+        return;
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) return;
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop() || '';
+
+        for (const part of parts) {
+          if (part.startsWith(': heartbeat')) continue;
+          const dataLine = part.split('\n').find(l => l.startsWith('data: '));
+          if (!dataLine) continue;
+
+          try {
+            const event = JSON.parse(dataLine.slice(6));
+
+            // Update inline progress display
+            if (event.type === 'thinking') {
+              setAgentStreamEvents(prev => [...prev, { type: 'thinking', text: event.reasoning }]);
+              setStepMessage(event.reasoning.slice(0, 80) + '...');
+            } else if (event.type === 'tool_call') {
+              const toolLabel = event.tool?.replace(/_/g, ' ') || 'tool';
+              setAgentStreamEvents(prev => [...prev, { type: 'tool_call', text: `Invoking ${toolLabel}`, tool: event.tool, model: event.model }]);
+              setStepMessage(`Invoking ${toolLabel}...`);
+            } else if (event.type === 'tool_result') {
+              setAgentStreamEvents(prev => [...prev, { type: 'tool_result', text: `${event.tool?.replace(/_/g, ' ')} complete`, tool: event.tool }]);
+              if (event.tool && event.result) {
+                // Find the matching tool_call for its model
+                handleAgentToolResult(event.tool, '', event.result);
+              }
+            } else if (event.type === 'assessment') {
+              setAgentStreamEvents(prev => [...prev, { type: 'assessment', text: event.final_assessment?.primary_diagnosis || 'Assessment complete' }]);
+              handleAgentAssessment(event.final_assessment, event.tools_used);
+            } else if (event.type === 'consensus') {
+              setAgentStreamEvents(prev => [...prev, { type: 'consensus', text: 'Cross-modal consensus built' }]);
+              handleAgentConsensus(event.consensus);
+            } else if (event.type === 'done') {
+              setCompletedSteps(prev => new Set([...Array.from(prev), 'agent_reasoning']));
+            }
+          } catch {
+            // Skip malformed events
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Agent reasoning error:', err);
+    }
+  }, [handleAgentAssessment, handleAgentConsensus, handleAgentToolResult]);
 
   const MIN_CASE_LENGTH = 50;
 
@@ -599,9 +804,9 @@ export default function CaseAnalysisPage() {
       const age = getPatientAge(linkedPatient);
       const sex = linkedPatient.sex;
       ctx.push(`Patient: ${age}yo ${sex === 'male' ? 'male' : sex === 'female' ? 'female' : 'patient'}`);
-      if (linkedPatient.conditions.length > 0) ctx.push(`PMH: ${linkedPatient.conditions.join(', ')}`);
-      if (linkedPatient.medications.length > 0) ctx.push(`Current medications: ${linkedPatient.medications.join(', ')}`);
-      if (linkedPatient.allergies.length > 0) ctx.push(`Allergies: ${linkedPatient.allergies.join(', ')}`);
+      if (linkedPatient.conditions?.length > 0) ctx.push(`PMH: ${linkedPatient.conditions.join(', ')}`);
+      if (linkedPatient.medications?.length > 0) ctx.push(`Current medications: ${linkedPatient.medications.join(', ')}`);
+      if (linkedPatient.allergies?.length > 0) ctx.push(`Allergies: ${linkedPatient.allergies.join(', ')}`);
       const contextBlock = ctx.join('. ') + '.';
       if (!analysisText.includes(contextBlock.slice(0, 30))) {
         analysisText = contextBlock + '\n\n' + analysisText;
@@ -616,10 +821,17 @@ export default function CaseAnalysisPage() {
         body: JSON.stringify({ case_text: analysisText }),
       });
       if (!response.ok) throw new Error('Failed to start analysis');
-      await processSSEStream(response, (resultData) => {
-        session.updateResult(resultData as unknown as Record<string, unknown>);
-        session.addEvent({ type: 'initial_analysis', changeSummary: `Initial analysis: ${resultData.top_recommendation || 'No recommendation'}` });
+      let resultData: CaseAnalysisData | null = null;
+      await processSSEStream(response, (data) => {
+        resultData = data;
+        session.updateResult(data as unknown as Record<string, unknown>);
+        session.addEvent({ type: 'initial_analysis', changeSummary: `Initial analysis: ${data.top_recommendation || 'No recommendation'}` });
       });
+
+      // Auto-trigger agent reasoning after main analysis completes
+      if (resultData) {
+        await runAgentReasoning(analysisText, resultData);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -707,6 +919,17 @@ export default function CaseAnalysisPage() {
       setFollowUpMessages(loaded.followUpMessages || []);
       setPendingFindings([]);
       setError(null);
+      if (loaded.agentResult) {
+        if (loaded.agentResult.assessment) setAgentAssessment(loaded.agentResult.assessment);
+        if (loaded.agentResult.consensus) setAgentConsensus(loaded.agentResult.consensus);
+        if (loaded.agentResult.toolResults) setAgentToolResults(loaded.agentResult.toolResults);
+        if (loaded.agentResult.toolsUsed) setAgentToolsUsed(loaded.agentResult.toolsUsed);
+      } else {
+        setAgentAssessment(null);
+        setAgentConsensus(null);
+        setAgentToolResults([]);
+        setAgentToolsUsed([]);
+      }
     }
   };
 
@@ -776,6 +999,7 @@ export default function CaseAnalysisPage() {
 
   const handleDictationTranscript = useCallback((text: string) => {
     setCaseText(prev => prev ? prev + '\n' + text : text);
+    setDictationUsed(true);
   }, []);
 
   const loadExample = () => {
@@ -783,6 +1007,136 @@ export default function CaseAnalysisPage() {
     setCaseText(EXAMPLE_CASES[key].text);
     setExampleIndex((exampleIndex + 1) % EXAMPLE_CASE_KEYS.length);
   };
+
+  // Merge agent risk scores with main analysis scores
+  const { mergedRiskScores, agentScoreIds } = useMemo(() => {
+    const mainScores = result?.clinical_risk_scores || null;
+    const agentRiskResult = agentToolResults.find(tr => tr.tool === 'compute_risk_scores');
+    if (!agentRiskResult) return { mergedRiskScores: mainScores, agentScoreIds: new Set<string>() };
+
+    const agentScores = (agentRiskResult.result as { scores?: Array<{ score_id: string; score_name: string; total_score: number; max_score: number; risk_level: string; risk_interpretation: string; recommendation: string; variables: Array<{ name: string; value: number | string | null; source: string; points: number; label: string; criteria: string }>; missing_variables: string[]; applicable: boolean }> })?.scores || [];
+    if (agentScores.length === 0) return { mergedRiskScores: mainScores, agentScoreIds: new Set<string>() };
+
+    const existingIds = new Set((mainScores?.scores || []).map(s => s.score_id));
+    const newScores = agentScores.filter(s => !existingIds.has(s.score_id));
+    const newIds = new Set(newScores.map(s => s.score_id));
+
+    if (newScores.length === 0) return { mergedRiskScores: mainScores, agentScoreIds: new Set<string>() };
+
+    const merged = {
+      scores: [...(mainScores?.scores || []), ...newScores.map(s => ({
+        ...s,
+        variables: s.variables.map(v => ({ ...v, source: v.source as 'deterministic' | 'medgemma' | 'missing' })),
+      }))],
+      case_category: mainScores?.case_category || '',
+      summary: mainScores?.summary || '',
+    };
+
+    return { mergedRiskScores: merged, agentScoreIds: newIds };
+  }, [result?.clinical_risk_scores, agentToolResults]);
+
+  // Agent diagnosis for DDx tab
+  const agentDiagnosis = useMemo(() => {
+    if (!agentAssessment?.primary_diagnosis || !agentAssessment?.confidence) return null;
+    return {
+      primary_diagnosis: agentAssessment.primary_diagnosis,
+      confidence: agentAssessment.confidence,
+      key_findings: agentAssessment.key_findings,
+    };
+  }, [agentAssessment]);
+
+  // Build lightweight consensus when agent consensus is unavailable
+  const effectiveConsensus = useMemo((): ConsensusData | null => {
+    // If full agent consensus exists, use it
+    if (agentConsensus) return agentConsensus;
+    // If no result yet, nothing to show
+    if (!result) return null;
+
+    // Build lightweight consensus from available signals
+    const agreements: Array<{ finding: string; models: string[]; confidence: number }> = [];
+    const contributingModels: string[] = ['MedGemma'];
+
+    // MedGemma core reasoning
+    if (result.top_recommendation) {
+      agreements.push({
+        finding: `Primary recommendation: ${result.top_recommendation}`,
+        models: ['MedGemma'],
+        confidence: result.treatment_options.find(t => t.name === result.top_recommendation)?.confidence || 0.8,
+      });
+    }
+
+    // Risk scores (deterministic)
+    if (result.clinical_risk_scores?.scores?.length) {
+      const highRisk = result.clinical_risk_scores.scores.filter(s =>
+        /high|critical|elevated/i.test(s.risk_level)
+      );
+      if (highRisk.length > 0) {
+        agreements.push({
+          finding: `Risk scores: ${highRisk.map(s => `${s.score_name} (${s.risk_level})`).join(', ')}`,
+          models: ['Deterministic Scoring'],
+          confidence: 0.95,
+        });
+        if (!contributingModels.includes('Risk Scores')) contributingModels.push('Risk Scores');
+      }
+    }
+
+    // TxGemma / medication safety
+    if (result.medication_review) {
+      const mr = result.medication_review;
+      const totalFlags = (mr.interactions?.length || 0) + (mr.renal_flags?.length || 0);
+      if (totalFlags > 0) {
+        agreements.push({
+          finding: `Medication safety: ${totalFlags} flag(s) identified`,
+          models: ['TxGemma', 'Deterministic'],
+          confidence: 0.9,
+        });
+        if (!contributingModels.includes('TxGemma')) contributingModels.push('TxGemma');
+      } else {
+        agreements.push({
+          finding: 'Medication safety: No significant interactions detected',
+          models: ['TxGemma', 'Deterministic'],
+          confidence: 0.85,
+        });
+        if (!contributingModels.includes('TxGemma')) contributingModels.push('TxGemma');
+      }
+    }
+
+    // Agent tool results — CXR, Derm, etc.
+    for (const tr of agentToolResults) {
+      const toolModelMap: Record<string, string> = {
+        analyze_chest_xray: 'CXR Foundation',
+        analyze_skin_lesion: 'Derm Foundation',
+        analyze_pathology: 'Path Foundation',
+        screen_respiratory: 'HeAR',
+        predict_drug_toxicity: 'TxGemma',
+      };
+      const modelName = toolModelMap[tr.tool];
+      if (modelName && !('error' in (tr.result || {}))) {
+        if (!contributingModels.includes(modelName)) contributingModels.push(modelName);
+      }
+    }
+
+    // Disposition agreement
+    if (result.acute_management?.disposition && result.acute_management?.risk_stratification) {
+      agreements.push({
+        finding: `Disposition: ${result.acute_management.disposition} (${result.acute_management.risk_stratification})`,
+        models: ['MedGemma'],
+        confidence: 0.85,
+      });
+    }
+
+    if (agreements.length === 0) return null;
+
+    const avgConf = agreements.reduce((sum, a) => sum + a.confidence, 0) / agreements.length;
+
+    return {
+      agreements,
+      disagreements: [],
+      integrated_assessment: `${contributingModels.length} signal source${contributingModels.length !== 1 ? 's' : ''} evaluated. ${agreements.length} points of agreement identified.`,
+      overall_confidence: avgConf,
+      contributing_models: contributingModels,
+    };
+  }, [result, agentConsensus, agentToolResults]);
 
   // Count unacknowledged safety alerts for sidebar badge
   const SERIOUS_KEYWORDS_RE = /contraindicated|avoid|risk|caution|dangerous|toxic|fatal|severe/i;
@@ -990,6 +1344,29 @@ export default function CaseAnalysisPage() {
                 })}
               </div>
               <Progress value={stepProgress * 100} className="h-1" />
+              {/* Agent reasoning inline progress */}
+              {currentStep === 'agent_reasoning' && agentStreamEvents.length > 0 && (
+                <div className="mt-3 space-y-1 max-h-40 overflow-y-auto">
+                  {agentStreamEvents.slice(-5).map((evt, i) => (
+                    <div key={i} className={cn(
+                      'flex items-center gap-2 text-xs px-2 py-1 rounded',
+                      evt.type === 'thinking' && 'text-indigo-600',
+                      evt.type === 'tool_call' && 'text-amber-600 font-medium',
+                      evt.type === 'tool_result' && 'text-green-600',
+                      evt.type === 'assessment' && 'text-green-700 font-semibold',
+                      evt.type === 'consensus' && 'text-purple-600 font-semibold',
+                    )}>
+                      {evt.type === 'thinking' && <Brain className="w-3 h-3 shrink-0" />}
+                      {evt.type === 'tool_call' && <Wrench className="w-3 h-3 shrink-0" />}
+                      {evt.type === 'tool_result' && <CheckCircle2 className="w-3 h-3 shrink-0" />}
+                      {evt.type === 'assessment' && <Sparkles className="w-3 h-3 shrink-0" />}
+                      {evt.type === 'consensus' && <Sparkles className="w-3 h-3 shrink-0" />}
+                      <span className="truncate">{evt.text}</span>
+                      {evt.model && <Badge variant="outline" className="text-[9px] px-1 py-0 shrink-0">{evt.model}</Badge>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -1043,6 +1420,58 @@ export default function CaseAnalysisPage() {
             {/* Case Summary — always visible */}
             {parsedCase && <CaseSummaryCard parsedCase={parsedCase} />}
 
+            {/* Model Attribution Strip — shows which Google Health AI models contributed */}
+            <ModelAttributionStrip
+              activeTools={currentStep === 'agent_reasoning'
+                ? agentStreamEvents.filter(e => e.type === 'tool_call').map(e => e.tool!).filter(Boolean)
+                : []
+              }
+              usedTools={agentToolsUsed}
+              toolResults={agentToolResults}
+              isAnalyzing={isLoading}
+              dictationUsed={dictationUsed}
+              medicationReviewRan={!!result?.medication_review && (
+                (result.medication_review.interactions?.length || 0) > 0 ||
+                (result.medication_review.renal_flags?.length || 0) > 0 ||
+                (result.medication_review.duplicate_therapy?.length || 0) > 0 ||
+                !!result.medication_review.renal_function?.egfr
+              )}
+            />
+
+            {/* Interview DDx Card — shows when case came from interview handoff */}
+            {interviewDDx && (
+              <Card className="border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20">
+                <CardContent className="pt-3 pb-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ClipboardList className="w-4 h-4 text-blue-600" />
+                    <span className="text-xs font-semibold uppercase tracking-wider text-blue-600">
+                      Interview Triage Data
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {'triage' in interviewDDx && interviewDDx.triage != null && (
+                      <div>
+                        <span className="text-muted-foreground">ESI Level:</span>{' '}
+                        <span className="font-medium">{String((interviewDDx.triage as Record<string, unknown>).esi_level || 'N/A')}</span>
+                      </div>
+                    )}
+                    {'recommended_setting' in interviewDDx && interviewDDx.recommended_setting != null && (
+                      <div>
+                        <span className="text-muted-foreground">Setting:</span>{' '}
+                        <span className="font-medium">{String(interviewDDx.recommended_setting)}</span>
+                      </div>
+                    )}
+                    {Array.isArray(interviewDDx.red_flags) && (interviewDDx.red_flags as string[]).length > 0 && (
+                      <div className="col-span-2">
+                        <span className="text-muted-foreground">Red Flags:</span>{' '}
+                        <span className="font-medium text-red-600">{(interviewDDx.red_flags as string[]).join(', ')}</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Safety Alert Banner */}
             <SafetyAlertBanner
               count={unackedAlerts}
@@ -1074,16 +1503,44 @@ export default function CaseAnalysisPage() {
                   <Wrench className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Tools</span>
                 </TabsTrigger>
-                <TabsTrigger value="agent" className="gap-1.5">
-                  <Brain className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Agent</span>
-                </TabsTrigger>
               </TabsList>
 
               {/* ─── Clinical Review Tab (Assessment + Safety) ─── */}
               <TabsContent value="review" forceMount className={activeTab !== 'review' ? 'hidden' : ''}>
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                   <div className="lg:col-span-3 space-y-6">
+                    {/* Agent Assessment Banner */}
+                    {agentAssessment && (
+                      <Card className="border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/20">
+                        <CardContent className="pt-3 pb-3">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Brain className="w-4 h-4 text-indigo-600" />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600">Agent Assessment</span>
+                            {agentAssessment.confidence != null && (
+                              <Badge variant="outline" className="ml-auto font-mono text-indigo-700 border-indigo-300">
+                                {Math.round(agentAssessment.confidence * 100)}%
+                              </Badge>
+                            )}
+                          </div>
+                          {agentAssessment.primary_diagnosis && (
+                            <p className="text-sm font-medium text-indigo-900 dark:text-indigo-100">{agentAssessment.primary_diagnosis}</p>
+                          )}
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {agentToolsUsed.map(tool => (
+                              <Badge key={tool} variant="secondary" className="text-[10px] bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300">
+                                {tool.replace(/_/g, ' ')}
+                              </Badge>
+                            ))}
+                          </div>
+                          {agentAssessment.disposition && result.acute_management?.disposition &&
+                            agentAssessment.disposition !== result.acute_management.disposition && (
+                            <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-1.5">
+                              Agent disposition: <span className="font-medium">{agentAssessment.disposition}</span>
+                            </p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
                     {hasAcuteManagement(result.acute_management) && (
                       <AcuteManagementEditor
                         acuteManagement={result.acute_management!}
@@ -1119,14 +1576,19 @@ export default function CaseAnalysisPage() {
                         cons: t.cons,
                       }))}
                     />
+                    {/* Foundation Model Findings — visual cards from agent tool results */}
+                    {agentToolResults.length > 0 && (
+                      <FoundationModelFindings toolResults={agentToolResults} />
+                    )}
                   </div>
                   <div className="lg:col-span-2 space-y-6">
                     <RiskScoresTab
-                      riskScores={result.clinical_risk_scores || null}
+                      riskScores={mergedRiskScores}
                       caseText={caseText}
                       parsedCase={result.parsed_case as unknown as Record<string, unknown>}
                       overrides={overrides}
                       onOverridesChange={handleOverridesChange}
+                      agentScoreIds={agentScoreIds}
                     />
                     <Section
                       title="Differential Diagnosis"
@@ -1136,9 +1598,10 @@ export default function CaseAnalysisPage() {
                         ddxResult={result.differential_diagnosis || null}
                         caseText={caseText}
                         parsedCase={result.parsed_case as unknown as Record<string, unknown>}
+                        agentDiagnosis={agentDiagnosis}
                       />
                     </Section>
-                    {result.clinical_pearls.length > 0 && (
+                    {(result.clinical_pearls?.length ?? 0) > 0 && (
                       <Section
                         title="Clinical Pearls"
                         icon={<Lightbulb className="w-4 h-4 text-amber-500" />}
@@ -1160,6 +1623,21 @@ export default function CaseAnalysisPage() {
                         </Card>
                       </Section>
                     )}
+                    {effectiveConsensus && (
+                      <Section
+                        title="Cross-Modal Consensus"
+                        icon={<Sparkles className="w-4 h-4 text-purple-600" />}
+                        badge={agentConsensus ? (
+                          <Badge variant="secondary" className="text-[9px] bg-purple-100 text-purple-700">Full</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[9px]">Lightweight</Badge>
+                        )}
+                      >
+                        <ConsensusPanel consensus={effectiveConsensus} />
+                      </Section>
+                    )}
+                    {/* Quality Scorecard — 14-point evaluation */}
+                    <QualityScorecard result={result} />
                   </div>
                 </div>
               </TabsContent>
@@ -1338,7 +1816,7 @@ export default function CaseAnalysisPage() {
                     <FileBarChart className="w-4 h-4 mr-2" />
                     Send to Chart
                   </Button>
-                  {session.currentSession && session.currentSession.events.length > 0 && (
+                  {session.currentSession && (session.currentSession.events?.length ?? 0) > 0 && (
                     <>
                       <Section
                         title="Visual Timeline"
@@ -1363,15 +1841,6 @@ export default function CaseAnalysisPage() {
                 </div>
               </TabsContent>
 
-              {/* ─── Agent Tab ─── */}
-              <TabsContent value="agent">
-                <div className="space-y-6">
-                  <AgentReasoningTrace
-                    caseText={caseText}
-                    parsedCase={result.parsed_case as unknown as Record<string, unknown>}
-                  />
-                </div>
-              </TabsContent>
             </Tabs>
 
             {/* Floating Follow-Up Chat Drawer */}
@@ -1388,7 +1857,7 @@ export default function CaseAnalysisPage() {
             />
 
             <p className="text-center text-[10px] text-muted-foreground pt-2">
-              Powered by MedGemma 27B on Modal &middot; Evidence from PubMed &middot; For educational purposes only
+              Powered by 7 Google Health AI Models &middot; MedGemma &middot; CXR Foundation &middot; Derm Foundation &middot; Path Foundation &middot; TxGemma &middot; HeAR &middot; MedASR
             </p>
           </div>
         )}

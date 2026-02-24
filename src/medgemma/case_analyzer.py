@@ -1012,6 +1012,8 @@ def _word_matches(word: str, text: str) -> bool:
     (e.g., "mono" matching "mono-ADP-ribosylation").
     Longer words use substring matching since false positives are rare.
     """
+    if not word or not text:
+        return False
     if len(word) < 6:
         return bool(re.search(r"\b" + re.escape(word) + r"\b", text, re.IGNORECASE))
     return word.lower() in text.lower()
@@ -1715,10 +1717,10 @@ class ClinicalCaseAnalyzer:
                             ]
                             papers.append(
                                 {
-                                    "pmid": pmid_el.text if pmid_el is not None else "",
-                                    "title": title_el.text if title_el is not None else "",
-                                    "abstract": abstract_el.text if abstract_el is not None else "",
-                                    "year": year_el.text if year_el is not None else "",
+                                    "pmid": (pmid_el.text or "") if pmid_el is not None else "",
+                                    "title": (title_el.text or "") if title_el is not None else "",
+                                    "abstract": (abstract_el.text or "") if abstract_el is not None else "",
+                                    "year": (year_el.text or "") if year_el is not None else "",
                                     "authors": authors,
                                     "publication_types": pub_types,
                                     "mesh_terms": mesh,

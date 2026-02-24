@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Mic, MicOff, Loader2 } from 'lucide-react';
+import { Send, Square, Mic, Loader2 } from 'lucide-react';
+import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import type { EMSMessage } from '@/types/ems';
 
 interface EMSReportChatProps {
@@ -12,6 +13,12 @@ interface EMSReportChatProps {
   disabled?: boolean;
 }
 
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 export function EMSReportChat({
   messages,
   onSendText,
@@ -20,52 +27,35 @@ export function EMSReportChat({
   disabled,
 }: EMSReportChatProps) {
   const [input, setInput] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+
+  const {
+    isRecording,
+    audioBlob,
+    audioDuration,
+    error: recorderError,
+    start: startRecording,
+    stop: stopRecording,
+    clear: clearRecording,
+  } = useAudioRecorder();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // When recording finishes and blob is available, send it
+  useEffect(() => {
+    if (audioBlob && onSendAudio) {
+      onSendAudio(audioBlob);
+      clearRecording();
+    }
+  }, [audioBlob, onSendAudio, clearRecording]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading || disabled) return;
     onSendText(input.trim());
     setInput('');
-  };
-
-  const toggleRecording = async () => {
-    if (isRecording) {
-      mediaRecorderRef.current?.stop();
-      setIsRecording(false);
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      chunksRef.current = [];
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-
-      recorder.onstop = () => {
-        stream.getTracks().forEach(t => t.stop());
-        if (chunksRef.current.length > 0 && onSendAudio) {
-          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-          onSendAudio(blob);
-        }
-      };
-
-      mediaRecorderRef.current = recorder;
-      recorder.start();
-      setIsRecording(true);
-    } catch {
-      // Mic permission denied — fall back to text
-    }
   };
 
   return (
@@ -84,12 +74,24 @@ export function EMSReportChat({
                   : 'bg-muted text-foreground rounded-bl-md'
               }`}
             >
-              {msg.content}
-              {msg.transcript && msg.role === 'user' && (
+              {msg.content === '(transcribing audio...)' && msg.role === 'user' ? (
+                <div className="flex items-center gap-1.5">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span className="text-xs italic opacity-70">Transcribing audio...</span>
+                </div>
+              ) : (
+                msg.content
+              )}
+              {msg.transcript && msg.transcript !== 'transcribing' && msg.role === 'user' && (
                 <p className="text-[10px] opacity-60 mt-1 italic">
                   Transcribed: {msg.transcript}
                 </p>
               )}
+              <span className="block mt-1 text-[10px] opacity-50">
+                {msg.timestamp
+                  ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : ''}
+              </span>
             </div>
           </div>
         ))}
@@ -105,41 +107,67 @@ export function EMSReportChat({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Recorder error */}
+      {recorderError && (
+        <div className="px-3 py-1.5 text-xs text-red-600 bg-red-50 border-t border-red-100">
+          {recorderError}
+        </div>
+      )}
+
       {/* Input */}
       <form onSubmit={handleSubmit} className="p-3 border-t border-border">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            placeholder={disabled ? 'Report complete' : 'Dictate or type...'}
-            disabled={disabled || isLoading}
-            className="flex-1 h-12 px-4 text-base bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none disabled:opacity-50"
-          />
-
-          {onSendAudio && (
+        {isRecording ? (
+          /* Recording banner — replaces text input */
+          <div className="flex items-center justify-between h-12 px-4 bg-red-50 border border-red-200 rounded-xl">
+            <div className="flex items-center gap-2.5">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+              </span>
+              <span className="text-sm font-medium text-red-700">Recording...</span>
+              <span className="text-sm tabular-nums text-red-600">{formatDuration(audioDuration)}</span>
+            </div>
             <button
               type="button"
-              onClick={toggleRecording}
-              disabled={disabled || isLoading}
-              className={`h-12 w-12 flex items-center justify-center rounded-xl transition-colors ${
-                isRecording
-                  ? 'bg-red-500 text-white animate-pulse'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              } disabled:opacity-50`}
+              onClick={stopRecording}
+              className="h-9 px-3 flex items-center gap-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
             >
-              {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              <Square className="w-3.5 h-3.5 fill-current" />
+              Stop
             </button>
-          )}
+          </div>
+        ) : (
+          /* Normal input area */
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder={disabled ? 'Report complete' : 'Dictate or type...'}
+              disabled={disabled || isLoading}
+              className="flex-1 h-12 px-4 text-base bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary/50 outline-none disabled:opacity-50"
+            />
 
-          <button
-            type="submit"
-            disabled={!input.trim() || disabled || isLoading}
-            className="h-12 w-12 flex items-center justify-center bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-colors"
-          >
-            <Send className="w-5 h-5" />
-          </button>
-        </div>
+            {onSendAudio && (
+              <button
+                type="button"
+                onClick={startRecording}
+                disabled={disabled || isLoading}
+                className="h-12 w-12 flex items-center justify-center rounded-xl bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-50 transition-colors"
+              >
+                <Mic className="w-5 h-5" />
+              </button>
+            )}
+
+            <button
+              type="submit"
+              disabled={!input.trim() || disabled || isLoading}
+              className="h-12 w-12 flex items-center justify-center bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-colors"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );

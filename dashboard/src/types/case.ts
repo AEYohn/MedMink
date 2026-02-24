@@ -163,6 +163,43 @@ export interface FollowUpMessage {
   content: string;
 }
 
+// Agent types
+export interface AgentAssessment {
+  primary_diagnosis?: string;
+  confidence?: number;
+  key_findings?: string[];
+  disposition?: string;
+  recommended_actions?: string[];
+}
+
+export interface AgentToolResult {
+  tool: string;
+  model?: string;
+  result: Record<string, unknown>;
+}
+
+export interface AgentSessionResult {
+  assessment: AgentAssessment | null;
+  consensus: AgentConsensusData | null;
+  toolResults: AgentToolResult[];
+  toolsUsed: string[];
+  completedAt: string;
+}
+
+export interface AgentConsensusData {
+  agreements?: Array<{ finding: string; models: string[]; confidence: number }>;
+  disagreements?: Array<{
+    finding: string;
+    model_a: { name: string; position: string };
+    model_b: { name: string; position: string };
+    resolution: string;
+  }>;
+  integrated_assessment?: string;
+  overall_confidence?: number;
+  contributing_models?: string[];
+  recommended_next_steps?: string[];
+}
+
 export type SSEEvent = StepUpdate | CaseAnalysisResult | { type: 'done' } | { type: 'error'; message: string };
 
 // Helper functions

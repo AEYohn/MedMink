@@ -144,6 +144,9 @@ export default function EMSPage() {
     setIsLoading(true);
     setError(null);
 
+    // Show placeholder while transcribing
+    addMessage({ role: 'user', content: '(transcribing audio...)', transcript: 'transcribing' });
+
     const form = new FormData();
     form.append('session_id', currentSession.sessionId);
     form.append('audio', blob, 'recording.webm');
@@ -155,6 +158,18 @@ export default function EMSPage() {
     form.append('phase', currentSession.phase);
     form.append('extracted_data', JSON.stringify(currentSession.extractedData));
 
+    const replacePlaceholder = (msgs: EMSMessage[], replacement: EMSMessage | null): EMSMessage[] => {
+      const idx = msgs.findLastIndex(m => m.content === '(transcribing audio...)');
+      if (idx < 0) return replacement ? [...msgs, replacement] : msgs;
+      const updated = [...msgs];
+      if (replacement) {
+        updated[idx] = replacement;
+      } else {
+        updated.splice(idx, 1);
+      }
+      return updated;
+    };
+
     try {
       const res = await fetch(`${API_URL}/api/ems/dictate/audio`, {
         method: 'POST',
@@ -163,8 +178,14 @@ export default function EMSPage() {
       if (!res.ok) throw new Error('Audio dictation failed');
       const data: EMSDictateResponse = await res.json();
 
-      addMessage({ role: 'user', content: data.transcript || '(audio)', transcript: data.transcript });
-      addMessage({ role: 'assistant', content: data.question });
+      // Replace placeholder with real transcript, add AI response
+      const msgs = replacePlaceholder(currentSession.messages, {
+        role: 'user',
+        content: data.transcript || '(audio)',
+        transcript: data.transcript,
+      });
+      msgs.push({ role: 'assistant', content: data.question });
+      updateSession({ messages: msgs });
       updateFromResponse({
         phase: data.phase,
         extracted_data: data.extracted_data,
@@ -180,8 +201,13 @@ export default function EMSPage() {
         });
         if (retryRes.ok) {
           const data: EMSDictateResponse = await retryRes.json();
-          addMessage({ role: 'user', content: data.transcript || '(audio)', transcript: data.transcript });
-          addMessage({ role: 'assistant', content: data.question });
+          const msgs = replacePlaceholder(currentSession.messages, {
+            role: 'user',
+            content: data.transcript || '(audio)',
+            transcript: data.transcript,
+          });
+          msgs.push({ role: 'assistant', content: data.question });
+          updateSession({ messages: msgs });
           updateFromResponse({
             phase: data.phase,
             extracted_data: data.extracted_data,
@@ -193,12 +219,15 @@ export default function EMSPage() {
       } catch {
         // Retry also failed — fall through to error
       }
+      // Remove placeholder on error
+      const msgs = replacePlaceholder(currentSession.messages, null);
+      msgs.push({ role: 'assistant', content: 'Audio transcription failed. Please try again or type your response.' });
+      updateSession({ messages: msgs });
       setError(e instanceof Error ? e.message : 'Audio failed');
-      addMessage({ role: 'assistant', content: 'Audio transcription failed. Please try again or type your response.' });
     } finally {
       setIsLoading(false);
     }
-  }, [currentSession, addMessage, updateFromResponse]);
+  }, [currentSession, addMessage, updateSession, updateFromResponse]);
 
   const submitVitals = useCallback(async (vitals: Record<string, number | null>) => {
     if (!currentSession) return;

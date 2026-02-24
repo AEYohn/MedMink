@@ -314,7 +314,7 @@ export function ClinicianDashboard() {
                           <span className="text-[11px] font-mono text-muted-foreground/60">
                             {new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </span>
-                          {c.events.length > 0 && (
+                          {(c.events?.length ?? 0) > 0 && (
                             <span className="text-[11px] text-muted-foreground/40">
                               {c.events.length} event{c.events.length !== 1 ? 's' : ''}
                             </span>

@@ -7,6 +7,7 @@ interface Message {
   role: 'assistant' | 'user';
   content: string;
   transcript?: string;
+  audioUrl?: string;
 }
 
 interface InterviewChatProps {
@@ -50,7 +51,7 @@ export function InterviewChat({
   return (
     <div className="flex flex-col h-full">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4">
         {messages.map((msg, i) => (
           <div
             key={i}
@@ -63,9 +64,25 @@ export function InterviewChat({
                   : 'bg-muted rounded-bl-md'
               }`}
             >
-              <p dir="auto" className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-              {msg.transcript && msg.role === 'user' && (
-                <p className="text-xs opacity-70 mt-1 italic">Transcribed from audio</p>
+              {msg.audioUrl && msg.role === 'user' ? (
+                <>
+                  <audio src={msg.audioUrl} controls className="w-full max-w-[240px] h-8" />
+                  {msg.transcript === 'transcribing' ? (
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <Loader2 className="w-3 h-3 animate-spin opacity-70" />
+                      <p className="text-xs opacity-70 italic">Transcribing...</p>
+                    </div>
+                  ) : msg.content && msg.content !== '(audio recording...)' && (
+                    <p dir="auto" className="text-xs opacity-70 mt-1.5 italic">{msg.content}</p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p dir="auto" className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                  {msg.transcript && msg.role === 'user' && (
+                    <p className="text-xs opacity-70 mt-1 italic">Transcribed from audio</p>
+                  )}
+                </>
               )}
             </div>
           </div>

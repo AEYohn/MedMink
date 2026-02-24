@@ -1,29 +1,6 @@
 'use client';
 
-interface TriageData {
-  chief_complaint: string;
-  hpi: {
-    onset?: string;
-    location?: string;
-    duration?: string;
-    character?: string;
-    aggravating?: string;
-    relieving?: string;
-    severity?: string;
-  };
-  review_of_systems: {
-    positive?: string[];
-    negative?: string[];
-  };
-  past_medical_history: string[];
-  medications: string[];
-  allergies: string[];
-  esi_level: number;
-  esi_reasoning: string;
-  recommended_setting: string;
-  setting_reasoning: string;
-  red_flags: string[];
-}
+import type { TriageData } from '@/types/intake';
 
 const ESI_CONFIG: Record<number, { label: string; color: string; bg: string }> = {
   1: { label: 'Immediate', color: 'text-red-700 dark:text-red-300', bg: 'bg-red-500/20 border-red-500/30' },

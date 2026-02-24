@@ -61,6 +61,7 @@ export default function ChartingPage() {
   const [corrections, setCorrections] = useState<Correction[]>([]);
   const [soapData, setSoapData] = useState<SOAPData | null>(null);
   const [processingMode, setProcessingMode] = useState<'text' | 'audio'>('text');
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [showCompliance, setShowCompliance] = useState(true);
 
   // Hydrate SOAP data from case analysis (via sessionStorage)
@@ -83,9 +84,29 @@ export default function ChartingPage() {
     setIsInterim(interim);
   }, []);
 
-  const handleAudioReady = useCallback((blob: Blob) => {
+  const handleAudioReady = useCallback(async (blob: Blob) => {
     setAudioBlob(blob);
     setProcessingMode('audio');
+    // Auto-transcribe the recording
+    setIsTranscribing(true);
+    try {
+      const formData = new FormData();
+      formData.append('audio', blob, 'recording.webm');
+      const res = await fetch(`${getApiUrl()}/api/chart/transcribe`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.text) {
+          setTranscript(data.text);
+        }
+      }
+    } catch (e) {
+      console.error('Auto-transcription failed:', e);
+    } finally {
+      setIsTranscribing(false);
+    }
   }, []);
 
   const handleEnhance = async () => {
@@ -102,7 +123,7 @@ export default function ChartingPage() {
       const apiUrl = getApiUrl();
       let response: Response;
 
-      if (audioBlob && processingMode === 'audio') {
+      if (audioBlob && processingMode === 'audio' && !transcript.trim()) {
         const formData = new FormData();
         formData.append('audio', audioBlob, 'recording.webm');
         response = await fetch(`${apiUrl}/api/chart/transcribe-and-structure`, {
@@ -234,7 +255,7 @@ export default function ChartingPage() {
   };
 
   const canEnhance =
-    (transcript.trim().length > 10 || audioBlob) && !isProcessing && !isInterim;
+    (transcript.trim().length > 10 || audioBlob) && !isProcessing && !isInterim && !isTranscribing;
 
   return (
     <div className="min-h-screen bg-background">
@@ -289,6 +310,14 @@ export default function ChartingPage() {
               onAudioReady={handleAudioReady}
               disabled={isProcessing}
             />
+
+            {/* Transcription Loading */}
+            {isTranscribing && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-sm">Transcribing audio...</span>
+              </div>
+            )}
 
             {/* Transcript Display */}
             <TranscriptDisplay

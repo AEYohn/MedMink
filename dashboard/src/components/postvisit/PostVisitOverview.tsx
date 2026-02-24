@@ -35,7 +35,7 @@ export function PostVisitOverview({
   onAskAI: (question: string) => void;
 }) {
   const { t, bcp47 } = useTranslation();
-  const medications = useMemo(() => filterActualMedications(summary.medications), [summary.medications]);
+  const medications = useMemo(() => filterActualMedications(summary.medications || []), [summary.medications]);
 
   return (
     <div className="space-y-5">
@@ -153,7 +153,7 @@ export function PostVisitOverview({
             <h3 className="font-semibold text-sm text-foreground">{t('overview.yourPlan')}</h3>
           </div>
           <div className="space-y-2">
-            {summary.orders!.map((order, i) => (
+            {(summary.orders || []).map((order, i) => (
               <div key={i} className="flex items-start gap-3 rounded-lg bg-muted/50 border border-border px-4 py-3">
                 <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium capitalize shrink-0 mt-0.5 ${
                   order.type === 'referral' ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400' :
@@ -182,7 +182,7 @@ export function PostVisitOverview({
       )}
 
       {/* Follow-Up Appointments */}
-      {summary.followUps.length > 0 && (
+      {(summary.followUps?.length ?? 0) > 0 && (
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-2 mb-3">
             <Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400" />
@@ -205,7 +205,7 @@ export function PostVisitOverview({
       )}
 
       {/* Warning Signs */}
-      {summary.redFlags.length > 0 && (
+      {(summary.redFlags?.length ?? 0) > 0 && (
         <div className="rounded-xl border-2 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20 p-5">
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
@@ -240,7 +240,7 @@ export function PostVisitOverview({
       )}
 
       {/* Restrictions */}
-      {summary.restrictions.length > 0 && (
+      {(summary.restrictions?.length ?? 0) > 0 && (
         <div className="rounded-2xl border border-border bg-card p-5">
           <h3 className="font-semibold text-sm text-foreground mb-3">{t('overview.restrictions')}</h3>
           <ul className="space-y-1.5">

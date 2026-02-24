@@ -142,9 +142,11 @@ interface AgentReasoningTraceProps {
   /** If provided, trace auto-starts on mount */
   autoStart?: boolean;
   /** Called when the agent produces a final assessment */
-  onAssessment?: (assessment: AssessmentEvent['final_assessment']) => void;
+  onAssessment?: (assessment: AssessmentEvent['final_assessment'], toolsUsed: string[]) => void;
   /** Called when consensus is built */
   onConsensus?: (consensus: ConsensusEvent['consensus']) => void;
+  /** Called when a tool produces a result */
+  onToolResult?: (tool: string, model: string, result: Record<string, unknown>) => void;
 }
 
 export function AgentReasoningTrace({
@@ -157,6 +159,7 @@ export function AgentReasoningTrace({
   autoStart = false,
   onAssessment,
   onConsensus,
+  onToolResult,
 }: AgentReasoningTraceProps) {
   const [steps, setSteps] = useState<TraceStep[]>([]);
   const [isRunning, setIsRunning] = useState(false);
@@ -240,8 +243,16 @@ export function AgentReasoningTrace({
             // Auto-scroll to bottom
             setTimeout(() => traceEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
 
+            if (event.type === 'tool_result' && onToolResult) {
+              // Look back for matching tool_call to get the model
+              const matchingCall = [...steps].reverse().find(
+                s => s.event.type === 'tool_call' && (s.event as ToolCallEvent).tool === event.tool
+              );
+              const model = matchingCall ? (matchingCall.event as ToolCallEvent).model : '';
+              onToolResult(event.tool, model, event.result);
+            }
             if (event.type === 'assessment' && onAssessment) {
-              onAssessment(event.final_assessment);
+              onAssessment(event.final_assessment, event.tools_used);
             }
             if (event.type === 'consensus' && onConsensus) {
               onConsensus(event.consensus);
@@ -266,7 +277,7 @@ export function AgentReasoningTrace({
       setIsRunning(false);
       abortRef.current = null;
     }
-  }, [caseText, parsedCase, chestXrayB64, skinImageB64, pathologyImageB64, audioPath, isRunning, onAssessment, onConsensus]);
+  }, [caseText, parsedCase, chestXrayB64, skinImageB64, pathologyImageB64, audioPath, isRunning, onAssessment, onConsensus, onToolResult]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stopAgent = useCallback(() => {
     abortRef.current?.abort();

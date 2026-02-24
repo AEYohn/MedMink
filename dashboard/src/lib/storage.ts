@@ -212,6 +212,7 @@ export interface CaseSession {
   overrides?: ClinicianOverrides;
   activeTab?: string;
   chatOpen?: boolean;
+  agentResult?: import('@/types/case').AgentSessionResult;
 }
 
 export interface CaseEvent {

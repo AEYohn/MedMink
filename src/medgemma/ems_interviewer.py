@@ -231,12 +231,12 @@ class EMSReportAssistant:
         if phase_complete:
             session.phase = self._next_phase(session)
 
-        # Use deterministic opening question on phase transition
+        # Use deterministic opening question only when phase has no data yet
         question = data.get("next_question", "What else?")
         if phase_complete:
             new_criteria = EMS_PHASE_CRITERIA.get(session.phase, {})
             opening = new_criteria.get("opening_question")
-            if opening:
+            if opening and not self._phase_has_data(session, session.phase):
                 question = opening
 
         session.conversation_history.append({"role": "assistant", "content": question})
@@ -425,15 +425,41 @@ class EMSReportAssistant:
 
         return report
 
+    _PHASE_SECTION = {
+        "dispatch": "dispatch",
+        "scene": "scene",
+        "patient_info": "patient_info",
+        "primary_assessment": "primary_assessment",
+        "vitals": "vitals",
+        "secondary_assessment": "secondary_assessment",
+        "interventions": "interventions",
+        "transport": "transport",
+    }
+
+    def _phase_has_data(self, session: EMSReportSession, phase: str) -> bool:
+        """Check if a phase already has sufficient extracted data."""
+        section = self._PHASE_SECTION.get(phase)
+        if not section:
+            return False
+        data = session.extracted_data.get(section)
+        if isinstance(data, dict):
+            return len(data) >= 2
+        if isinstance(data, list):
+            return len(data) > 0
+        return False
+
     def _next_phase(self, session: EMSReportSession) -> str:
         """Advance to the next phase, skipping phases with sufficient data."""
         try:
             idx = EMS_PHASES.index(session.phase)
             for i in range(idx + 1, len(EMS_PHASES)):
-                return EMS_PHASES[i]
+                candidate = EMS_PHASES[i]
+                if not self._phase_has_data(session, candidate):
+                    return candidate
+            # All remaining phases have data — go to review
+            return "review"
         except ValueError:
-            pass
-        return session.phase
+            return session.phase
 
     def _format_conversation(self, history: list[dict[str, str]]) -> str:
         lines = []

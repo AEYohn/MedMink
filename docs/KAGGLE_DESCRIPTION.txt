@@ -1,0 +1,17 @@
+The problem is simple: when someone is sick, every minute spent on paperwork is a minute not spent on care.
+
+The patient filling out a clipboard in a language they barely read. The paramedic trying to radio a report while keeping someone alive. The doctor piecing together labs, imaging, and vitals for the fourth patient this hour.
+
+MedMink is built for all three of them.
+
+For the patient — a guided check-in, in your own language, on your own phone. Voice or text. No jargon. The AI listens the way a good nurse would, then sends your complete story to the doctor before they walk in. You showed up feeling invisible. Now you've been heard.
+
+For the clinician — paste a case, get a structured workup in seconds. Differential diagnosis, treatment plan with evidence grades, risk scores, drug safety alerts. Accept what's right, reject what's not, modify the rest. The AI adapts. You're still the doctor — you just have a tireless assistant who already read every guideline.
+
+For EMS — talk, don't type. MedMink captures your voice report and structures it into a clean handoff. By the time you roll through the ED doors, the receiving team already has the triage on their screen. Your patient's story arrives before they do.
+
+Under the hood: 7 Google Health AI foundation models — MedGemma for clinical reasoning, CXR Foundation for chest X-rays, Derm Foundation for skin lesions, Path Foundation for pathology, TxGemma for drug safety, HeAR for respiratory sounds, and MedASR for clinical speech — orchestrated by a single autonomous agent that decides which models to call based on clinical context.
+
+What makes it different: every AI recommendation is transparent, editable, and under clinician control. This isn't automation replacing judgment — it's a tool that gives time back to the people who need it most.
+
+Three roles. One platform. Less paperwork, more care.

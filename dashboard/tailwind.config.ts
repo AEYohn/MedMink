@@ -7,6 +7,12 @@ const config: Config = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    // Role card gradients (dynamically applied from ROLE_CONFIGS)
+    'from-teal-500', 'to-emerald-500',
+    'from-rose-500', 'to-pink-500',
+    'from-amber-500', 'to-orange-500',
+  ],
   theme: {
     extend: {
       colors: {

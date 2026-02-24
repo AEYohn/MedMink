@@ -22,6 +22,12 @@ const DICTATION_TURNS = [
 export async function record(page, baseUrl) {
   await seedLocalStorage(page, { patients: false, caseSessions: false, visitSummaries: false });
 
+  // Clear any existing EMS sessions so we start fresh (shows "New Run Report" button)
+  await page.addInitScript(() => {
+    localStorage.removeItem('ems-sessions');
+    localStorage.removeItem('ems-current-session');
+  });
+
   // Install API mocks before navigating
   await mockEMSStart(page);
   await mockEMSDictate(page);

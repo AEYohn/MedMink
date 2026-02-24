@@ -56,6 +56,8 @@ interface RiskScoresTabProps {
   parsedCase: Record<string, unknown>;
   overrides?: ClinicianOverrides;
   onOverridesChange?: (overrides: ClinicianOverrides) => void;
+  /** Set of score_ids sourced from the agent */
+  agentScoreIds?: Set<string>;
 }
 
 const riskLevelColor: Record<string, string> = {
@@ -133,10 +135,12 @@ function ScoreCard({
   score,
   clinicianInputs,
   onVariableChange,
+  isAgentSourced,
 }: {
   score: ScoreResult;
   clinicianInputs: Record<string, number | boolean>;
   onVariableChange?: (varName: string, value: number | boolean) => void;
+  isAgentSourced?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const borderClass = riskLevelBorder[score.risk_level] || riskLevelBorder.unknown;
@@ -150,6 +154,11 @@ function ScoreCard({
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-muted-foreground" />
                 <CardTitle className="text-base">{score.score_name}</CardTitle>
+                {isAgentSourced && (
+                  <Badge className="text-[10px] px-1.5 py-0 bg-indigo-100 text-indigo-700 border-indigo-300">
+                    Agent
+                  </Badge>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="font-mono text-sm font-bold">
@@ -275,6 +284,7 @@ export function RiskScoresTab({
   parsedCase,
   overrides,
   onOverridesChange,
+  agentScoreIds,
 }: RiskScoresTabProps) {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [localResult, setLocalResult] = useState<RiskScoreData | null>(null);
@@ -360,6 +370,7 @@ export function RiskScoresTab({
           score={score}
           clinicianInputs={overrides?.riskScoreInputs[score.score_id] || {}}
           onVariableChange={onOverridesChange ? (varName, value) => handleVariableChange(score.score_id, varName, value) : undefined}
+          isAgentSourced={agentScoreIds?.has(score.score_id)}
         />
       ))}
 
@@ -377,6 +388,7 @@ export function RiskScoresTab({
               score={score}
               clinicianInputs={overrides?.riskScoreInputs[score.score_id] || {}}
               onVariableChange={onOverridesChange ? (varName, value) => handleVariableChange(score.score_id, varName, value) : undefined}
+              isAgentSourced={agentScoreIds?.has(score.score_id)}
             />
           ))}
         </>

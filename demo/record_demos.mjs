@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Demo Video Recorder — records 10 feature demo videos as MP4
+ * Demo Video Recorder — records all feature demo videos as MP4
  *
  * Usage:
- *   node demo/record_demos.mjs                          # Record all 10 features
+ *   node demo/record_demos.mjs                          # Record all features
  *   node demo/record_demos.mjs --feature=dashboard      # Single feature
  *   node demo/record_demos.mjs --feature=dashboard,interview  # Multiple features
  *   node demo/record_demos.mjs --headless=false         # Show browser (default: headless)
@@ -29,23 +29,74 @@ function makeTimestampedDir() {
 const OUTPUT_DIR = makeTimestampedDir();
 const WEBM_DIR = join(OUTPUT_DIR, '_webm');
 
-// All features in order
+// All features in order — every feature is a module file
 const FEATURES = [
-  { id: 'dashboard',       module: './features/01-dashboard.mjs' },
-  { id: 'case-analysis',   module: './features/02-case-analysis.mjs' },
-  { id: 'case-assessment', module: './features/02a-case-assessment.mjs' },
-  { id: 'case-treatment',  module: './features/02b-case-treatment.mjs' },
-  { id: 'case-safety',     module: './features/02c-case-safety.mjs' },
-  { id: 'case-orders',     module: './features/02d-case-orders.mjs' },
-  { id: 'case-tools',      module: './features/02e-case-tools.mjs' },
-  { id: 'interview',       module: './features/03-interview.mjs' },
-  { id: 'ems-report',      module: './features/04-ems-report.mjs' },
-  { id: 'charting',        module: './features/05-charting.mjs' },
-  { id: 'imaging',         module: './features/06-imaging.mjs' },
-  { id: 'labs',            module: './features/07-labs.mjs' },
-  { id: 'patients',        module: './features/08-patients.mjs' },
-  { id: 'referrals',       module: './features/09-referrals.mjs' },
-  { id: 'patient-portal',  module: './features/10-patient-portal.mjs' },
+  // === Dashboard ===
+  { id: 'dashboard',         module: './features/01-dashboard.mjs' },
+
+  // === Case Analysis Flow ===
+  { id: 'case-analysis',     module: './features/02-case-analysis.mjs' },
+  { id: 'case-assessment',   module: './features/02a-case-assessment.mjs' },
+  { id: 'case-treatment',    module: './features/02b-case-treatment.mjs' },
+  { id: 'case-safety',       module: './features/02c-case-safety.mjs' },
+  { id: 'case-orders',       module: './features/02d-case-orders.mjs' },
+  { id: 'case-tools',        module: './features/02e-case-tools.mjs' },
+  { id: 'case-agent',        module: './features/02f-case-agent.mjs' },
+
+  // === Foundation Model Imaging ===
+  { id: 'cxr-foundation',    module: './features/02h-cxr-foundation.mjs' },
+  { id: 'derm-foundation',   module: './features/02i-derm-foundation.mjs' },
+  { id: 'path-foundation',   module: './features/02j-path-foundation.mjs' },
+
+  // === Drug Tools (TxGemma) ===
+  { id: 'drug-properties',   module: './features/02k-drug-properties.mjs' },
+  { id: 'drug-interaction',  module: './features/02l-drug-interaction.mjs' },
+
+  // === Case Extras ===
+  { id: 'reassessment',      module: './features/02m-reassessment.mjs' },
+  { id: 'followup-chat',     module: './features/02n-followup-chat.mjs' },
+  { id: 'case-timeline',     module: './features/02o-case-timeline.mjs' },
+
+  // === Interview ===
+  { id: 'interview',         module: './features/03-interview.mjs' },
+  { id: 'multilingual',      module: './features/03a-multilingual.mjs' },
+
+  // === EMS Report ===
+  { id: 'ems-report',        module: './features/04-ems-report.mjs' },
+
+  // === Charting ===
+  { id: 'charting',          module: './features/05-charting.mjs' },
+  { id: 'compliance',        module: './features/05a-compliance.mjs' },
+
+  // === Imaging ===
+  { id: 'imaging',           module: './features/06-imaging.mjs' },
+
+  // === Labs ===
+  { id: 'labs',              module: './features/07-labs.mjs' },
+
+  // === Patients ===
+  { id: 'patients',          module: './features/08-patients.mjs' },
+  { id: 'patient-detail',    module: './features/08a-patient-detail.mjs' },
+  { id: 'new-patient',       module: './features/08b-new-patient.mjs' },
+
+  // === Referrals ===
+  { id: 'referrals',         module: './features/09-referrals.mjs' },
+
+  // === Patient Portal ===
+  { id: 'patient-portal',    module: './features/10-patient-portal.mjs' },
+  { id: 'patient-intake',    module: './features/11-patient-intake.mjs' },
+  { id: 'patient-checkin',   module: './features/12-patient-checkin.mjs' },
+  { id: 'patient-visit',     module: './features/13-patient-visit.mjs' },
+  { id: 'patient-health',    module: './features/14-patient-health.mjs' },
+  { id: 'patient-messages',  module: './features/15-patient-messages.mjs' },
+  { id: 'postvisit',         module: './features/16-postvisit.mjs' },
+
+  // === Clinician Pages ===
+  { id: 'cases-list',        module: './features/17-cases-list.mjs' },
+  { id: 'chat',              module: './features/18-chat.mjs' },
+  { id: 'consensus',         module: './features/19-consensus.mjs' },
+  { id: 'admin',             module: './features/20-admin.mjs' },
+  { id: 'settings',          module: './features/21-settings.mjs' },
 ];
 
 // Parse CLI arguments
@@ -93,7 +144,7 @@ async function main() {
   await mkdir(OUTPUT_DIR, { recursive: true });
   await mkdir(WEBM_DIR, { recursive: true });
 
-  console.log(`\n=== Demo Video Recorder ===`);
+  console.log(`\n=== Demo Video Recorder (${featuresToRecord.length} clips) ===`);
   console.log(`Base URL: ${opts.baseUrl}`);
   console.log(`Headless: ${opts.headless}`);
   console.log(`Features: ${featuresToRecord.map(f => f.id).join(', ')}`);

@@ -76,5 +76,3 @@ Active development for the MedGemma Impact Challenge (deadline Feb 24, 2026). Pu
 
 ## License
 MIT
-
-Built for the [MedGemma Impact Challenge](https://kaggle.com/competitions/medgemma-impact-challenge) by [@noam1](https://github.com/noam1)

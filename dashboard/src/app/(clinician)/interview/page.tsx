@@ -15,7 +15,7 @@ import { usePatientFromUrl } from '@/hooks/usePatientFromUrl';
 import { useActivePatient } from '@/contexts/ActivePatientContext';
 import { getPatient, getPatientDisplayName, getPatientAge } from '@/lib/patient-storage';
 import { getApiUrl } from '@/lib/api-url';
-import { mockStartInterview, mockRespond, mockComplete } from '@/lib/mock-interview';
+// mock-interview import removed — we now wait for backend boot instead of falling back
 
 const API_URL = getApiUrl() || '';
 
@@ -100,7 +100,7 @@ export default function InterviewPage() {
   const [showVisitHistory, setShowVisitHistory] = useState(false);
   const [promptCough, setPromptCough] = useState(false);
   const [respiratoryResults, setRespiratoryResults] = useState<any>(null);
-  const [mockMode, setMockMode] = useState(false);
+  const [connecting, setConnecting] = useState(false);
 
   // Sync active patient context into local patientId
   useEffect(() => {
@@ -111,6 +111,13 @@ export default function InterviewPage() {
 
   const { isRecording, audioBlob, audioDuration, start: startRecording, stop: stopRecording, clear: clearRecording } = useAudioRecorder();
   const pendingSendRef = useRef(false);
+
+  const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clean up retry timer on unmount
+  useEffect(() => {
+    return () => { if (retryRef.current) clearTimeout(retryRef.current); };
+  }, []);
 
   const startInterview = useCallback(async () => {
     setIsLoading(true);
@@ -143,19 +150,16 @@ export default function InterviewPage() {
       }, 10000);
       if (!res.ok) throw new Error(`Failed to start interview: ${res.status}`);
       const data = await res.json();
+      setConnecting(false);
       setSessionId(data.session_id);
       setCurrentPhase(data.phase);
       const greeting = data.question?.trim() || "Hello! I'm here to help with your intake. What brought you in today?";
       setMessages([{ role: 'assistant', content: greeting }]);
     } catch {
-      // Backend unavailable — fall back to mock mode
-      setMockMode(true);
-      const data = mockStartInterview();
-      setSessionId(data.session_id);
-      setCurrentPhase(data.phase);
-      const greeting = data.question?.trim() || "Hello! I'm here to help with your intake. What brought you in today?";
-      setMessages([{ role: 'assistant', content: greeting }]);
+      // Backend is cold-starting — show connecting state and auto-retry
+      setConnecting(true);
       setError(null);
+      retryRef.current = setTimeout(() => startInterview(), 5000);
     } finally {
       setIsLoading(false);
     }
@@ -172,47 +176,35 @@ export default function InterviewPage() {
     setError(null);
 
     try {
-      if (mockMode) {
-        await new Promise(r => setTimeout(r, 800));
-        const data = mockRespond(sessionId, text, updatedMessages, currentPhase);
-        setCurrentPhase(data.phase);
-        const aiResponse = data.question?.trim() || "I understand. Can you tell me more?";
-        setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
-        if (data.prompt_cough_recording) setPromptCough(true);
-        if (data.phase === 'review_and_triage' || data.phase === 'complete') {
-          await completeInterview();
-        }
-      } else {
-        const res = await fetchWithTimeout(`${API_URL}/api/interview/respond`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            session_id: sessionId,
-            text,
-            conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
-            phase: currentPhase,
-            patient_id: patientId,
-            language,
-          }),
-        }, 60000);
-        if (!res.ok) throw new Error(`Response failed: ${res.status}`);
-        const data = await res.json();
+      const res = await fetchWithTimeout(`${API_URL}/api/interview/respond`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          text,
+          conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
+          phase: currentPhase,
+          patient_id: patientId,
+          language,
+        }),
+      }, 60000);
+      if (!res.ok) throw new Error(`Response failed: ${res.status}`);
+      const data = await res.json();
 
-        setCurrentPhase(data.phase);
-        const aiResponse = data.question?.trim() || "I understand. Can you tell me more?";
-        setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
+      setCurrentPhase(data.phase);
+      const aiResponse = data.question?.trim() || "I understand. Can you tell me more?";
+      setMessages(prev => [...prev, { role: 'assistant', content: aiResponse }]);
 
-        if (data.prompt_cough_recording) setPromptCough(true);
-        if (data.phase === 'review_and_triage' || data.phase === 'complete') {
-          await completeInterview();
-        }
+      if (data.prompt_cough_recording) setPromptCough(true);
+      if (data.phase === 'review_and_triage' || data.phase === 'complete') {
+        await completeInterview();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process response');
     } finally {
       setIsLoading(false);
     }
-  }, [inputText, sessionId, isLoading, messages, currentPhase, patientId, language, mockMode]);
+  }, [inputText, sessionId, isLoading, messages, currentPhase, patientId, language]);
 
   const handleStopRecording = useCallback(() => {
     stopRecording();
@@ -221,13 +213,6 @@ export default function InterviewPage() {
 
   const sendAudio = useCallback(async () => {
     if (!sessionId || !audioBlob) return;
-
-    // Mock mode: no backend to transcribe audio — tell user to type instead
-    if (mockMode) {
-      clearRecording();
-      setError('Voice input requires the backend. Please type your response instead.');
-      return;
-    }
 
     setMessages(prev => [...prev, { role: 'user', content: '(audio recording...)', transcript: 'transcribing' }]);
     setIsLoading(true);
@@ -305,7 +290,7 @@ export default function InterviewPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, audioBlob, clearRecording, messages, currentPhase, patientId, language, mockMode]);
+  }, [sessionId, audioBlob, clearRecording, messages, currentPhase, patientId, language]);
 
   useEffect(() => {
     if (pendingSendRef.current && audioBlob) {
@@ -319,32 +304,25 @@ export default function InterviewPage() {
 
     setIsLoading(true);
     try {
-      if (mockMode) {
-        await new Promise(r => setTimeout(r, 1500));
-        const data = mockComplete(sessionId, messages);
-        setTriage(data as unknown as TriageData);
-        setCurrentPhase('complete');
-      } else {
-        const res = await fetchWithTimeout(`${API_URL}/api/interview/${sessionId}/complete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
-            phase: currentPhase,
-            patient_id: patientId,
-          }),
-        }, 120000);
-        if (!res.ok) throw new Error(`Triage failed: ${res.status}`);
-        const data = await res.json();
-        setTriage(data);
-        setCurrentPhase('complete');
-      }
+      const res = await fetchWithTimeout(`${API_URL}/api/interview/${sessionId}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
+          phase: currentPhase,
+          patient_id: patientId,
+        }),
+      }, 120000);
+      if (!res.ok) throw new Error(`Triage failed: ${res.status}`);
+      const data = await res.json();
+      setTriage(data);
+      setCurrentPhase('complete');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate triage');
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, messages, currentPhase, patientId, mockMode]);
+  }, [sessionId, messages, currentPhase, patientId]);
 
   // Phase progress calculation
   const currentPhaseIndex = PHASES.indexOf(currentPhase);
@@ -512,7 +490,7 @@ export default function InterviewPage() {
                     setTriage(null);
                     setCurrentPhase('greeting');
                     setError(null);
-                    setMockMode(false);
+                    setConnecting(false);
                   }}
                   className="px-4 py-2 text-sm font-medium border border-border rounded-xl hover:bg-muted transition-colors"
                 >
@@ -552,7 +530,7 @@ export default function InterviewPage() {
                     const vignette = vignetteParts.join('\n');
 
                     // Also try to call the handoff endpoint if available
-                    if (sessionId && !mockMode) {
+                    if (sessionId) {
                       try {
                         const res = await fetch(`${API_URL}/api/interview/${sessionId}/handoff`, {
                           method: 'POST',
@@ -592,6 +570,17 @@ export default function InterviewPage() {
                   Analyze Case
                 </button>
               </div>
+            </div>
+          </div>
+        ) : connecting ? (
+          /* Connecting to backend — waiting for cold start */
+          <div className="flex flex-col items-center justify-center h-full gap-4 px-6">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            <div className="text-center max-w-sm">
+              <h2 className="text-lg font-semibold mb-1">Starting up...</h2>
+              <p className="text-sm text-muted-foreground">
+                Our system is warming up. This usually takes about 30 seconds. Please wait — we&apos;ll connect you automatically.
+              </p>
             </div>
           </div>
         ) : (

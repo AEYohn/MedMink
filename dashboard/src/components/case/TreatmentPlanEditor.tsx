@@ -564,7 +564,7 @@ function InteractiveTreatmentCard({
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-green-600 mb-1">Pros</p>
                 <ul className="space-y-0.5">
-                  {option.pros.map((pro, i) => (
+                  {(option.pros || []).map((pro, i) => (
                     <li key={i} className="flex items-start gap-1.5 text-xs">
                       <CheckCircle2 className="w-3 h-3 text-green-500 mt-0.5 flex-shrink-0" />
                       <span className="text-muted-foreground">{pro}</span>
@@ -575,7 +575,7 @@ function InteractiveTreatmentCard({
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-red-600 mb-1">Cons</p>
                 <ul className="space-y-0.5">
-                  {option.cons.map((con, i) => (
+                  {(option.cons || []).map((con, i) => (
                     <li key={i} className="flex items-start gap-1.5 text-xs">
                       <XCircle className="w-3 h-3 text-red-500 mt-0.5 flex-shrink-0" />
                       <span className="text-muted-foreground">{con}</span>
@@ -586,7 +586,7 @@ function InteractiveTreatmentCard({
             </div>
 
             {/* Evidence Trail */}
-            {(option.papers_used?.length > 0 || option.key_evidence.length > 0) && (
+            {(option.papers_used?.length > 0 || (option.key_evidence?.length ?? 0) > 0) && (
               <>
                 <Separator />
                 <div>
@@ -599,7 +599,7 @@ function InteractiveTreatmentCard({
                       </Badge>
                     )}
                   </div>
-                  {option.key_evidence.length > 0 ? (
+                  {(option.key_evidence?.length ?? 0) > 0 ? (
                     <ul className="space-y-2">
                       {option.key_evidence.map((ev, i) => (
                         <li key={i} className="text-xs p-2 bg-muted/30 rounded-md border border-border/50">

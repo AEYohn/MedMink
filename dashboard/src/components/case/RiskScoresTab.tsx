@@ -192,7 +192,7 @@ function ScoreCard({
             )}
 
             {/* Variable breakdown table with editable inputs */}
-            {score.variables.length > 0 && (
+            {(score.variables?.length ?? 0) > 0 && (
               <div className="border rounded-md overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
@@ -253,7 +253,7 @@ function ScoreCard({
               </div>
             )}
 
-            {score.missing_variables.length > 0 && (
+            {(score.missing_variables?.length ?? 0) > 0 && (
               <div className="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 p-2.5">
                 <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
                 <div>

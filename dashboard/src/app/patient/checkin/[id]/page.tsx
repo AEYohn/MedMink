@@ -8,6 +8,8 @@ import { getIntakeResults } from '@/lib/storage';
 import { getApiUrl } from '@/lib/api-url';
 import { useRole } from '@/contexts/RoleContext';
 import { useTranslation } from '@/i18n';
+import { buildVignetteFromTriage } from '@/lib/build-vignette';
+import { getPatient, getPatientAge } from '@/lib/patient-storage';
 import type { IntakeTriageResult } from '@/types/intake';
 
 const API_URL = getApiUrl() || '';
@@ -72,23 +74,49 @@ export default function CheckinDetailPage() {
     setIsHandingOff(true);
     setError(null);
     try {
-      const res = await fetchWithTimeout(`${API_URL}/api/interview/${intake.sessionId}/handoff`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversation_history: intake.conversationHistory?.map(m => ({ role: m.role, content: m.content })) || [],
-          phase: 'complete',
-        }),
-      }, 30000);
-      if (!res.ok) throw new Error(`Handoff failed: ${res.status}`);
-      const data = await res.json();
-      sessionStorage.setItem('handoff-vignette', data.vignette);
-      if (data.management_plan) {
-        sessionStorage.setItem('handoff-management-plan', JSON.stringify(data.management_plan));
+      // Try backend handoff first
+      try {
+        const res = await fetchWithTimeout(`${API_URL}/api/interview/${intake.sessionId}/handoff`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversation_history: intake.conversationHistory?.map(m => ({ role: m.role, content: m.content })) || [],
+            phase: 'complete',
+          }),
+        }, 30000);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.vignette) {
+            sessionStorage.setItem('handoff-vignette', data.vignette);
+            if (data.management_plan) {
+              sessionStorage.setItem('handoff-management-plan', JSON.stringify(data.management_plan));
+            }
+            if (data.recommended_imaging?.length) {
+              sessionStorage.setItem('handoff-imaging', JSON.stringify(data.recommended_imaging));
+            }
+            if (intake.patientId) sessionStorage.setItem('handoff-patient-id', intake.patientId);
+            setRole('clinician');
+            router.push('/case?from=interview');
+            return;
+          }
+        }
+      } catch {
+        // Fall through to local vignette
       }
-      if (data.recommended_imaging?.length) {
-        sessionStorage.setItem('handoff-imaging', JSON.stringify(data.recommended_imaging));
-      }
+
+      // Fallback: build vignette from saved triage data
+      const linkedPatient = intake.patientId ? getPatient(intake.patientId) : null;
+      const vignette = buildVignetteFromTriage(
+        intake.triageData,
+        linkedPatient ? { age: getPatientAge(linkedPatient), sex: linkedPatient.sex } : undefined,
+      );
+      sessionStorage.setItem('handoff-vignette', vignette);
+      sessionStorage.setItem('handoff-management-plan', JSON.stringify({
+        triage: { esi_level: intake.triageData.esi_level, reasoning: intake.triageData.esi_reasoning },
+        red_flags: intake.triageData.red_flags,
+        recommended_setting: intake.triageData.recommended_setting,
+      }));
+      if (intake.patientId) sessionStorage.setItem('handoff-patient-id', intake.patientId);
       setRole('clinician');
       router.push('/case?from=interview');
     } catch (err) {

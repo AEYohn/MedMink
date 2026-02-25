@@ -181,7 +181,7 @@ export function DifferentialDiagnosisTab({
               </div>
             )}
             {/* Discrepancy callout */}
-            {result.diagnoses.length > 0 &&
+            {(result.diagnoses?.length ?? 0) > 0 &&
               result.diagnoses[0].diagnosis.toLowerCase() !== agentDiagnosis.primary_diagnosis.toLowerCase() && (
               <div className="flex items-start gap-2 mt-2 p-2 rounded bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
@@ -195,7 +195,7 @@ export function DifferentialDiagnosisTab({
       )}
 
       {/* Diagnosis Cards */}
-      {result.diagnoses.map((dx, i) => (
+      {(result.diagnoses || []).map((dx, i) => (
         <Collapsible
           key={i}
           open={expanded[i] || false}

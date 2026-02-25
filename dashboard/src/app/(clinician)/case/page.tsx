@@ -108,6 +108,44 @@ import type {
   AgentConsensusData,
 } from '@/types/case';
 
+/** Normalize a CaseAnalysisData object so all expected array/object fields exist. */
+function normalizeResult(r: CaseAnalysisData): CaseAnalysisData {
+  r.treatment_options = r.treatment_options || [];
+  r.clinical_pearls = r.clinical_pearls || [];
+  r.papers_reviewed = r.papers_reviewed || [];
+  r.suggested_followups = r.suggested_followups || [];
+  if (r.differential_diagnosis) {
+    r.differential_diagnosis.diagnoses = r.differential_diagnosis.diagnoses || [];
+    r.differential_diagnosis.key_distinguishing_tests = r.differential_diagnosis.key_distinguishing_tests || [];
+  }
+  if (r.clinical_risk_scores) {
+    r.clinical_risk_scores.scores = (r.clinical_risk_scores.scores || []).map(s => ({
+      ...s,
+      variables: s.variables || [],
+      missing_variables: s.missing_variables || [],
+    }));
+  }
+  if (r.medication_review) {
+    r.medication_review.interactions = r.medication_review.interactions || [];
+    r.medication_review.renal_flags = r.medication_review.renal_flags || [];
+    r.medication_review.duplicate_therapy = r.medication_review.duplicate_therapy || [];
+  }
+  if (r.acute_management) {
+    r.acute_management.immediate_actions = r.acute_management.immediate_actions || [];
+    r.acute_management.monitoring_plan = r.acute_management.monitoring_plan || [];
+    r.acute_management.do_not_do = r.acute_management.do_not_do || [];
+    r.acute_management.consults = r.acute_management.consults || [];
+  }
+  r.treatment_options = r.treatment_options.map(t => ({
+    ...t,
+    pros: t.pros || [],
+    cons: t.cons || [],
+    key_evidence: t.key_evidence || [],
+    papers_used: t.papers_used || [],
+  }));
+  return r;
+}
+
 // Tab migration for saved sessions with old tab names
 const TAB_MIGRATION: Record<string, string> = {
   assessment: 'review',
@@ -475,10 +513,15 @@ export default function CaseAnalysisPage() {
     if (params.get('from') === 'interview') {
       const vignette = sessionStorage.getItem('handoff-vignette');
       const mgmtPlanRaw = sessionStorage.getItem('handoff-management-plan');
+      const handoffPatientId = sessionStorage.getItem('handoff-patient-id');
       if (vignette) {
         session.clearCurrentSession();
         resetAnalysisState();
         setCaseText(vignette);
+        if (handoffPatientId) {
+          setPatientId(handoffPatientId);
+          setActivePatient(handoffPatientId);
+        }
         if (mgmtPlanRaw) {
           try { setInterviewDDx(JSON.parse(mgmtPlanRaw)); } catch {}
         }
@@ -486,6 +529,7 @@ export default function CaseAnalysisPage() {
         sessionStorage.removeItem('handoff-management-plan');
         sessionStorage.removeItem('handoff-extracted-data');
         sessionStorage.removeItem('handoff-imaging');
+        sessionStorage.removeItem('handoff-patient-id');
         // Mark for auto-submit
         handoffAutoSubmitRef.current = true;
       }
@@ -509,16 +553,7 @@ export default function CaseAnalysisPage() {
       if (s.patientId) setActivePatient(s.patientId);
       if (s.overrides) setOverrides(s.overrides);
       if (s.currentResult) {
-        const r = s.currentResult as unknown as CaseAnalysisData;
-        // Guard against old stored sessions missing array fields
-        r.treatment_options = r.treatment_options || [];
-        r.clinical_pearls = r.clinical_pearls || [];
-        r.papers_reviewed = r.papers_reviewed || [];
-        if (r.medication_review) {
-          r.medication_review.interactions = r.medication_review.interactions || [];
-          r.medication_review.renal_flags = r.medication_review.renal_flags || [];
-          r.medication_review.duplicate_therapy = r.medication_review.duplicate_therapy || [];
-        }
+        const r = normalizeResult(s.currentResult as unknown as CaseAnalysisData);
         setResult(r);
         if (r.parsed_case) setParsedCase(r.parsed_case);
         if (r.suggested_followups?.length) setSuggestedQuestions(r.suggested_followups);
@@ -607,11 +642,12 @@ export default function CaseAnalysisPage() {
         }
       } else if (data.type === 'result') {
         const r = data as CaseAnalysisResult;
-        setResult(r.data);
-        if (r.data.suggested_followups?.length) {
-          setSuggestedQuestions(r.data.suggested_followups);
+        const normalized = normalizeResult(r.data);
+        setResult(normalized);
+        if (normalized.suggested_followups?.length) {
+          setSuggestedQuestions(normalized.suggested_followups);
         }
-        onResult(r.data);
+        onResult(normalized);
       } else if (data.type === 'error') {
         setError((data as { type: 'error'; message: string }).message);
       }
@@ -907,7 +943,7 @@ export default function CaseAnalysisPage() {
       if (loaded.overrides) setOverrides(loaded.overrides);
       else setOverrides(createEmptyOverrides());
       if (loaded.currentResult) {
-        const r = loaded.currentResult as unknown as CaseAnalysisData;
+        const r = normalizeResult(loaded.currentResult as unknown as CaseAnalysisData);
         setResult(r);
         if (r.parsed_case) setParsedCase(r.parsed_case);
         if (r.suggested_followups?.length) setSuggestedQuestions(r.suggested_followups);
@@ -1061,7 +1097,7 @@ export default function CaseAnalysisPage() {
       agreements.push({
         finding: `Primary recommendation: ${result.top_recommendation}`,
         models: ['MedGemma'],
-        confidence: result.treatment_options.find(t => t.name === result.top_recommendation)?.confidence || 0.8,
+        confidence: (result.treatment_options || []).find(t => t.name === result.top_recommendation)?.confidence || 0.8,
       });
     }
 
@@ -1570,7 +1606,7 @@ export default function CaseAnalysisPage() {
                       sex={result.parsed_case?.patient?.sex || ''}
                       overrides={overrides}
                       onOverridesChange={handleOverridesChange}
-                      treatmentOptions={result.treatment_options.map(t => ({
+                      treatmentOptions={(result.treatment_options || []).map(t => ({
                         name: t.name,
                         verdict: t.verdict,
                         cons: t.cons,
@@ -1664,7 +1700,7 @@ export default function CaseAnalysisPage() {
                   )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <TreatmentComparisonChart
-                      treatments={result.treatment_options.map(t => ({
+                      treatments={(result.treatment_options || []).map(t => ({
                         name: t.name, verdict: t.verdict, confidence: t.confidence,
                         evidence_grade: t.evidence_grade,
                       }))}

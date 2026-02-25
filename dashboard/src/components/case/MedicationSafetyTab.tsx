@@ -161,16 +161,16 @@ export function MedicationSafetyTab({
   const BannerIcon = banner.icon;
 
   // Sort interactions by severity
-  const sortedInteractions = [...result.interactions].sort((a, b) => {
+  const sortedInteractions = [...(result.interactions || [])].sort((a, b) => {
     const order = { major: 0, moderate: 1, minor: 2 };
     return (order[a.severity] ?? 2) - (order[b.severity] ?? 2);
   });
 
   const totalAlerts =
-    result.interactions.length +
-    result.drug_disease_conflicts.length +
-    result.dosing_concerns.length +
-    result.allergy_alerts.length;
+    (result.interactions?.length ?? 0) +
+    (result.drug_disease_conflicts?.length ?? 0) +
+    (result.dosing_concerns?.length ?? 0) +
+    (result.allergy_alerts?.length ?? 0);
 
   return (
     <div className="space-y-4">
@@ -233,7 +233,7 @@ export function MedicationSafetyTab({
       )}
 
       {/* Drug-Disease Conflicts */}
-      {result.drug_disease_conflicts.length > 0 && (
+      {(result.drug_disease_conflicts?.length ?? 0) > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-semibold">Drug-Disease Conflicts</h3>
           {result.drug_disease_conflicts.map((conflict, i) => (
@@ -256,7 +256,7 @@ export function MedicationSafetyTab({
       )}
 
       {/* Dosing Concerns */}
-      {result.dosing_concerns.length > 0 && (
+      {(result.dosing_concerns?.length ?? 0) > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-semibold">Dosing Concerns</h3>
           {result.dosing_concerns.map((concern, i) => (
@@ -272,7 +272,7 @@ export function MedicationSafetyTab({
       )}
 
       {/* Allergy Alerts */}
-      {result.allergy_alerts.length > 0 && (
+      {(result.allergy_alerts?.length ?? 0) > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-semibold flex items-center gap-1">
             <ShieldAlert className="w-4 h-4 text-red-600" /> Allergy Alerts
